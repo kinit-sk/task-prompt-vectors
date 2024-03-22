@@ -1,6 +1,13 @@
 from datasets import load_dataset
 from peft import PromptTuningConfig, get_peft_model, PeftType, TaskType, PeftModel
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Seq2SeqTrainer, Seq2SeqTrainingArguments, GenerationConfig, default_data_collator
+from transformers import (
+    AutoModelForSeq2SeqLM,
+    AutoTokenizer,
+    Seq2SeqTrainer,
+    Seq2SeqTrainingArguments,
+    GenerationConfig,
+    default_data_collator,
+)
 from safetensors import safe_open
 import torch
 import numpy as np
@@ -16,7 +23,11 @@ lr = 0.3
 batch_size = 32
 num_epochs = 5
 
-peft_config = PromptTuningConfig(peft_type=PeftType.PROMPT_TUNING, task_type=TaskType.SEQ_2_SEQ_LM, num_virtual_tokens=num_virtual_tokens)
+peft_config = PromptTuningConfig(
+    peft_type=PeftType.PROMPT_TUNING,
+    task_type=TaskType.SEQ_2_SEQ_LM,
+    num_virtual_tokens=num_virtual_tokens,
+)
 
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name_or_path)
 model = get_peft_model(model, peft_config)
@@ -24,9 +35,15 @@ model.print_trainable_parameters()
 
 print(model.prompt_encoder.default.embedding.weight)
 
-origin_emb_weights = safe_open(f"{origin_prompt_save}/adapter_model.safetensors", framework="pt", device="cpu").get_slice("prompt_embeddings")[:, :]
-mrpc_emb_weights = safe_open("./mrpc/adapter_model.safetensors", framework="pt", device="cpu").get_slice("prompt_embeddings")[:, :]
-rte_emb_weights = safe_open("./rte/adapter_model.safetensors", framework="pt", device="cpu").get_slice("prompt_embeddings")[:, :]
+origin_emb_weights = safe_open(
+    f"{origin_prompt_save}/adapter_model.safetensors", framework="pt", device="cpu"
+).get_slice("prompt_embeddings")[:, :]
+mrpc_emb_weights = safe_open(
+    "./mrpc/adapter_model.safetensors", framework="pt", device="cpu"
+).get_slice("prompt_embeddings")[:, :]
+rte_emb_weights = safe_open(
+    "./rte/adapter_model.safetensors", framework="pt", device="cpu"
+).get_slice("prompt_embeddings")[:, :]
 
 mrpc_diff = mrpc_emb_weights - origin_emb_weights
 rte_diff = rte_emb_weights - origin_emb_weights
@@ -34,7 +51,9 @@ rte_diff = rte_emb_weights - origin_emb_weights
 model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(mrpc_emb_weights)
 print(model.prompt_encoder.default.embedding.weight)
 
-tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path, model_max_length=512, use_fast=True)
+tokenizer = AutoTokenizer.from_pretrained(
+    tokenizer_name_or_path, model_max_length=512, use_fast=True
+)
 
 if tokenizer.pad_token_id is None:
     tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -43,13 +62,25 @@ model.resize_token_embeddings(len(tokenizer))
 
 dataset = load_dataset("glue", "mrpc")
 
+
 def tokenizer_function(examples):
     inputs = examples["inputs"]
     targets = examples["targets"]
 
-    model_inputs = tokenizer(inputs, max_length=source_len, padding="max_length", truncation=True, return_tensors="pt")
-    labels = tokenizer(targets, max_length=target_len, padding="max_length", truncation=True, return_tensors="pt")
-
+    model_inputs = tokenizer(
+        inputs,
+        max_length=source_len,
+        padding="max_length",
+        truncation=True,
+        return_tensors="pt",
+    )
+    labels = tokenizer(
+        targets,
+        max_length=target_len,
+        padding="max_length",
+        truncation=True,
+        return_tensors="pt",
+    )
 
     labels["input_ids"] = [
         [(l if l != tokenizer.pad_token_id else -100) for l in label]
@@ -63,18 +94,18 @@ def tokenizer_function(examples):
 def preprocess_function(example):
     id2label = {0: "equivalent", 1: "not_equivalent"}
 
-    inputs = " ".join([
-        "sentence1:",
-        example["sentence1"],
-        "sentence2:",
-        example["sentence2"],
-    ])
+    inputs = " ".join(
+        [
+            "sentence1:",
+            example["sentence1"],
+            "sentence2:",
+            example["sentence2"],
+        ]
+    )
 
     targets = id2label[example["label"]]
 
-
     return {"inputs": inputs, "targets": targets}
-
 
 
 processed_datasets = dataset.map(
@@ -82,7 +113,8 @@ processed_datasets = dataset.map(
     remove_columns=dataset["train"].column_names,
     load_from_cache_file=False,
     desc="Running preprocessor on dataset",
-).map(tokenizer_function,
+).map(
+    tokenizer_function,
     batched=True,
     load_from_cache_file=False,
     remove_columns=["inputs", "targets"],
@@ -99,8 +131,8 @@ def compute_metrics(eval_preds):
     preds, labels = eval_preds
     # print(tokenizer.pad_token_id)
 
-    preds[preds==-100] = tokenizer.pad_token_id
-    labels[labels==-100] = tokenizer.pad_token_id
+    preds[preds == -100] = tokenizer.pad_token_id
+    labels[labels == -100] = tokenizer.pad_token_id
 
     # print(preds, labels)
     preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
@@ -110,7 +142,7 @@ def compute_metrics(eval_preds):
     labels = [label.strip() for label in labels]
 
     print(preds, labels)
-    
+
     correct = 0
     total = 0
     for pred, true in zip(preds, labels):

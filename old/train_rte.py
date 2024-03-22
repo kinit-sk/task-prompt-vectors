@@ -1,6 +1,13 @@
 from datasets import load_dataset
 from peft import PromptTuningConfig, get_peft_model, PeftType, TaskType, PeftModel
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Seq2SeqTrainer, Seq2SeqTrainingArguments, GenerationConfig, default_data_collator
+from transformers import (
+    AutoModelForSeq2SeqLM,
+    AutoTokenizer,
+    Seq2SeqTrainer,
+    Seq2SeqTrainingArguments,
+    GenerationConfig,
+    default_data_collator,
+)
 from safetensors import safe_open
 import wandb
 import torch
@@ -19,12 +26,18 @@ num_epochs = 5
 warmup_steps = 500
 weight_decay = 1e-5
 
-tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path, model_max_length=512, use_fast=True)
+tokenizer = AutoTokenizer.from_pretrained(
+    tokenizer_name_or_path, model_max_length=512, use_fast=True
+)
 
 if tokenizer.pad_token_id is None:
     tokenizer.pad_token_id = tokenizer.eos_token_id
 
-peft_config = PromptTuningConfig(peft_type=PeftType.PROMPT_TUNING, task_type=TaskType.SEQ_2_SEQ_LM, num_virtual_tokens=num_virtual_tokens)
+peft_config = PromptTuningConfig(
+    peft_type=PeftType.PROMPT_TUNING,
+    task_type=TaskType.SEQ_2_SEQ_LM,
+    num_virtual_tokens=num_virtual_tokens,
+)
 
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name_or_path)
 model.resize_token_embeddings(len(tokenizer))
@@ -34,20 +47,26 @@ model.print_trainable_parameters()
 
 # print(model.prompt_encoder.default.embedding.weight)
 
-origin_emb_weights = safe_open(f"{origin_prompt_save}/adapter_model.safetensors", framework="pt", device="cpu").get_slice("prompt_embeddings")[:, :]
+origin_emb_weights = safe_open(
+    f"{origin_prompt_save}/adapter_model.safetensors", framework="pt", device="cpu"
+).get_slice("prompt_embeddings")[:, :]
 # print(origin_emb_weights)
 
 model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(origin_emb_weights)
 # print(model.prompt_encoder.default.embedding.weight)
 
 from preprocess import get_rte
-train_dataset, eval_dataset, test_dataset = get_rte(tokenizer=tokenizer, source_len=source_len, target_len=target_len)
+
+train_dataset, eval_dataset, test_dataset = get_rte(
+    tokenizer=tokenizer, source_len=source_len, target_len=target_len
+)
+
 
 def compute_metrics(eval_preds):
     preds, labels = eval_preds
-    
-    preds[preds==-100] = tokenizer.pad_token_id
-    labels[labels==-100] = tokenizer.pad_token_id
+
+    preds[preds == -100] = tokenizer.pad_token_id
+    labels[labels == -100] = tokenizer.pad_token_id
 
     # print(preds, labels)
     preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
@@ -57,7 +76,7 @@ def compute_metrics(eval_preds):
     labels = [label.strip() for label in labels]
 
     # print(preds, labels)
-    
+
     correct = 0
     total = 0
     for pred, true in zip(preds, labels):
@@ -79,7 +98,7 @@ training_args = Seq2SeqTrainingArguments(
     predict_with_generate=True,
     generation_config=GenerationConfig(max_new_tokens=target_len),
     weight_decay=weight_decay,
-    warmup_steps=warmup_steps
+    warmup_steps=warmup_steps,
 )
 
 trainer = Seq2SeqTrainer(
