@@ -2,3 +2,5 @@ __pycache__
 adapter_config.json
 adapter_model.safetensors
 wandb
+bin
+saves
