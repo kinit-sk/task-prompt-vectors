@@ -56,11 +56,16 @@ model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(
 )
 model.save_pretrained(origin_prompt_save)
 
-origin_emb_weights = safe_open(f"./{origin_prompt_save}/adapter_model.safetensors", framework="pt", device="cpu").get_slice("prompt_embeddings")[:, :]
+origin_emb_weights = safe_open(
+    f"./{origin_prompt_save}/adapter_model.safetensors", framework="pt", device="cpu"
+).get_slice("prompt_embeddings")[:, :]
 print(origin_emb_weights)
-torch.save({"prompt_embeddings": origin_emb_weights}, f"./{origin_prompt_save}/origin.bin")
+torch.save(
+    {"prompt_embeddings": origin_emb_weights}, f"./{origin_prompt_save}/origin.bin"
+)
 
 artifact = wandb.Artifact(name=name, type="weights")
 artifact.add_dir(local_path=origin_prompt_save)
 run.log_artifact(artifact)
+wandb.log(data={})
 run.finish()

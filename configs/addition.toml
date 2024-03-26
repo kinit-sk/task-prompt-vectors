@@ -1,0 +1,15 @@
+do_train = false
+do_eval = false
+do_test = true
+test_dataset_names = ["qnli", "mnli"]
+model_name_or_path = "t5-base"
+tokenizer_name_or_path = "t5-base"
+max_target_length = 128
+per_device_test_batch_size = 32
+report_to = "wandb"
+num_virtual_tokens = 50
+wandb_project = "arithmetics"
+max_source_length = 256
+split_validation_test = true
+output_dir = "eval_addition"
+origin_prompt = "soft_prompts/origin.bin"

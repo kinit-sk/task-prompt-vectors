@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Optional
 
 
 class AbstractTaskType:
-    formater: function = NotImplemented
+    formater = NotImplemented
 
 
 class Seq2SeqLM(AbstractTaskType):
@@ -14,7 +14,6 @@ class Seq2SeqLM(AbstractTaskType):
         labels: List[str],
         add_prefix: bool,
         prefix: Optional[str] = None,
-        extra_fields: Dict[str, Any] = {},
     ):
         input_prefix = task_name if prefix is None else prefix
         inputs = [input_prefix] + inputs if add_prefix else inputs
@@ -22,7 +21,6 @@ class Seq2SeqLM(AbstractTaskType):
             "source": " ".join(inputs),
             "target": " ".join(labels),
             "task": task_name,
-            "extra_fields": extra_fields,
         }
 
 

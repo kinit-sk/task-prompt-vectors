@@ -4,3 +4,4 @@ adapter_model.safetensors
 wandb
 bin
 saves
+soft_prompts

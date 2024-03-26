@@ -4,7 +4,6 @@ import numpy as np
 import torch
 
 from .type import AutoType
-from .utils import round_stsb_target
 
 from collections import OrderedDict, defaultdict
 from typing import Mapping
@@ -12,19 +11,15 @@ from typing import Mapping
 from typing import List
 
 from evaluate import Metric
+from datasets import Dataset
 
-from metrics import (
-    f1_score_with_invalid,
-    accuracy_with_invalid,
-    spearmanr,
-    pearsonr,
-)
+from metrics import accuracy_with_invalid
 
 
 class AbstractTask:
     name: str = NotImplemented
-    preprocessor: function = NotImplemented
-    formater: function = NotImplemented
+    preprocessor = NotImplemented
+    formater = NotImplemented
     metrics: List[Metric] = NotImplemented
     metric_names: List[str] = NotImplemented
     config = NotImplemented
@@ -37,18 +32,15 @@ class AbstractTask:
         "test": "test",
     }
     small_datasets_without_all_splits = [
-        "wnli",
-        "stsb",
-        "scitail",
+        "trec_fine",
+        "trec_coarse",
     ]
     large_data_without_all_splits = [
-        "qqp",
         "qnli",
         "sst2",
-        "snli",
-        "amazon_polarity",
+        "mnli",
         "yelp_polarity",
-        "winogrande",
+        "dbpedia",
     ]
 
     def __init__(self, seed=42):
@@ -101,7 +93,7 @@ class AbstractTask:
         else:
             return indices[validation_size:]
 
-    def map_dataset(self, dataset, add_prefix):
+    def map_dataset(self, dataset: Dataset, add_prefix: bool) -> Dataset:
         return dataset.map(
             functools.partial(self.preprocessor, add_prefix=add_prefix),
             remove_columns=dataset.column_names,
@@ -109,10 +101,17 @@ class AbstractTask:
             desc=f"Running {self.name}_preprocessor on dataset",
         )
 
-    def load_dataset(self, split: int):
+    def load_dataset(self, split: int) -> Dataset:
         return datasets.load_dataset(
             self.name, self.dataset_config_name, split=split, script_version="master"
         )
+
+    def compute_metrics(self, tokenizer, eval_preds):
+        preds, labels = eval_preds
+
+        decoded_preds, decoded_lables = self.postprocessor(preds, labels, tokenizer, ignore_pad_token_for_loss=True)
+
+        return {n: m(decoded_preds, decoded_lables) for n, m in zip(self.metric_names, self.metrics)}
 
     def get(
         self,
@@ -121,7 +120,7 @@ class AbstractTask:
         add_prefix=True,
         n_obs=None,
         split_validation_test=False,
-    ):
+    ) -> Dataset:
         self.formater = AutoType.get(task_type).formater
         if (
             split_validation_test
@@ -165,7 +164,7 @@ class SST2(AbstractTask):
         "test": "validation",
     }
 
-    def load_dataset(self, split):
+    def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("glue", self.name, split=split)
 
     def preprocessor(self, example, add_prefix=True):
@@ -186,7 +185,7 @@ class QNLI(AbstractTask):
         "test": "validation",
     }
 
-    def load_dataset(self, split):
+    def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("glue", self.name, split=split)
 
     def preprocessor(self, example, add_prefix=True):
@@ -212,7 +211,7 @@ class MNLI(AbstractTask):
         "test": "validation_matched",
     }
 
-    def load_dataset(self, split):
+    def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("glue", self.name, split=split)
 
     def preprocessor(self, example, add_prefix=True):
@@ -227,134 +226,6 @@ class MNLI(AbstractTask):
         return self.formater(self.name, input_texts, label_texts, add_prefix)
 
 
-class WNLI(AbstractTask):
-    name = "wnli"
-    labels_list = ["0", "1"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
-    split_to_data_split = {
-        "train": "train",
-        "validation": "validation",
-        "test": "validation",
-    }
-
-    def load_dataset(self, split):
-        return datasets.load_dataset("glue", "wnli", split=split)
-
-    def preprocessor(self, example, add_prefix=True):
-        input_texts = [
-            "sentence1:",
-            example["sentence1"],
-            "sentence2:",
-            example["sentence2"],
-        ]
-        label_texts = [str(example["label"])]
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
-
-
-class QQP(AbstractTask):
-    name = "qqp"
-    labels_list = ["0", "1"]
-    metrics = [accuracy_with_invalid, f1_score_with_invalid]
-    metric_names = ["accuracy_with_invalid", "f1"]
-    split_to_data_split = {
-        "train": "train",
-        "validation": "validation",
-        "test": "validation",
-    }
-
-    def load_dataset(self, split):
-        return datasets.load_dataset("glue", self.name, split=split)
-
-    def preprocessor(self, example, add_prefix=True):
-        input_texts = [
-            "question1:",
-            example["question1"],
-            "question2:",
-            example["question2"],
-        ]
-        label_texts = [str(example["label"])]
-
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
-
-
-class STSB(AbstractTask):
-    name = "stsb"
-    labels_list = [str(np.round(label, decimals=1)) for label in np.arange(0, 5.2, 0.2)]
-
-    metrics = [pearsonr, spearmanr]
-    metric_names = ["pearsonr", "spearmanr"]
-    split_to_data_split = {
-        "train": "train",
-        "validation": "validation",
-        "test": "validation",
-    }
-
-    def load_dataset(self, split):
-        return datasets.load_dataset("glue", self.name, split=split)
-
-    def preprocessor(self, example, add_prefix=True):
-        input_texts = [
-            "sentence1:",
-            example["sentence1"],
-            "sentence2:",
-            example["sentence2"],
-        ]
-
-        label_texts = [str(round_stsb_target(example["label"]))]
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
-
-
-class WinoGrande(AbstractTask):
-    name = "winogrande"
-    labels_list = ["0", "1"]
-    split_to_data_split = {
-        "train": "train",
-        "validation": "validation",
-        "test": "validation",
-    }
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
-
-    def load_dataset(self, split):
-        return datasets.load_dataset("winogrande", "winogrande_xl", split=split)
-
-    def preprocessor(self, example, add_prefix=True):
-        input_texts = [
-            "sentence:",
-            example["sentence"],
-            "option0:",
-            example["option1"],
-            "option1:",
-            example["option1"],
-        ]
-        label_texts = [str(int(example["answer"]) - 1)]
-
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
-
-
-class SciTail(AbstractTask):
-    name = "scitail"
-    labels_list = ["0", "1"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
-    split_to_data_split = {"train": "train", "validation": "validation", "test": "test"}
-
-    def load_dataset(self, split):
-        return datasets.load_dataset("scitail", "snli_format", split=split)
-
-    def preprocessor(self, example, add_prefix=True):
-        label2id = {"entailment": "0", "neutral": "1"}
-        input_texts = [
-            "premise:",
-            example["sentence1"],
-            "hypothesis:",
-            example["sentence2"],
-        ]
-        label_texts = [label2id[example["gold_label"]]]
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
-
-
 class YelpPolarity(AbstractTask):
     name = "yelp_polarity"
     labels_list = ["0", "1"]
@@ -362,7 +233,7 @@ class YelpPolarity(AbstractTask):
     metric_names = ["accuracy_with_invalid"]
     split_to_data_split = {"train": "train", "test": "test"}
 
-    def load_dataset(self, split):
+    def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("yelp_polarity")[split]
 
     def preprocessor(self, example, add_prefix=True):
@@ -371,17 +242,71 @@ class YelpPolarity(AbstractTask):
         return self.formater(self.name, input_texts, label_texts, add_prefix)
 
 
+class TRECFine(AbstractTask):
+    name = "trec_fine"
+    labels_list = [str(i) for i in list(range(50))]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy"]
+    split_to_data_split = {"train": "train", "validation": "test"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("trec", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = ["sentence:", example["text"]]
+        label_texts = [str(example["fine_label"])]
+
+        return self.formater(self.name, input_texts, label_texts, add_prefix)
+
+
+class TRECCoarse(AbstractTask):
+    name = "trec_coarse"
+    labels_list = [str(i) for i in list(range(6))]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy"]
+    split_to_data_split = {"train": "train", "validation": "test"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("trec", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = ["sentence:", example["text"]]
+        label_texts = [str(example["coarse_label"])]
+
+        return self.formater(self.name, input_texts, label_texts, add_prefix)
+
+
+class DBPEDIA(AbstractTask):
+    name = "dbpedia"
+    labels_list = [str(i) for i in list(range(14))]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy"]
+    split_to_data_split = {"train": "train", "test": "test"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("dbpedia_14", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "title:",
+            example["title"],
+            "content:",
+            example["content"],
+        ]
+        label_texts = [str(example["label"])]
+
+        return self.formater(self.name, input_texts, label_texts, add_prefix)
+
+
 TASK_MAPPING = OrderedDict(
     [
         ("sst2", SST2),
         ("qnli", QNLI),
         ("mnli", MNLI),
-        ("wnli", WNLI),
-        ("qqp", QQP),
-        ("stsb", STSB),
-        ("winogrande", WinoGrande),
-        ("scitail", SciTail),
         ("yelp_polarity", YelpPolarity),
+        ("trec_fine", TRECFine),
+        ("trec_coarse", TRECCoarse),
+        ("dbpedia", DBPEDIA),
     ]
 )
 
