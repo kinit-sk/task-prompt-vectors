@@ -3,11 +3,39 @@ from arithmetics import TaskPrompt, PromptArithmeticsModel
 from args import TrainingArguments
 from tasks import AutoTask
 
-from transformers import Seq2SeqTrainer, default_data_collator, PreTrainedTokenizer
+from transformers import Seq2SeqTrainer, default_data_collator, PreTrainedTokenizer, AutoTokenizer
 
 from datasets import Dataset
 
 import functools
+
+def compute_metrics(eval_preds):
+
+    tokenizer = AutoTokenizer.from_pretrained("t5-base", model_max_length=512, use_fast=True)
+    preds, labels = eval_preds
+    # print(tokenizer.pad_token_id)
+
+    preds[preds==-100] = tokenizer.pad_token_id
+    labels[labels==-100] = tokenizer.pad_token_id
+
+    # print(preds, labels)
+    preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
+    labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+
+    preds = [pred.strip() for pred in preds]
+    labels = [label.strip() for label in labels]
+
+    # print(preds, labels)
+    
+    correct = 0
+    total = 0
+    for pred, true in zip(preds, labels):
+        if pred.strip() == true.strip():
+            correct += 1
+        total += 1
+    accuracy = correct / total
+    return {"accuracy": accuracy}
+
 
 class ArithmeticsEvaluator:
     task_prompts: List[TaskPrompt] = None
@@ -26,18 +54,21 @@ class ArithmeticsEvaluator:
             print(f"Evaluating task origin {tp.task_name}")
             self.pa_model.set_task(tp)
 
-            print(tp.tasks, tp.task_name)
+            print("current PT weights:", self.pa_model.peft_model.prompt_encoder.default.embedding.weight)
 
-            for t in tp.tasks:
+            for t in ["mnli", "qnli"]:
+                print(t)
                 trainer = Seq2SeqTrainer(
-                    model=self.pa_model,
+                    model=self.pa_model.peft_model,
                     tokenizer=self.tokenizer,
-                    train_dataset=self.datasets[t],
-                    eval_dataset=self.datasets[t],
                     args=self.training_args,
                     data_collator=default_data_collator,
-                    compute_metrics=functools.partial(AutoTask.get(t).compute_metrics, tokenizer=self.tokenizer),
+                    compute_metrics=compute_metrics
                 )
 
-                print(self.datasets[t][0])
-                trainer.evaluate(eval_dataset=self.datasets[t], metric_key_prefix="test")
+                print(trainer.evaluate(eval_dataset=self.datasets[t], metric_key_prefix="test"))
+
+
+# mnli + qnli (qnli_acc 78.4, mnli_acc 82.3)
+# mnli - qnli (qnli_acc 0.2 , mnli_acc 50.8)
+# qnli - mnli (qnli_acc 0.0 , mnli_acc 0.0)

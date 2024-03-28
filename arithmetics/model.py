@@ -7,9 +7,8 @@ from .config import PromptArithmeticsConfig
 from .task_prompt import TaskPrompt
 
 
-class PromptArithmeticsModel(torch.nn.Module):
+class PromptArithmeticsModel():
     def __init__(self, peft_model: PeftModel, pa_config: PromptArithmeticsConfig):
-        super().__init__()
         self.pa_config = pa_config
         self.peft_model = peft_model
 
@@ -30,9 +29,6 @@ class PromptArithmeticsModel(torch.nn.Module):
         self.peft_model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(
             self.origin_prompt
         )
-
-    def forward(self, *args: Any, **kwargs: Any):
-        return self.peft_model(*args, **kwargs)
 
 
 def get_pa_model(

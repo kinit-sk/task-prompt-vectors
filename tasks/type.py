@@ -20,7 +20,6 @@ class Seq2SeqLM(AbstractTaskType):
         return {
             "source": " ".join(inputs),
             "target": " ".join(labels),
-            "task": task_name,
         }
 
 
