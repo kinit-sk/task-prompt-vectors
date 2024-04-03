@@ -1,5 +1,5 @@
 from typing import List
-from transformers import AutoTokenizer, PreTrainedTokenizer
+from transformers import AutoTokenizer
 from datasets import concatenate_datasets
 
 from .tasks import AutoTask
@@ -12,7 +12,7 @@ class Preprocessor:
         self.tasks = tasks
         self.data_args = data_args
         self.training_args = training_args
-        self.tokenizer = AutoTokenizer.from_pretrained(data_args.tokenizer_name_or_path, model_max_length=512, use_fast=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True)
 
     def preprocess_function(
         self, examples, max_target_length: int

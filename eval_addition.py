@@ -42,33 +42,20 @@ preprocessor = Preprocessor(["mnli", "qnli"], data_args, training_args)
 
 _, _, test_datasets = preprocessor.get_data()
 
-# from torch.utils.data import DataLoader
-# from transformers import default_data_collator
-
-# test_dataloaders = {
-#     name: DataLoader(
-#         test_datasets[name],
-#         collate_fn=default_data_collator,
-#         batch_size=32,
-#         pin_memory=True,
-#     )
-#     for name in test_datasets
-# }
-
-# for i,b in enumerate(test_dataloaders["qnli"]):
-#     print(b)
-#     break
-
 # mnli_qnli = mnli + qnli
 # mnli_not_qnli = mnli - qnli
 # qnli_not_mnli = qnli - mnli
 # task_prompts = [mnli_qnli, mnli_not_qnli, qnli_not_mnli]
 
-zeros = TaskPrompt("zeros", prompt=torch.zeros(size=origin_prompt.shape))
-noise = TaskPrompt("noise", prompt=(100)*torch.randn(size=origin_prompt.shape))
-task_prompts = [mnli + noise, qnli + noise]
+noise_prompt = torch.randn(size=origin_prompt.shape)
+noise_prompt = noise_prompt * (torch.linalg.matrix_norm(origin_prompt)/torch.linalg.matrix_norm(noise_prompt))
 
-# task_prompts = [mnli, qnli]
+print(torch.linalg.matrix_norm(origin_prompt), torch.linalg.matrix_norm(noise_prompt))
+
+zeros = TaskPrompt("zeros", prompt=torch.zeros(size=origin_prompt.shape))
+noise = TaskPrompt("noise", prompt=noise_prompt)
+
+task_prompts = [mnli, qnli]
 
 evaluator = ArithmeticsEvaluator(task_prompts=task_prompts, pa_model=pa_model, datasets=test_datasets, training_args=training_args, tokenizer=tokenizer)
 evaluator.run()

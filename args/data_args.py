@@ -5,7 +5,7 @@ from typing import Optional, List
 
 @dataclass
 class DataTrainingArguments:
-    test_dataset_names: Optional[List[str]] = field(
+    dataset_names: Optional[List[str]] = field(
         default=None,
         metadata={
             "help": "The name of the test dataset to use (via the datasets library)."
@@ -28,7 +28,7 @@ class DataTrainingArguments:
         },
     )
 
-    tokenizer_name_or_path: Optional[str] = field(
+    data_tokenizer_name_or_path: Optional[str] = field(
         default="t5-base",
         metadata={"help": "Specify tokenizer to use while train/test/eval."},
     )

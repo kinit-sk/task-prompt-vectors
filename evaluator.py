@@ -9,6 +9,8 @@ from datasets import Dataset
 
 import functools
 
+import wandb
+
 def compute_metrics(eval_preds):
 
     tokenizer = AutoTokenizer.from_pretrained("t5-base", model_max_length=512, use_fast=True)
@@ -68,7 +70,5 @@ class ArithmeticsEvaluator:
 
                 print(trainer.evaluate(eval_dataset=self.datasets[t], metric_key_prefix="test"))
 
-
-# mnli + qnli (qnli_acc 78.4, mnli_acc 82.3)
-# mnli - qnli (qnli_acc 0.2 , mnli_acc 50.8)
-# qnli - mnli (qnli_acc 0.0 , mnli_acc 0.0)
+                if wandb.run:
+                    wandb.finish()
