@@ -16,8 +16,10 @@ from datetime import datetime
 import wandb
 import os
 
+import torch
 
-timestampt = datetime.now().strftime("%m%d%Y%H%M%S")
+
+timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
 
 
 # For now it will be this kind of shitty, TODO replace with compute metrics from tasks.py
@@ -64,31 +66,50 @@ tokenizer = AutoTokenizer.from_pretrained(
     data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True
 )
 
-model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
-model.resize_token_embeddings(len(tokenizer))
+output_dir = training_args.output_dir
 
-model = get_peft_model(model, peft_config=pt_args)
-model.print_trainable_parameters()
+for origin_prompt in pt_args.origin_prompts:
+    model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
+    # model.resize_token_embeddings(len(tokenizer))
 
-for dataset_name in data_args.dataset_names:
-    preprocessor = Preprocessor([dataset_name], data_args, training_args)
+    model = get_peft_model(model, peft_config=pt_args)
+    model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(torch.load(f"saves/{origin_prompt}/{origin_prompt}.bin")["prompt_embeddings"])
+    model.base_model.generation_config.max_new_tokens = 10
 
-    train_dataset, valid_datasets, test_datasets = preprocessor.get_data()
+    print("current PT weights:", model.prompt_encoder.default.embedding.weight)
 
-    trainer = MultiTaskSeq2SeqTrainer(
-        model=model,
-        tokenizer=tokenizer,
-        args=training_args,
-        train_dataset=train_dataset,
-        eval_dataset=valid_datasets,
-        data_collator=default_data_collator,
-        compute_metrics=compute_metrics,
-    )
-    trainer.train()
+    model.print_trainable_parameters()
 
-    trainer.evaluate(eval_dataset=test_datasets[dataset_name], metric_key_prefix="test")
+    for dataset_name in data_args.dataset_names:
+        print(f"task: {dataset_name}")
 
-    if wandb.run is not None:
-        wandb.finish()
+        preprocessor = Preprocessor([dataset_name], data_args, training_args)
 
-    model.save_pretrained(f".saves/prompt_tuning_{dataset_name}_best")
+        training_args.output_dir = f"{output_dir}_{timestamp}_{dataset_name}_{origin_prompt}"
+        training_args.run_name = f"prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}"
+
+        train_dataset, valid_datasets, test_datasets = preprocessor.get_data()
+
+        trainer = MultiTaskSeq2SeqTrainer(
+            model=model,
+            tokenizer=tokenizer,
+            args=training_args,
+            train_dataset=train_dataset,
+            eval_dataset=valid_datasets,
+            data_collator=default_data_collator,
+            compute_metrics=compute_metrics,
+        )
+        trainer.train()
+
+        trainer.evaluate(eval_dataset=test_datasets[dataset_name], metric_key_prefix="test")
+
+        save_name = f".saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"
+        model.save_pretrained(save_name)
+
+        if wandb.run is not None:
+            artifact = wandb.Artifact(name=training_args.run_name, type="weights")
+            artifact.add_dir(local_path=save_name)
+            wandb.run.log_artifact(artifact)
+            wandb.log(data={})
+
+            wandb.finish()
