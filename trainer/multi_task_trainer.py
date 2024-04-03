@@ -15,11 +15,36 @@ if is_torch_tpu_available(check_device=False):
     import torch_xla.core.xla_model as xm
     import torch_xla.debug.metrics as met
 
+
 class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
     def _compute_avg_metrics(self, metrics):
-        print(list(map(lambda x: x[1], filter(lambda x: x[0].startswith("eval_") and ("loss" in x[0]), metrics.items()))))
-        return torch.tensor(list(map(lambda x: x[1], filter(lambda x: x[0].startswith("eval_") and ("loss" in x[0]), metrics.items())))).mean().item()
-    
+        print(
+            list(
+                map(
+                    lambda x: x[1],
+                    filter(
+                        lambda x: x[0].startswith("eval_") and ("loss" in x[0]),
+                        metrics.items(),
+                    ),
+                )
+            )
+        )
+        return (
+            torch.tensor(
+                list(
+                    map(
+                        lambda x: x[1],
+                        filter(
+                            lambda x: x[0].startswith("eval_") and ("loss" in x[0]),
+                            metrics.items(),
+                        ),
+                    )
+                )
+            )
+            .mean()
+            .item()
+        )
+
     def evaluate(
         self,
         eval_dataset: Optional[Dataset] = None,
@@ -56,7 +81,11 @@ class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
         start_time = time.time()
 
-        eval_loop = self.prediction_loop if self.args.use_legacy_prediction_loop else self.evaluation_loop
+        eval_loop = (
+            self.prediction_loop
+            if self.args.use_legacy_prediction_loop
+            else self.evaluation_loop
+        )
         output = eval_loop(
             eval_dataloader,
             description="Evaluation",
@@ -79,14 +108,18 @@ class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
             )
         )
 
-        output.metrics.update({"eval_average_loss": self._compute_avg_metrics(output.metrics)})
+        output.metrics.update(
+            {"eval_average_loss": self._compute_avg_metrics(output.metrics)}
+        )
         self.log(output.metrics)
 
         if DebugOption.TPU_METRICS_DEBUG in self.args.debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
             xm.master_print(met.metrics_report())
 
-        self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, output.metrics)
+        self.control = self.callback_handler.on_evaluate(
+            self.args, self.state, self.control, output.metrics
+        )
 
         self._memory_tracker.stop_and_update_metrics(output.metrics)
 

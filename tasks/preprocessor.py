@@ -7,16 +7,22 @@ from args import DataTrainingArguments, TrainingArguments
 
 import functools
 
+
 class Preprocessor:
-    def __init__(self, tasks: List[str], data_args: DataTrainingArguments, training_args: TrainingArguments):
+    def __init__(
+        self,
+        tasks: List[str],
+        data_args: DataTrainingArguments,
+        training_args: TrainingArguments,
+    ):
         self.tasks = tasks
         self.data_args = data_args
         self.training_args = training_args
-        self.tokenizer = AutoTokenizer.from_pretrained(data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True
+        )
 
-    def preprocess_function(
-        self, examples, max_target_length: int
-    ):
+    def preprocess_function(self, examples, max_target_length: int):
         padding = "max_length"
 
         inputs = self.tokenizer(
@@ -61,9 +67,7 @@ class Preprocessor:
                     split="train",
                     split_validation_test=self.data_args.split_validation_test,
                     add_prefix=True,
-                    n_obs=(
-                        self.data_args.max_train_samples
-                    ),
+                    n_obs=(self.data_args.max_train_samples),
                 )
                 for dataset_name in self.tasks
             ]
@@ -105,7 +109,9 @@ class Preprocessor:
                     desc="Running preprocess_function on valid_dataset",
                 )
 
-                valid_datasets[name] = valid_datasets[name].remove_columns(cols_to_remove)
+                valid_datasets[name] = valid_datasets[name].remove_columns(
+                    cols_to_remove
+                )
 
         if self.training_args.do_test:
             test_datasets = {
@@ -130,6 +136,5 @@ class Preprocessor:
                 )
 
                 test_datasets[name] = test_datasets[name].remove_columns(cols_to_remove)
-
 
         return train_dataset, valid_datasets, test_datasets

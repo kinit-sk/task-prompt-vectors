@@ -109,9 +109,14 @@ class AbstractTask:
     def compute_metrics(self, tokenizer, eval_preds):
         preds, labels = eval_preds
 
-        decoded_preds, decoded_lables = self.postprocessor(preds, labels, tokenizer, ignore_pad_token_for_loss=True)
+        decoded_preds, decoded_lables = self.postprocessor(
+            preds, labels, tokenizer, ignore_pad_token_for_loss=True
+        )
 
-        return {n: m(decoded_preds, decoded_lables) for n, m in zip(self.metric_names, self.metrics)}
+        return {
+            n: m(decoded_preds, decoded_lables)
+            for n, m in zip(self.metric_names, self.metrics)
+        }
 
     def get(
         self,

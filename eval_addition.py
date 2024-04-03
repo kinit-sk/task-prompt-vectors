@@ -18,7 +18,9 @@ parser = ArgumentParser(
 training_args, data_args, pa_config = parser.parse_toml_file("configs/addition.toml")
 print(training_args.device)
 
-tokenizer = AutoTokenizer.from_pretrained(data_args.tokenizer_name_or_path, model_max_length=512, use_fast=True)
+tokenizer = AutoTokenizer.from_pretrained(
+    data_args.tokenizer_name_or_path, model_max_length=512, use_fast=True
+)
 
 model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
 model.resize_token_embeddings(len(tokenizer))
@@ -48,7 +50,9 @@ _, _, test_datasets = preprocessor.get_data()
 # task_prompts = [mnli_qnli, mnli_not_qnli, qnli_not_mnli]
 
 noise_prompt = torch.randn(size=origin_prompt.shape)
-noise_prompt = noise_prompt * (torch.linalg.matrix_norm(origin_prompt)/torch.linalg.matrix_norm(noise_prompt))
+noise_prompt = noise_prompt * (
+    torch.linalg.matrix_norm(origin_prompt) / torch.linalg.matrix_norm(noise_prompt)
+)
 
 print(torch.linalg.matrix_norm(origin_prompt), torch.linalg.matrix_norm(noise_prompt))
 
@@ -57,5 +61,11 @@ noise = TaskPrompt("noise", prompt=noise_prompt)
 
 task_prompts = [mnli, qnli]
 
-evaluator = ArithmeticsEvaluator(task_prompts=task_prompts, pa_model=pa_model, datasets=test_datasets, training_args=training_args, tokenizer=tokenizer)
+evaluator = ArithmeticsEvaluator(
+    task_prompts=task_prompts,
+    pa_model=pa_model,
+    datasets=test_datasets,
+    training_args=training_args,
+    tokenizer=tokenizer,
+)
 evaluator.run()

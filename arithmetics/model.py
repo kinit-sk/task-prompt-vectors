@@ -7,7 +7,7 @@ from .config import PromptArithmeticsConfig
 from .task_prompt import TaskPrompt
 
 
-class PromptArithmeticsModel():
+class PromptArithmeticsModel:
     def __init__(self, peft_model: PeftModel, pa_config: PromptArithmeticsConfig):
         self.pa_config = pa_config
         self.peft_model = peft_model

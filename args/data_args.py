@@ -64,6 +64,8 @@ class DataTrainingArguments:
 
     max_test_samples: Optional[int] = field(
         default=None,
-        metadata={"help": "For debugging purposes or quicker training, truncate the number of test examples to this "
-                  "value if set."}
+        metadata={
+            "help": "For debugging purposes or quicker training, truncate the number of test examples to this "
+            "value if set."
+        },
     )

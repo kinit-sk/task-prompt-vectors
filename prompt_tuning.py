@@ -1,23 +1,36 @@
 from args import TrainingArguments, DataTrainingArguments, ArgumentParser
 from tasks import Preprocessor
 from arithmetics import PromptArithmeticsConfig
+from trainer import MultiTaskSeq2SeqTrainer
 
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, GenerationConfig, default_data_collator
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSeq2SeqLM,
+    GenerationConfig,
+    default_data_collator,
+)
 from peft import get_peft_model
 
-from trainer import MultiTaskSeq2SeqTrainer
+from datetime import datetime
 
 import wandb
 import os
 
+
+timestampt = datetime.now().strftime("%m%d%Y%H%M%S")
+
+
+# For now it will be this kind of shitty, TODO replace with compute metrics from tasks.py
 def compute_metrics(eval_preds):
 
-    tokenizer = AutoTokenizer.from_pretrained("t5-base", model_max_length=512, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(
+        "t5-base", model_max_length=512, use_fast=True
+    )
     preds, labels = eval_preds
     # print(tokenizer.pad_token_id)
 
-    preds[preds==-100] = tokenizer.pad_token_id
-    labels[labels==-100] = tokenizer.pad_token_id
+    preds[preds == -100] = tokenizer.pad_token_id
+    labels[labels == -100] = tokenizer.pad_token_id
 
     # print(preds, labels)
     preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
@@ -27,7 +40,7 @@ def compute_metrics(eval_preds):
     labels = [label.strip() for label in labels]
 
     # print(preds, labels)
-    
+
     correct = 0
     total = 0
     for pred, true in zip(preds, labels):
@@ -37,6 +50,7 @@ def compute_metrics(eval_preds):
     accuracy = correct / total
     return {"accuracy": accuracy}
 
+
 parser = ArgumentParser(
     (TrainingArguments, DataTrainingArguments, PromptArithmeticsConfig)
 )
@@ -44,9 +58,11 @@ parser = ArgumentParser(
 training_args, data_args, pt_args = parser.parse_toml_file("configs/prompt_tuning.toml")
 print(training_args)
 
-os.environ["WANDB_PROJECT"]=training_args.wandb_project
+os.environ["WANDB_PROJECT"] = training_args.wandb_project
 
-tokenizer = AutoTokenizer.from_pretrained(data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True)
+tokenizer = AutoTokenizer.from_pretrained(
+    data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True
+)
 
 model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
 model.resize_token_embeddings(len(tokenizer))
@@ -75,4 +91,4 @@ for dataset_name in data_args.dataset_names:
     if wandb.run is not None:
         wandb.finish()
 
-    model.save_pretrained(f"./pt_{dataset_name}_best")
+    model.save_pretrained(f".saves/prompt_tuning_{dataset_name}_best")

@@ -4,8 +4,8 @@ from typing import Self
 
 class TaskPrompt:
     task_name: str = None
-    task_weights: torch.Tensor = None,
-    origin_weigts: torch.Tensor = None,
+    task_weights: torch.Tensor = (None,)
+    origin_weigts: torch.Tensor = (None,)
     prompt: torch.Tensor = None
     tasks: set = None
 
@@ -30,7 +30,7 @@ class TaskPrompt:
 
             self.prompt = task_weights - origin_weigts
 
-        self.tasks = set(task_name.replace("+ ","").replace("- ", "").split(" "))
+        self.tasks = set(task_name.replace("+ ", "").replace("- ", "").split(" "))
 
     def __add__(self, other: Self) -> Self:
         # print(type(other))
