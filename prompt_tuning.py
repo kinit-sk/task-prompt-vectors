@@ -68,19 +68,23 @@ tokenizer = AutoTokenizer.from_pretrained(
 output_dir = training_args.output_dir
 
 for origin_prompt in pt_args.origin_prompts:
-    model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
-    model = get_peft_model(model, peft_config=pt_args)
-
-    model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(
-        torch.load(f"saves/{origin_prompt}/{origin_prompt}.bin")["prompt_embeddings"]
-    )
-    model.base_model.generation_config.max_new_tokens = 10
-
-    print("current PT weights:", model.prompt_encoder.default.embedding.weight)
-
-    model.print_trainable_parameters()
+    training_args.origin_prompt_name = origin_prompt
 
     for dataset_name in data_args.dataset_names:
+        training_args.train_dataset_names = [dataset_name]
+
+        model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
+        model = get_peft_model(model, peft_config=pt_args)
+
+        model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(
+            torch.load(f"saves/{origin_prompt}/{origin_prompt}.bin")["prompt_embeddings"]
+        )
+        model.base_model.generation_config.max_new_tokens = 10
+
+        print("current PT weights:", model.prompt_encoder.default.embedding.weight)
+
+        model.print_trainable_parameters()
+
         print(f"task: {dataset_name}")
 
         preprocessor = Preprocessor([dataset_name], data_args, training_args)

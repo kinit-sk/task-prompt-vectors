@@ -1,7 +1,7 @@
 from transformers import Seq2SeqTrainingArguments
 from dataclasses import dataclass, field
 
-from typing import Optional
+from typing import Optional, List
 
 
 @dataclass
@@ -22,4 +22,14 @@ class TrainingArguments(Seq2SeqTrainingArguments):
     wandb_project: Optional[str] = field(
         default=None,
         metadata={"help": "Specify wandb project."},
+    )
+
+    train_dataset_names: Optional[List[str]] = field(
+        default=None,
+        metadata={"help": "Specify train dataset name or names."},
+    )
+
+    origin_prompt_name: Optional[str] = field(
+        default=None,
+        metadata={"help": "Specify origin prompt name or names."},
     )
