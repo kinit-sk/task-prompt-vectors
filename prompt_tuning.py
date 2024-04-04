@@ -70,8 +70,10 @@ output_dir = training_args.output_dir
 for origin_prompt in pt_args.origin_prompts:
     model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
     model = get_peft_model(model, peft_config=pt_args)
-    
-    model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(torch.load(f"saves/{origin_prompt}/{origin_prompt}.bin")["prompt_embeddings"])
+
+    model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(
+        torch.load(f"saves/{origin_prompt}/{origin_prompt}.bin")["prompt_embeddings"]
+    )
     model.base_model.generation_config.max_new_tokens = 10
 
     print("current PT weights:", model.prompt_encoder.default.embedding.weight)
@@ -83,8 +85,12 @@ for origin_prompt in pt_args.origin_prompts:
 
         preprocessor = Preprocessor([dataset_name], data_args, training_args)
 
-        training_args.output_dir = f"{output_dir}_{timestamp}_{dataset_name}_{origin_prompt}"
-        training_args.run_name = f"prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}"
+        training_args.output_dir = (
+            f"{output_dir}_{timestamp}_{dataset_name}_{origin_prompt}"
+        )
+        training_args.run_name = (
+            f"prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}"
+        )
 
         train_dataset, valid_datasets, test_datasets = preprocessor.get_data()
 
@@ -99,9 +105,15 @@ for origin_prompt in pt_args.origin_prompts:
         )
         trainer.train()
 
-        print(trainer.evaluate(eval_dataset=test_datasets[dataset_name], metric_key_prefix="test"))
+        print(
+            trainer.evaluate(
+                eval_dataset=test_datasets[dataset_name], metric_key_prefix="test"
+            )
+        )
 
-        save_name = f"./saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"
+        save_name = (
+            f"./saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"
+        )
         model.save_pretrained(save_name)
 
         if wandb.run is not None:

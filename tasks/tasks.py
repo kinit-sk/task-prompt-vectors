@@ -157,6 +157,7 @@ class AbstractTask:
 
         return self.map_dataset(dataset, add_prefix)
 
+
 # Sentiment classification
 class SST2(AbstractTask):
     name = "sst2"
@@ -177,6 +178,7 @@ class SST2(AbstractTask):
         label_texts = [str(example["label"])]
 
         return self.formater(self.name, input_texts, label_texts, add_prefix)
+
 
 class SST2Text(AbstractTask):
     name = "sst2_text"
@@ -199,6 +201,7 @@ class SST2Text(AbstractTask):
 
         return self.formater(self.name, input_texts, label_texts, add_prefix)
 
+
 class YelpPolarity(AbstractTask):
     name = "yelp_polarity"
     labels_list = ["0", "1"]
@@ -213,6 +216,7 @@ class YelpPolarity(AbstractTask):
         input_texts = ["sentence:", example["text"]]
         label_texts = [str(example["label"])]
         return self.formater(self.name, input_texts, label_texts, add_prefix)
+
 
 class YelpPolarityText(AbstractTask):
     name = "yelp_polarity_text"
@@ -229,6 +233,7 @@ class YelpPolarityText(AbstractTask):
         input_texts = ["sentence:", example["text"]]
         label_texts = [self.id2label[example["label"]]]
         return self.formater(self.name, input_texts, label_texts, add_prefix)
+
 
 # Natural language inference
 class QNLI(AbstractTask):
@@ -255,6 +260,7 @@ class QNLI(AbstractTask):
         label_texts = [str(example["label"])]
 
         return self.formater(self.name, input_texts, label_texts, add_prefix)
+
 
 class QNLIText(AbstractTask):
     name = "qnli_text"
@@ -308,6 +314,7 @@ class MNLI(AbstractTask):
 
         return self.formater(self.name, input_texts, label_texts, add_prefix)
 
+
 class MNLIText(AbstractTask):
     name = "mnli_text"
     labels_list = ["entailment", "neutral", "contradiction"]
@@ -333,6 +340,7 @@ class MNLIText(AbstractTask):
         label_texts = [self.id2label[example["label"]]]
 
         return self.formater(self.name, input_texts, label_texts, add_prefix)
+
 
 # Multi task question classification
 class TRECFine(AbstractTask):
@@ -389,7 +397,7 @@ class DBPEDIA(AbstractTask):
         label_texts = [str(example["label"])]
 
         return self.formater(self.name, input_texts, label_texts, add_prefix)
-    
+
 
 TASK_MAPPING = OrderedDict(
     [

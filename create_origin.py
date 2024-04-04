@@ -60,11 +60,14 @@ for i in range(n_origins):
     model.save_pretrained(origin_prompt_save)
 
     origin_emb_weights = safe_open(
-        f"./{origin_prompt_save}/adapter_model.safetensors", framework="pt", device="cpu"
+        f"./{origin_prompt_save}/adapter_model.safetensors",
+        framework="pt",
+        device="cpu",
     ).get_slice("prompt_embeddings")[:, :]
     print(origin_emb_weights)
     torch.save(
-        {"prompt_embeddings": origin_emb_weights}, f"./{origin_prompt_save}/origin_{i}.bin"
+        {"prompt_embeddings": origin_emb_weights},
+        f"./{origin_prompt_save}/origin_{i}.bin",
     )
 
     artifact = wandb.Artifact(name=name, type="weights")
