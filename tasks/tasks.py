@@ -157,7 +157,7 @@ class AbstractTask:
 
         return self.map_dataset(dataset, add_prefix)
 
-
+# Sentiment classification
 class SST2(AbstractTask):
     name = "sst2"
     labels_list = ["0", "1"]
@@ -178,7 +178,59 @@ class SST2(AbstractTask):
 
         return self.formater(self.name, input_texts, label_texts, add_prefix)
 
+class SST2Text(AbstractTask):
+    name = "sst2_text"
+    labels_list = ["negative", "positive"]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy_with_invalid"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    id2label = {0: "negative", 1: "positive"}
 
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", self.name, split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = ["sentence", example["sentence"]]
+        label_texts = [str(example["label"])]
+
+        return self.formater(self.name, input_texts, label_texts, add_prefix)
+
+class YelpPolarity(AbstractTask):
+    name = "yelp_polarity"
+    labels_list = ["0", "1"]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy_with_invalid"]
+    split_to_data_split = {"train": "train", "test": "test"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("yelp_polarity")[split]
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = ["sentence:", example["text"]]
+        label_texts = [str(example["label"])]
+        return self.formater(self.name, input_texts, label_texts, add_prefix)
+
+class YelpPolarityText(AbstractTask):
+    name = "yelp_polarity_text"
+    labels_list = ["negative", "positive"]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy_with_invalid"]
+    split_to_data_split = {"train": "train", "test": "test"}
+    id2label = {0: "negative", 1: "positive"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("yelp_polarity")[split]
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = ["sentence:", example["text"]]
+        label_texts = [self.id2label[example["label"]]]
+        return self.formater(self.name, input_texts, label_texts, add_prefix)
+
+# Natural language inference
 class QNLI(AbstractTask):
     name = "qnli"
     labels_list = ["0", "1"]
@@ -201,6 +253,32 @@ class QNLI(AbstractTask):
             example["sentence"],
         ]
         label_texts = [str(example["label"])]
+
+        return self.formater(self.name, input_texts, label_texts, add_prefix)
+
+class QNLIText(AbstractTask):
+    name = "qnli_text"
+    labels_list = ["entailment", "not_entailment"]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy_with_invalid"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    id2label = {0: "entailment", 1: "not_entailment"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", self.name, split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "question:",
+            example["question"],
+            "sentence:",
+            example["sentence"],
+        ]
+        label_texts = [self.id2label[example["label"]]]
 
         return self.formater(self.name, input_texts, label_texts, add_prefix)
 
@@ -230,23 +308,33 @@ class MNLI(AbstractTask):
 
         return self.formater(self.name, input_texts, label_texts, add_prefix)
 
-
-class YelpPolarity(AbstractTask):
-    name = "yelp_polarity"
-    labels_list = ["0", "1"]
+class MNLIText(AbstractTask):
+    name = "mnli_text"
+    labels_list = ["entailment", "neutral", "contradiction"]
     metrics = [accuracy_with_invalid]
     metric_names = ["accuracy_with_invalid"]
-    split_to_data_split = {"train": "train", "test": "test"}
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation_mismatched",
+        "test": "validation_matched",
+    }
+    id2label = {0: "entailment", 1: "neutral", 2: "contradiction"}
 
     def load_dataset(self, split) -> Dataset:
-        return datasets.load_dataset("yelp_polarity")[split]
+        return datasets.load_dataset("glue", self.name, split=split)
 
     def preprocessor(self, example, add_prefix=True):
-        input_texts = ["sentence:", example["text"]]
-        label_texts = [str(example["label"])]
+        input_texts = [
+            "premise:",
+            example["premise"],
+            "hypothesis:",
+            example["hypothesis"],
+        ]
+        label_texts = [self.id2label[example["label"]]]
+
         return self.formater(self.name, input_texts, label_texts, add_prefix)
 
-
+# Multi task question classification
 class TRECFine(AbstractTask):
     name = "trec_fine"
     labels_list = [str(i) for i in list(range(50))]
@@ -301,14 +389,18 @@ class DBPEDIA(AbstractTask):
         label_texts = [str(example["label"])]
 
         return self.formater(self.name, input_texts, label_texts, add_prefix)
-
+    
 
 TASK_MAPPING = OrderedDict(
     [
         ("sst2", SST2),
+        ("sst2_text", SST2Text),
         ("qnli", QNLI),
+        ("qnli_text", QNLIText),
         ("mnli", MNLI),
+        ("mnli_text", MNLIText),
         ("yelp_polarity", YelpPolarity),
+        ("yelp_polarity_text", YelpPolarityText),
         ("trec_fine", TRECFine),
         ("trec_coarse", TRECCoarse),
         ("dbpedia", DBPEDIA),
