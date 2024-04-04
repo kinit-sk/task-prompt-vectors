@@ -9,7 +9,7 @@ from transformers import (
     GenerationConfig,
     default_data_collator,
 )
-from peft import get_peft_model
+from peft import get_peft_model, PeftModel
 
 from datetime import datetime
 
@@ -72,8 +72,9 @@ for origin_prompt in pt_args.origin_prompts:
     model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
     # model.resize_token_embeddings(len(tokenizer))
 
-    model = get_peft_model(model, peft_config=pt_args)
-    model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(torch.load(f"saves/{origin_prompt}/{origin_prompt}.bin")["prompt_embeddings"])
+    # model = get_peft_model(model, peft_config=pt_args)
+    # model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(torch.load(f"saves/{origin_prompt}/{origin_prompt}.bin")["prompt_embeddings"])
+    model = PeftModel.from_pretrained(model, ".saves/prompt_tuning_04032024200551_qnli_origin_0_best", config=pt_args)
     model.base_model.generation_config.max_new_tokens = 10
 
     print("current PT weights:", model.prompt_encoder.default.embedding.weight)
@@ -99,12 +100,12 @@ for origin_prompt in pt_args.origin_prompts:
             data_collator=default_data_collator,
             compute_metrics=compute_metrics,
         )
-        trainer.train()
+        # trainer.train()
 
-        trainer.evaluate(eval_dataset=test_datasets[dataset_name], metric_key_prefix="test")
+        print(trainer.evaluate(eval_dataset=test_datasets[dataset_name], metric_key_prefix="test"))
 
-        save_name = f".saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"
-        model.save_pretrained(save_name)
+        save_name = f"./saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"
+        # model.save_pretrained(save_name)
 
         if wandb.run is not None:
             artifact = wandb.Artifact(name=training_args.run_name, type="weights")
