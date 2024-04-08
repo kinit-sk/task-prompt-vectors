@@ -1,7 +1,6 @@
 from typing import List, Dict
 from arithmetics import TaskPrompt, PromptArithmeticsModel
 from args import TrainingArguments
-from tasks import AutoTask
 
 from transformers import (
     Seq2SeqTrainer,
@@ -12,10 +11,10 @@ from transformers import (
 
 from datasets import Dataset
 
-import functools
-
 import wandb
+import torch
 
+from peft import PeftModel
 
 def compute_metrics(eval_preds):
 
@@ -53,31 +52,34 @@ class ArithmeticsEvaluator:
     def __init__(
         self,
         task_prompts: List[TaskPrompt],
-        pa_model: PromptArithmeticsModel,
+        model: PeftModel,
         datasets: Dict[str, Dataset],
         training_args: TrainingArguments,
         tokenizer: PreTrainedTokenizer,
     ):
         self.task_prompts = task_prompts
-        self.pa_model = pa_model
+        self.model = model
         self.datasets = datasets
         self.training_args = training_args
         self.tokenizer = tokenizer
 
+    def set_task(self, task_prompt: TaskPrompt):
+        self.model.prompt_encoder.default.embedding.weight = task_prompt.apply()
+
     def run(self):
         for tp in self.task_prompts:
             print(f"Evaluating task origin {tp.task_name}")
-            self.pa_model.set_task(tp)
+            self.set_task(tp)
 
             print(
                 "current PT weights:",
-                self.pa_model.peft_model.prompt_encoder.default.embedding.weight,
+                self.model.peft_model.prompt_encoder.default.embedding.weight,
             )
 
-            for t in ["mnli", "qnli"]:
-                print(t)
+            for dataset_name in self.datasets:
+                print(dataset_name)
                 trainer = Seq2SeqTrainer(
-                    model=self.pa_model.peft_model,
+                    model=self.model,
                     tokenizer=self.tokenizer,
                     args=self.training_args,
                     data_collator=default_data_collator,
@@ -86,7 +88,7 @@ class ArithmeticsEvaluator:
 
                 print(
                     trainer.evaluate(
-                        eval_dataset=self.datasets[t], metric_key_prefix="test"
+                        eval_dataset=self.datasets[dataset_name], metric_key_prefix="test"
                     )
                 )
 

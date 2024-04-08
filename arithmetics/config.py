@@ -9,3 +9,7 @@ class PromptArithmeticsConfig(PromptTuningConfig):
     origin_prompts: List[str] = field(
         default=None, metadata={"help": "Path to the origin prompts"}
     )
+
+    task_prompts: List[str] = field(
+        default=None, metadata={"help": "Path to the origin prompts"}
+    )

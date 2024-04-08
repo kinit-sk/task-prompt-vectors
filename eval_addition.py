@@ -4,11 +4,25 @@ from arithmetics import PromptArithmeticsConfig, get_pa_model, TaskPrompt
 from tasks import Preprocessor
 
 import torch
+import itertools
+import operator
 
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from typing import List
+from functools import reduce
+from peft import TaskType, PromptTuningConfig, get_peft_model
 
 # import transformers
 # transformers.logging.set_verbosity_debug()
+
+# create set of task prompts per origin prompt (for stability purposes)
+def get_task_prompts(pa_config):
+    {origin_prompt: [TaskPrompt(prompt_name, task_weights=torch.load(f"soft_prompts/{prompt_name}.bin")["prompt_embeddings"], origin_weigts=torch.load(origin_prompt)["prompt_embeddings"]) for prompt_name in pa_config.origin_prompts] for origin_prompt in pa_config.origin_prompts}
+
+def create_task_combinations(task_prompts : List[TaskPrompt], n : int = 2):
+    tp_cominations = itertools.combinations(task_prompts, n)
+
+    return [reduce(operator.add, tp) for tp in tp_cominations]
 
 
 parser = ArgumentParser(
@@ -19,53 +33,36 @@ training_args, data_args, pa_config = parser.parse_toml_file("configs/addition.t
 print(training_args.device)
 
 tokenizer = AutoTokenizer.from_pretrained(
-    data_args.tokenizer_name_or_path, model_max_length=512, use_fast=True
+    data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True
 )
 
 model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
-model.resize_token_embeddings(len(tokenizer))
 
-pa_model = get_pa_model(model=model, pa_config=pa_config)
+peft_config = PromptTuningConfig(
+    task_type=TaskType.SEQ_2_SEQ_LM,
+    num_virtual_tokens=pa_config.num_virtual_tokens,
+)
 
-origin_prompt = torch.load(pa_config.origin_prompt)["prompt_embeddings"]
-qnli_prompt = torch.load("soft_prompts/qnli.bin")["prompt_embeddings"]
-mnli_prompt = torch.load("soft_prompts/mnli.bin")["prompt_embeddings"]
+model = get_peft_model(model, peft_config)
 
-print("mnli_prompt:", mnli_prompt)
-print("qnli_prompt:", qnli_prompt)
-print("origin_prompt:", origin_prompt)
-
-qnli = TaskPrompt("qnli", task_weights=qnli_prompt, origin_weigts=origin_prompt)
-mnli = TaskPrompt("mnli", task_weights=mnli_prompt, origin_weigts=origin_prompt)
-
-print(pa_model.peft_model.prompt_encoder.default.embedding.weight)
-
-preprocessor = Preprocessor(["mnli", "qnli"], data_args, training_args)
+preprocessor = Preprocessor(data_args.dataset_names, data_args, training_args)
 
 _, _, test_datasets = preprocessor.get_data()
 
-# mnli_qnli = mnli + qnli
-# mnli_not_qnli = mnli - qnli
-# qnli_not_mnli = qnli - mnli
-# task_prompts = [mnli_qnli, mnli_not_qnli, qnli_not_mnli]
+tp_per_origin = get_task_prompts(pa_config=pa_config)
 
-noise_prompt = torch.randn(size=origin_prompt.shape)
-noise_prompt = noise_prompt * (
-    torch.linalg.matrix_norm(origin_prompt) / torch.linalg.matrix_norm(noise_prompt)
-)
+for origin_prompt in tp_per_origin:
+    model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(torch.load(origin_prompt)["prompt_embeddings"])
 
-print(torch.linalg.matrix_norm(origin_prompt), torch.linalg.matrix_norm(noise_prompt))
+    print(model.prompt_encoder.default.embedding.weight)
 
-zeros = TaskPrompt("zeros", prompt=torch.zeros(size=origin_prompt.shape))
-noise = TaskPrompt("noise", prompt=noise_prompt)
+    print(origin_prompt, tp_per_origin[tp_per_origin])
 
-task_prompts = [mnli, qnli]
-
-evaluator = ArithmeticsEvaluator(
-    task_prompts=task_prompts,
-    pa_model=pa_model,
-    datasets=test_datasets,
-    training_args=training_args,
-    tokenizer=tokenizer,
-)
-evaluator.run()
+    evaluator = ArithmeticsEvaluator(
+        task_prompts=create_task_combinations(tp_per_origin[origin_prompt]),
+        model=model,
+        datasets=test_datasets,
+        training_args=training_args,
+        tokenizer=tokenizer,
+    )
+    evaluator.run()

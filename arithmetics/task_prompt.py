@@ -61,3 +61,6 @@ class TaskPrompt:
 
     def __str__(self):
         return f"{self.task_name} {self.prompt}"
+
+    def apply(self):
+        return torch.nn.Parameter(self.origin_weigts + self.prompt)
