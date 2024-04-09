@@ -26,5 +26,5 @@ for t in res_dict:
             data[i].append(res_dict[t][tt])
 print(data)
 
-sns.scatterplot(data=df)
+sns.scatterplot(data=res_dict)
 plt.show()
