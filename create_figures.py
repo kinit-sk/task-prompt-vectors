@@ -23,7 +23,7 @@ data = {"first_task": [], "second_task": []}
 for t in res_dict:
     if len(t.split(" ")) == 2:
         first_task, second_task = t.split(" ")
-        data["first _task"].append(res_dict[t][first_task])
+        data["first_task"].append(res_dict[t][first_task])
         data["second_task"].append(res_dict[t][second_task])
 
 print(data)
