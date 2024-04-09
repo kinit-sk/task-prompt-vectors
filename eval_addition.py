@@ -16,8 +16,12 @@ import os
 
 import pandas as pd
 
+from datetime import datetime
+
 # import transformers
 # transformers.logging.set_verbosity_debug()
+
+timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
 
 # create set of task prompts per origin prompt (for stability purposes)
 def get_task_prompts(pa_config, dataset_names):
@@ -69,6 +73,8 @@ for origin_prompt in tp_per_origin:
 
     print(model.prompt_encoder.default.embedding.weight)
 
+    training_args.run_name = f"addition_{timestamp}_{origin_prompt}"
+
     evaluator = ArithmeticsEvaluator(
         task_prompts=tp_per_origin[origin_prompt] + create_task_combinations(tp_per_origin[origin_prompt]),
         model=model,
@@ -81,4 +87,4 @@ for origin_prompt in tp_per_origin:
 
     df = pd.DataFrame.from_dict(results)
     df = df.groupby(["tasks"], as_index=False).first()
-    df.to_csv("./resuts.csv")
+    df.to_csv("./results.csv")

@@ -1,7 +1,7 @@
 do_train = false
 do_eval = false
 do_test = true
-dataset_names = ["qnli", "mnli"]
+dataset_names = ["qnli", "mnli", "trec_coarse", "dbpedia", "sst2", "yelp_polarity"]
 model_name_or_path = "t5-base"
 data_tokenizer_name_or_path = "t5-base"
 max_target_length = 128

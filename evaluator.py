@@ -69,6 +69,7 @@ class ArithmeticsEvaluator:
         self.origin_weights = origin_weights
         self.results_df = pd.DataFrame(columns=["tasks", "accuracy"])
         self.results = []
+        self.orig_run_name = self.training_args.run_name
 
     def set_task(self, task_prompt: TaskPrompt):
         self.model.prompt_encoder.default.embedding.weight = task_prompt.apply(self.origin_weights)
@@ -84,6 +85,7 @@ class ArithmeticsEvaluator:
             )
 
             for dataset_name in tp.tasks:
+                self.training_args.run_name = f"{self.orig_run_name}_{tp.task_name.replace(' ', '')}_{dataset_name}"
                 print(dataset_name)
                 trainer = Seq2SeqTrainer(
                     model=self.model,
