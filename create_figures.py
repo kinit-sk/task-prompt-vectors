@@ -23,14 +23,14 @@ data = {"first_task": [], "second_task": []}
 for t in res_dict:
     if len(t.split(" ")) == 2:
         first_task, second_task = t.split(" ")
-        data["first_task"].append(res_dict[t][first_task])
-        data["second_task"].append(res_dict[t][second_task])
+        data["first_task"].append({"a": res_dict[t][first_task]})
+        data["second_task"].append({"a": res_dict[t][second_task]})
 
 print(data)
 
 sns.scatterplot(data=data, x="first_task", y="second_task")
-
-plt.vlines(x=1, ymin=0, ymax=1.5, colors='r',linestyles='dashed')
-plt.hlines(y=1, xmin=0, xmax=1.5, colors='k',linestyles='dashed')
+                
+plt.vlines(x=1, ymin=0, ymax=1.5, colors='g',linestyles='dashed')
+plt.hlines(y=1, xmin=0, xmax=1.5, colors='g',linestyles='dashed')
 
 plt.show()
