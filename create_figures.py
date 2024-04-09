@@ -18,14 +18,16 @@ for t in df["tasks"]:
 
 print(res_dict)
 
-data = {"first_task": [], "second_task": []}
+data = {"first_task": [], "second_task": [], "tasks": []}
 
 for t in res_dict:
     if len(t.split(" ")) == 2:
         first_task, second_task = t.split(" ")
-        data["first_task"].append({"a": res_dict[t][first_task]})
-        data["second_task"].append({"a": res_dict[t][second_task]})
+        data["first_task"].append(res_dict[t][first_task])
+        data["second_task"].append(res_dict[t][second_task])
+        data["tasks"].append(t)
 
+data = pd.DataFrame.from_dict(data)
 print(data)
 
 sns.scatterplot(data=data, x="first_task", y="second_task")
