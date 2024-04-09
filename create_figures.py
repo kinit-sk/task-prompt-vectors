@@ -30,7 +30,7 @@ print(data)
 
 sns.scatterplot(data=data, x="first_task", y="second_task")
 
-plt.vlines(x=1, colors='r',linestyles='dashed')
-plt.hlines(y=1, colors='k',linestyles='dashed')
+plt.vlines(x=1, ymin=0, ymax=1.5, colors='r',linestyles='dashed')
+plt.hlines(y=1, xmin=0, xmax=1.5, colors='k',linestyles='dashed')
 
 plt.show()
