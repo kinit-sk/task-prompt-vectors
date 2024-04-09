@@ -18,13 +18,15 @@ for t in df["tasks"]:
 
 print(res_dict)
 
-data = [[],[]]
+data = {"first task": [], "second_task": []}
 
 for t in res_dict:
     if len(t.split(" ")) == 2:
-        for i, tt in enumerate(res_dict[t]):
-            data[i].append(res_dict[t][tt])
+        first_task, second_task = t.split(" ")
+        data["first task"].append(res_dict[t][first_task])
+        data["second_task"].append(res_dict[t][second_task])
+
 print(data)
 
-sns.scatterplot(data=res_dict["mnli qnli"])
+sns.scatterplot(data=data, x="first_task", y="second_task")
 plt.show()
