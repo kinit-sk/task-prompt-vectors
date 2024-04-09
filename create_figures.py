@@ -26,6 +26,7 @@ for t in res_dict:
         for tt in t.split(" "):
             data[-1].append(res_dict[t][tt])
 
+data = [tuple(d) for d in data]
 print(data)
 
 sns.scatterplot(data=data)
