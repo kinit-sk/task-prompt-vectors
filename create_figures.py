@@ -29,4 +29,8 @@ for t in res_dict:
 print(data)
 
 sns.scatterplot(data=data, x="first_task", y="second_task")
+
+plt.vlines(x=1, colors='r',linestyles='dashed')
+plt.hlines(y=1, colors='k',linestyles='dashed')
+
 plt.show()
