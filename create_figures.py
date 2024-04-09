@@ -18,15 +18,12 @@ for t in df["tasks"]:
 
 print(res_dict)
 
-data = []
+data = [[],[]]
 
 for t in res_dict:
-    if len(t.split(" ")) >= 2:
-        data.append([])
-        for tt in t.split(" "):
-            data[-1].append(res_dict[t][tt])
-
-data = [tuple(d) for d in data]
+    if len(t.split(" ")) == 2:
+        for i, tt in enumerate(res_dict[t]):
+            data[i].append(res_dict[t][tt])
 print(data)
 
 sns.scatterplot(data=data)
