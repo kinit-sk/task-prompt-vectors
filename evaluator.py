@@ -16,6 +16,8 @@ import torch
 
 from peft import PeftModel
 
+import pandas as pd
+
 def compute_metrics(eval_preds):
 
     tokenizer = AutoTokenizer.from_pretrained(
@@ -48,6 +50,7 @@ def compute_metrics(eval_preds):
 
 class ArithmeticsEvaluator:
     task_prompts: List[TaskPrompt] = None
+    results_df: pd.DataFrame = None
 
     def __init__(
         self,
@@ -56,15 +59,19 @@ class ArithmeticsEvaluator:
         datasets: Dict[str, Dataset],
         training_args: TrainingArguments,
         tokenizer: PreTrainedTokenizer,
+        origin_weights: torch.Tensor,
     ):
         self.task_prompts = task_prompts
         self.model = model
         self.datasets = datasets
         self.training_args = training_args
         self.tokenizer = tokenizer
+        self.origin_weights = origin_weights
+        self.results_df = pd.DataFrame(columns=["tasks", "accuracy"])
+        self.results = []
 
     def set_task(self, task_prompt: TaskPrompt):
-        self.model.prompt_encoder.default.embedding.weight = task_prompt.apply()
+        self.model.prompt_encoder.default.embedding.weight = task_prompt.apply(self.origin_weights)
 
     def run(self):
         for tp in self.task_prompts:
@@ -73,10 +80,10 @@ class ArithmeticsEvaluator:
 
             print(
                 "current PT weights:",
-                self.model.peft_model.prompt_encoder.default.embedding.weight,
+                self.model.prompt_encoder.default.embedding.weight,
             )
 
-            for dataset_name in self.datasets:
+            for dataset_name in tp.tasks:
                 print(dataset_name)
                 trainer = Seq2SeqTrainer(
                     model=self.model,
@@ -86,11 +93,13 @@ class ArithmeticsEvaluator:
                     compute_metrics=compute_metrics,
                 )
 
-                print(
-                    trainer.evaluate(
-                        eval_dataset=self.datasets[dataset_name], metric_key_prefix="test"
-                    )
-                )
+                current_results = trainer.evaluate(eval_dataset=self.datasets[dataset_name], metric_key_prefix="test")
+                print(current_results)
+
+
+                self.results.append({"tasks":  " ".join(tp.tasks), f"{dataset_name}_accuracy": current_results["test_accuracy"]})
 
                 if wandb.run:
                     wandb.finish()
+
+        return self.results

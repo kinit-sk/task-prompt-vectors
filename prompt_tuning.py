@@ -79,7 +79,7 @@ for origin_prompt in pt_args.origin_prompts:
         model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(
             torch.load(f"saves/{origin_prompt}/{origin_prompt}.bin")["prompt_embeddings"]
         )
-        model.base_model.generation_config.max_new_tokens = 10
+        model.base_model.generation_config.max_new_tokens = training_args.max_target_length
 
         print("current PT weights:", model.prompt_encoder.default.embedding.weight)
 
