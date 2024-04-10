@@ -62,5 +62,5 @@ class TaskPrompt:
     def __str__(self):
         return f"{self.task_name} {self.prompt}"
 
-    def apply(self, origin_weights):
-        return torch.nn.Parameter(origin_weights + self.prompt)
+    def apply(self, origin_weights, coef=1):
+        return torch.nn.Parameter(origin_weights + coef*self.prompt)

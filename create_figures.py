@@ -3,7 +3,7 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("resuts.csv", index_col=0)
+df = pd.read_csv("results_04102024083442.csv", index_col=0)
 df = df.groupby(["tasks"], as_index=False).first() # comment when fixed
 
 res_dict = {}
@@ -30,9 +30,13 @@ for t in res_dict:
 data = pd.DataFrame.from_dict(data)
 print(data)
 
-sns.scatterplot(data=data, x="first_task", y="second_task")
+scatterplot = sns.scatterplot(data=data, x="first_task", y="second_task", hue="tasks", style="tasks")
                 
-plt.vlines(x=1, ymin=0, ymax=1.5, colors='g',linestyles='dashed')
-plt.hlines(y=1, xmin=0, xmax=1.5, colors='g',linestyles='dashed')
+plt.vlines(x=1, ymin=0, ymax=1.2, colors='gray',linestyles='dashed')
+plt.hlines(y=1, xmin=0, xmax=1.2, colors='gray',linestyles='dashed')
+scatterplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
-plt.show()
+fig = scatterplot.get_figure()
+fig.savefig("results_04102024083442.png", bbox_inches='tight') 
+
+data.to_csv("data_results_04102024083442.csv")

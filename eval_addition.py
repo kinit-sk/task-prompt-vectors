@@ -58,7 +58,7 @@ model.base_model.generation_config.max_new_tokens = data_args.max_target_length
 
 preprocessor = Preprocessor(data_args.dataset_names, data_args, training_args)
 
-_, _, test_datasets = preprocessor.get_data()
+_, valid_datasets, test_datasets = preprocessor.get_data()
 
 tp_per_origin = get_task_prompts(pa_config=pa_config, dataset_names=data_args.dataset_names)
 
@@ -78,13 +78,12 @@ for origin_prompt in tp_per_origin:
     evaluator = ArithmeticsEvaluator(
         task_prompts=tp_per_origin[origin_prompt] + create_task_combinations(tp_per_origin[origin_prompt]),
         model=model,
-        datasets=test_datasets,
+        test_datasets=test_datasets,
+        eval_datasets=valid_datasets,
         training_args=training_args,
         tokenizer=tokenizer,
         origin_weights=origin_weights
     )
     results = evaluator.run()
 
-    df = pd.DataFrame.from_dict(results)
-    df = df.groupby(["tasks"], as_index=False).first()
-    df.to_csv("./results.csv")
+    results.to_csv(f"./results_{origin_prompt}_{timestamp}.csv")
