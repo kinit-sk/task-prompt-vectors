@@ -7,6 +7,7 @@ from transformers import (
     AutoTokenizer,
     AutoModelForSeq2SeqLM,
     default_data_collator,
+    DataCollatorForSeq2Seq,
 )
 from peft import get_peft_model
 
@@ -40,7 +41,7 @@ def compute_metrics(eval_preds):
     preds = [pred.strip() for pred in preds]
     labels = [label.strip() for label in labels]
 
-    # print(preds, labels)
+    print(preds, labels)
 
     correct = 0
     total = 0
@@ -79,7 +80,7 @@ for origin_prompt in pt_args.origin_prompts:
         model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(
             torch.load(f"saves/{origin_prompt}/{origin_prompt}.bin")["prompt_embeddings"]
         )
-        model.base_model.generation_config.max_new_tokens = training_args.max_target_length
+        model.base_model.generation_config.max_new_tokens = data_args.max_target_length
 
         print("current PT weights:", model.prompt_encoder.default.embedding.weight)
 
@@ -98,13 +99,15 @@ for origin_prompt in pt_args.origin_prompts:
 
         train_dataset, valid_datasets, test_datasets = preprocessor.get_data()
 
+        data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, return_tensors="pt")
+
         trainer = MultiTaskSeq2SeqTrainer(
             model=model,
             tokenizer=tokenizer,
             args=training_args,
             train_dataset=train_dataset,
             eval_dataset=valid_datasets,
-            data_collator=default_data_collator,
+            data_collator=data_collator,
             compute_metrics=compute_metrics,
         )
         trainer.train()

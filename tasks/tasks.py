@@ -351,7 +351,7 @@ class TRECFine(AbstractTask):
     split_to_data_split = {"train": "train", "validation": "test"}
 
     def load_dataset(self, split) -> Dataset:
-        return datasets.load_dataset("trec", split=split)
+        return datasets.load_dataset("trec", split=split, trust_remote_code=True)
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = ["sentence:", example["text"]]
@@ -368,7 +368,7 @@ class TRECCoarse(AbstractTask):
     split_to_data_split = {"train": "train", "validation": "test"}
 
     def load_dataset(self, split) -> Dataset:
-        return datasets.load_dataset("trec", split=split)
+        return datasets.load_dataset("trec", split=split, trust_remote_code=True)
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = ["sentence:", example["text"]]
