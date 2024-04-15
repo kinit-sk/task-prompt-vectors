@@ -8,6 +8,7 @@ class TaskPrompt:
     origin_weigts: torch.Tensor = (None,)
     prompt: torch.Tensor = None
     tasks: set = None
+    device: str = None
 
     def __init__(
         self,
@@ -15,6 +16,7 @@ class TaskPrompt:
         task_weights: torch.Tensor = None,
         origin_weigts: torch.Tensor = None,
         prompt: torch.Tensor = None,
+        device: str = "cuda"
     ):
         if "+" not in task_name and "-" not in task_name:
             self.task_name = f"+ {task_name}"
@@ -28,7 +30,7 @@ class TaskPrompt:
                 origin_weigts, torch.Tensor
             )
 
-            self.prompt = task_weights - origin_weigts
+            self.prompt = task_weights.to(device) - origin_weigts.to(device)
 
         self.tasks = set(task_name.replace("+ ", "").replace("- ", "").split(" "))
 

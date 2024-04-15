@@ -24,8 +24,8 @@ from datetime import datetime
 timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
 
 # create set of task prompts per origin prompt (for stability purposes)
-def get_task_prompts(pa_config, dataset_names):
-    return {origin_prompt: [TaskPrompt(prompt_name, task_weights=torch.load(f"soft_prompts/{prompt_name}.bin")["prompt_embeddings"], origin_weigts=torch.load(f"soft_prompts/{origin_prompt}.bin")["prompt_embeddings"]) for prompt_name in dataset_names] for origin_prompt in pa_config.origin_prompts}
+def get_task_prompts(pa_config, dataset_names, device = "cuda"):
+    return {origin_prompt: [TaskPrompt(prompt_name, task_weights=torch.load(f"soft_prompts/{origin_prompt}/{prompt_name}.bin"), origin_weigts=torch.load(f"soft_prompts/{origin_prompt}/{origin_prompt}.bin")["prompt_embeddings"], device=device) for prompt_name in dataset_names] for origin_prompt in pa_config.origin_prompts}
 
 def create_task_combinations(task_prompts : List[TaskPrompt], n : int = 2) -> List[TaskPrompt]:
     tp_cominations = itertools.combinations(task_prompts, n)
@@ -60,15 +60,15 @@ preprocessor = Preprocessor(data_args.dataset_names, data_args, training_args)
 
 _, valid_datasets, test_datasets = preprocessor.get_data()
 
-tp_per_origin = get_task_prompts(pa_config=pa_config, dataset_names=data_args.dataset_names)
+tp_per_origin = get_task_prompts(pa_config=pa_config, dataset_names=sorted(data_args.dataset_names))
 
 print(tp_per_origin)
 
-for tp in create_task_combinations(tp_per_origin["origin"]):
+for tp in create_task_combinations(tp_per_origin["origin_0"]):
     print(tp.task_name)
 
 for origin_prompt in tp_per_origin:
-    origin_weights = torch.load(f"soft_prompts/{origin_prompt}.bin")["prompt_embeddings"]
+    origin_weights = torch.load(f"soft_prompts/{origin_prompt}/{origin_prompt}.bin")["prompt_embeddings"].to(training_args.device)
     model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(origin_weights)
 
     print(model.prompt_encoder.default.embedding.weight)
