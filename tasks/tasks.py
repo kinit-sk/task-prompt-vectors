@@ -34,6 +34,7 @@ class AbstractTask:
     small_datasets_without_all_splits = [
         "trec_fine",
         "trec_coarse",
+        "wnli"
     ]
     large_data_without_all_splits = [
         "qnli",
@@ -41,6 +42,7 @@ class AbstractTask:
         "mnli",
         "yelp_polarity",
         "dbpedia",
+        "scitail"
     ]
 
     def __init__(self, seed=42):
@@ -341,6 +343,52 @@ class MNLIText(AbstractTask):
 
         return self.formater(self.name, input_texts, label_texts, add_prefix)
 
+class SciTail(AbstractTask):
+    name = "scitail"
+    labels_list = ["0", "1"]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy_with_invalid"]
+    split_to_data_split = {"train": "train", "validation": "validation", "test": "test"}
+
+    def load_dataset(self, split):
+        return datasets.load_dataset("scitail", "snli_format", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        label2id = {"entailment": "0", "neutral": "1"}
+        input_texts = [
+            "premise:",
+            example["sentence1"],
+            "hypothesis:",
+            example["sentence2"],
+        ]
+        label_texts = [label2id[example["gold_label"]]]
+
+        return self.formater(self.name, input_texts, label_texts, add_prefix)
+
+class WNLI(AbstractTask):
+    name = "wnli"
+    labels_list = ["0", "1"]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy_with_invalid"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+
+    def load_dataset(self, split):
+        return datasets.load_dataset("glue", "wnli", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "sentence1:",
+            example["sentence1"],
+            "sentence2:",
+            example["sentence2"],
+        ]
+        label_texts = [str(example["label"])]
+        return self.formater(self.name, input_texts, label_texts, add_prefix)
+
 
 # Multi task question classification
 class TRECFine(AbstractTask):
@@ -407,6 +455,8 @@ TASK_MAPPING = OrderedDict(
         ("qnli_text", QNLIText),
         ("mnli", MNLI),
         ("mnli_text", MNLIText),
+        ("scitail", SciTail),
+        ("wnli", WNLI),
         ("yelp_polarity", YelpPolarity),
         ("yelp_polarity_text", YelpPolarityText),
         ("trec_fine", TRECFine),
