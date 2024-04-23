@@ -16,8 +16,8 @@ for file in sorted(glob.glob("results_origin*.csv")):
 
     dfs.append(df)
 
-mean_dfs = pd.concat(dfs).groupby("tasks",as_index=False).mean()
-mean_dfs_std = pd.concat(dfs).groupby("tasks",as_index=False).std()
+mean_dfs = pd.concat(dfs).groupby("tasks", as_index=False).mean()
+mean_dfs_std = pd.concat(dfs).groupby("tasks", as_index=False).std()
 
 mean_dfs.to_csv("average_10.csv")
 mean_dfs_std.to_csv("std_10.csv")
@@ -32,8 +32,13 @@ for df in [mean_dfs, mean_dfs_std]:
         for tt in t.split(" "):
             if t not in res_dict:
                 res_dict[t] = {}
-            
-            res_dict[t].update({tt: df[df["tasks"] == t][f"{tt}_accuracy"].values[0]/mean_dfs[df["tasks"] == tt][f"{tt}_accuracy"].values[0]})
+
+            res_dict[t].update(
+                {
+                    tt: df[df["tasks"] == t][f"{tt}_accuracy"].values[0]
+                    / mean_dfs[df["tasks"] == tt][f"{tt}_accuracy"].values[0]
+                }
+            )
 
     print(res_dict)
 
@@ -51,14 +56,16 @@ for df in [mean_dfs, mean_dfs_std]:
     print(data)
     data_dfs.append(data)
 
-scatterplot = sns.scatterplot(data=data_dfs[0], x="first_task", y="second_task", hue="tasks", style="tasks")
-                
-plt.vlines(x=1, ymin=0, ymax=1.2, colors='gray',linestyles='dashed')
-plt.hlines(y=1, xmin=0, xmax=1.2, colors='gray',linestyles='dashed')
-scatterplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+scatterplot = sns.scatterplot(
+    data=data_dfs[0], x="first_task", y="second_task", hue="tasks", style="tasks"
+)
+
+plt.vlines(x=1, ymin=0, ymax=1.2, colors="gray", linestyles="dashed")
+plt.hlines(y=1, xmin=0, xmax=1.2, colors="gray", linestyles="dashed")
+scatterplot.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
 fig = scatterplot.get_figure()
-fig.savefig("results_10.png", bbox_inches='tight') 
+fig.savefig("results_10.png", bbox_inches="tight")
 
 data_dfs[0].to_csv("data_results_10.csv")
 data_dfs[1].to_csv("data_results_std_10.csv")

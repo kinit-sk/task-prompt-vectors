@@ -16,7 +16,7 @@ class TaskPrompt:
         task_weights: torch.Tensor = None,
         origin_weigts: torch.Tensor = None,
         prompt: torch.Tensor = None,
-        device: str = "cuda"
+        device: str = "cuda",
     ):
         if "+" not in task_name and "-" not in task_name:
             self.task_name = f"+ {task_name}"
@@ -65,4 +65,4 @@ class TaskPrompt:
         return f"{self.task_name} {self.prompt}"
 
     def apply(self, origin_weights, coef=1):
-        return torch.nn.Parameter(origin_weights + coef*self.prompt)
+        return torch.nn.Parameter(origin_weights + coef * self.prompt)

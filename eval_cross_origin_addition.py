@@ -50,20 +50,32 @@ preprocessor = Preprocessor(data_args.dataset_names, data_args, training_args)
 
 _, valid_datasets, test_datasets = preprocessor.get_data()
 
-origin_0_weights = torch.load(f"soft_prompts/origin_0/origin_0.bin")["prompt_embeddings"]
-origin_0_qnli_weights = torch.load(f"soft_prompts/origin_0/qnli.bin")["prompt_embeddings"]
-origin_0_mnli_weights = torch.load(f"soft_prompts/origin_0/mnli.bin")["prompt_embeddings"]
+origin_0_weights = torch.load(f"soft_prompts/origin_0/origin_0.bin")[
+    "prompt_embeddings"
+]
+origin_0_qnli_weights = torch.load(f"soft_prompts/origin_0/qnli.bin")[
+    "prompt_embeddings"
+]
+origin_0_mnli_weights = torch.load(f"soft_prompts/origin_0/mnli.bin")[
+    "prompt_embeddings"
+]
 
-origin_1_weights = torch.load(f"soft_prompts/origin_1/origin_1.bin")["prompt_embeddings"]
-origin_1_qnli_weights = torch.load(f"soft_prompts/origin_1/qnli.bin")["prompt_embeddings"]
-origin_1_mnli_weights = torch.load(f"soft_prompts/origin_1/mnli.bin")["prompt_embeddings"]
+origin_1_weights = torch.load(f"soft_prompts/origin_1/origin_1.bin")[
+    "prompt_embeddings"
+]
+origin_1_qnli_weights = torch.load(f"soft_prompts/origin_1/qnli.bin")[
+    "prompt_embeddings"
+]
+origin_1_mnli_weights = torch.load(f"soft_prompts/origin_1/mnli.bin")[
+    "prompt_embeddings"
+]
 
 
 origin_0_qnli = TaskPrompt("qnli", origin_0_qnli_weights, origin_0_weights)
-origin_0_mnli= TaskPrompt("mnli", origin_0_mnli_weights, origin_0_weights)
+origin_0_mnli = TaskPrompt("mnli", origin_0_mnli_weights, origin_0_weights)
 
-origin_1_qnli =TaskPrompt("qnli", origin_1_qnli_weights, origin_1_weights)
-origin_1_mnli =TaskPrompt("mnli", origin_1_mnli_weights, origin_1_weights)
+origin_1_qnli = TaskPrompt("qnli", origin_1_qnli_weights, origin_1_weights)
+origin_1_mnli = TaskPrompt("mnli", origin_1_mnli_weights, origin_1_weights)
 
 print(model.prompt_encoder.default.embedding.weight)
 
@@ -75,7 +87,7 @@ evaluator = ArithmeticsEvaluator(
     eval_datasets=valid_datasets,
     training_args=training_args,
     tokenizer=tokenizer,
-    origin_weights=origin_0_weights
+    origin_weights=origin_0_weights,
 )
 results = evaluator.run()
 

@@ -78,7 +78,9 @@ for origin_prompt in pt_args.origin_prompts:
         model = get_peft_model(model, peft_config=pt_args)
 
         model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(
-            torch.load(f"saves/{origin_prompt}/{origin_prompt}.bin")["prompt_embeddings"]
+            torch.load(f"saves/{origin_prompt}/{origin_prompt}.bin")[
+                "prompt_embeddings"
+            ]
         )
         model.base_model.generation_config.max_new_tokens = data_args.max_target_length
 

@@ -31,18 +31,14 @@ class AbstractTask:
         "validation": "validation",
         "test": "test",
     }
-    small_datasets_without_all_splits = [
-        "trec_fine",
-        "trec_coarse",
-        "wnli"
-    ]
+    small_datasets_without_all_splits = ["trec_fine", "trec_coarse", "wnli"]
     large_data_without_all_splits = [
         "qnli",
         "sst2",
         "mnli",
         "yelp_polarity",
         "dbpedia",
-        "scitail"
+        "scitail",
     ]
 
     def __init__(self, seed=42):
@@ -74,6 +70,7 @@ class AbstractTask:
             n_obs = total_size
         return n_obs
 
+    # generates indices of the dataset randomly with seed (if same seed and data provided we will still get the same shuffle, no matter how many times initialized)
     def shuffled_indices(self, dataset):
         num_samples = len(dataset)
         generator = torch.Generator()
@@ -343,6 +340,7 @@ class MNLIText(AbstractTask):
 
         return self.formater(self.name, input_texts, label_texts, add_prefix)
 
+
 class SciTail(AbstractTask):
     name = "scitail"
     labels_list = ["0", "1"]
@@ -364,6 +362,7 @@ class SciTail(AbstractTask):
         label_texts = [label2id[example["gold_label"]]]
 
         return self.formater(self.name, input_texts, label_texts, add_prefix)
+
 
 class WNLI(AbstractTask):
     name = "wnli"

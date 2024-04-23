@@ -10,13 +10,33 @@ import matplotlib.pyplot as plt
 tasks = ["qnli", "mnli", "trec_coarse", "dbpedia", "sst2", "yelp_polarity"]
 origins = ["origin"]
 
+
 def get_task_prompts(origin_prompts, dataset_names):
-    return {origin_prompt: [TaskPrompt(prompt_name, task_weights=torch.load(f"soft_prompts/{prompt_name}.bin")["prompt_embeddings"], origin_weigts=torch.load(f"soft_prompts/{origin_prompt}.bin")["prompt_embeddings"]) for prompt_name in dataset_names] for origin_prompt in origin_prompts}
+    return {
+        origin_prompt: [
+            TaskPrompt(
+                prompt_name,
+                task_weights=torch.load(f"soft_prompts/{prompt_name}.bin")[
+                    "prompt_embeddings"
+                ],
+                origin_weigts=torch.load(f"soft_prompts/{origin_prompt}.bin")[
+                    "prompt_embeddings"
+                ],
+            )
+            for prompt_name in dataset_names
+        ]
+        for origin_prompt in origin_prompts
+    }
+
 
 def get_tasks(dataset_names):
-    return [torch.load(f"soft_prompts/{prompt_name}.bin")["prompt_embeddings"] for prompt_name in dataset_names]
+    return [
+        torch.load(f"soft_prompts/{prompt_name}.bin")["prompt_embeddings"]
+        for prompt_name in dataset_names
+    ]
 
-tp =  get_task_prompts(origins, tasks)
+
+tp = get_task_prompts(origins, tasks)
 prompt_vectors = []
 task_weights_vectors = []
 
@@ -45,7 +65,7 @@ plt.figure(0)
 heatmap = sns.heatmap(df, annot=True, fmt=".2f", cmap="crest")
 
 fig = heatmap.get_figure()
-fig.savefig("heatmap_task_prompts.png", bbox_inches='tight')
+fig.savefig("heatmap_task_prompts.png", bbox_inches="tight")
 
 df = pd.DataFrame(tcs)
 df.columns = tasks
@@ -55,4 +75,4 @@ plt.figure(1)
 heatmap = sns.heatmap(df, annot=True, fmt=".2f", cmap="crest")
 
 fig = heatmap.get_figure()
-fig.savefig("heatmap_task_weights.png", bbox_inches='tight')
+fig.savefig("heatmap_task_weights.png", bbox_inches="tight")

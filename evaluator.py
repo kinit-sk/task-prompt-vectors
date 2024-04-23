@@ -19,6 +19,7 @@ from peft import PeftModel
 import pandas as pd
 import numpy as np
 
+
 def compute_metrics(eval_preds):
 
     tokenizer = AutoTokenizer.from_pretrained(
@@ -74,11 +75,15 @@ class ArithmeticsEvaluator:
         self.scaling_coefs = np.arange(0.0, 1.05, 0.05)
 
     def set_task(self, task_prompt: TaskPrompt, coef: float = 1):
-        self.model.prompt_encoder.default.embedding.weight = task_prompt.apply(self.origin_weights, coef)
+        self.model.prompt_encoder.default.embedding.weight = task_prompt.apply(
+            self.origin_weights, coef
+        )
 
     def run(self):
         for tp in self.task_prompts:
-            self.training_args.run_name = f"{self.orig_run_name}{tp.task_name.replace(' ', '')}"
+            self.training_args.run_name = (
+                f"{self.orig_run_name}{tp.task_name.replace(' ', '')}"
+            )
 
             print(f"Evaluating task origin {tp.task_name}")
 
@@ -91,48 +96,65 @@ class ArithmeticsEvaluator:
                     eval_acc = []
                     for dataset_name in tp.tasks:
                         print(dataset_name, coef)
-                        
+
                         self.set_task(tp, coef=coef)
-                        print(f"Current PT weights: {self.model.prompt_encoder.default.embedding.weight}")
-                        
-                        trainer = Seq2SeqTrainer(
-                        model=self.model,
-                        tokenizer=self.tokenizer,
-                        args=self.training_args,
-                        data_collator=default_data_collator,
-                        compute_metrics=compute_metrics,
+                        print(
+                            f"Current PT weights: {self.model.prompt_encoder.default.embedding.weight}"
                         )
 
-                        eval_res = trainer.evaluate(eval_dataset=self.eval_datasets[dataset_name], metric_key_prefix=f"eval_{dataset_name}")
+                        trainer = Seq2SeqTrainer(
+                            model=self.model,
+                            tokenizer=self.tokenizer,
+                            args=self.training_args,
+                            data_collator=default_data_collator,
+                            compute_metrics=compute_metrics,
+                        )
+
+                        eval_res = trainer.evaluate(
+                            eval_dataset=self.eval_datasets[dataset_name],
+                            metric_key_prefix=f"eval_{dataset_name}",
+                        )
                         print(eval_res)
 
                         eval_acc.append(eval_res[f"eval_{dataset_name}_accuracy"])
-                    
+
                     mean_acc = torch.tensor(eval_acc).mean()
                     if mean_acc > best_acc:
                         print(f"New best mean acc: {mean_acc} with coef: {coef}")
                         best_acc = mean_acc
                         best_coef = coef
-                    
+
             print(f"Testing with best coef: {best_coef}")
             for dataset_name in tp.tasks:
                 print(dataset_name, best_coef)
-                
+
                 self.set_task(tp, coef=best_coef)
-                print(f"Current PT weights: {self.model.prompt_encoder.default.embedding.weight}")
-                
-                trainer = Seq2SeqTrainer(
-                model=self.model,
-                tokenizer=self.tokenizer,
-                args=self.training_args,
-                data_collator=default_data_collator,
-                compute_metrics=compute_metrics,
+                print(
+                    f"Current PT weights: {self.model.prompt_encoder.default.embedding.weight}"
                 )
 
-                test_res = trainer.evaluate(eval_dataset=self.test_datasets[dataset_name], metric_key_prefix=f"test_{dataset_name}")
+                trainer = Seq2SeqTrainer(
+                    model=self.model,
+                    tokenizer=self.tokenizer,
+                    args=self.training_args,
+                    data_collator=default_data_collator,
+                    compute_metrics=compute_metrics,
+                )
+
+                test_res = trainer.evaluate(
+                    eval_dataset=self.test_datasets[dataset_name],
+                    metric_key_prefix=f"test_{dataset_name}",
+                )
                 print(test_res)
 
-                self.results.append({"tasks":  " ".join(tp.tasks), f"{dataset_name}_accuracy": test_res[f"test_{dataset_name}_accuracy"]})
+                self.results.append(
+                    {
+                        "tasks": " ".join(tp.tasks),
+                        f"{dataset_name}_accuracy": test_res[
+                            f"test_{dataset_name}_accuracy"
+                        ],
+                    }
+                )
 
             if wandb.run:
                 wandb.finish()
