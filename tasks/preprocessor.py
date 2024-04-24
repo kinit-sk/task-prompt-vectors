@@ -73,6 +73,7 @@ class Preprocessor:
             ]
 
             for i, train_dataset in enumerate(train_datasets):
+                print(train_dataset[0])
                 train_datasets[i] = train_datasets[i].map(
                     functools.partial(
                         self.preprocess_function,
@@ -99,6 +100,7 @@ class Preprocessor:
             }
 
             for i, name in enumerate(valid_datasets):
+                print(valid_datasets[name][0])
                 valid_datasets[name] = valid_datasets[name].map(
                     functools.partial(
                         self.preprocess_function,
@@ -125,6 +127,7 @@ class Preprocessor:
             }
 
             for i, name in enumerate(test_datasets):
+                print(test_datasets[name][0])
                 test_datasets[name] = test_datasets[name].map(
                     functools.partial(
                         self.preprocess_function,

@@ -5,7 +5,7 @@ import torch
 
 from .type import AutoType
 
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 from typing import Mapping
 
 from typing import List
@@ -40,6 +40,8 @@ class AbstractTask:
         "dbpedia",
         "scitail",
     ]
+    id2label = NotImplemented
+    label_column_name = NotImplemented
 
     def __init__(self, seed=42):
         self.dataset_config_name = "en"
@@ -77,20 +79,40 @@ class AbstractTask:
         generator.manual_seed(self.seed)
         return torch.randperm(num_samples, generator=generator).tolist()
 
-    def subsample(self, dataset, n_obs=None, indices=None):
+    def subsample(self, dataset: Dataset, n_obs=None):
         num_samples = len(dataset)
-        n_obs = self.check_n_obs(n_obs, num_samples)
-        if indices is None:
-            indices = self.shuffled_indices(dataset)
-        indices = indices[:n_obs]
-        return dataset.select(indices)
+        # n_obs = self.check_n_obs(n_obs, num_samples)
+        # if indices is None:
+        #     indices = self.shuffled_indices(dataset)
+        # indices = indices[:n_obs]
+        # return dataset.select(indices)
 
-    def get_split_indices(self, split, dataset, validation_size):
-        indices = self.shuffled_indices(dataset)
+        if n_obs >= num_samples:
+            return dataset
+
+        return dataset.train_test_split(
+            train_size=n_obs / num_samples,
+            seed=self.seed,
+            stratify_by_column=self.label_column_name,
+        )["train"]
+
+    def get_splits(self, split, dataset: Dataset, validation_size):
         if split == "validation":
-            return indices[:validation_size]
-        else:
-            return indices[validation_size:]
+            return dataset.train_test_split(
+                train_size=validation_size,
+                test_size=1 - validation_size,
+                seed=self.seed,
+                stratify_by_column=self.label_column_name,
+                shuffle=True,
+            )["train"]
+
+        return dataset.train_test_split(
+            train_size=validation_size,
+            test_size=1 - validation_size,
+            seed=self.seed,
+            stratify_by_column=self.label_column_name,
+            shuffle=True,
+        )["test"]
 
     def map_dataset(self, dataset: Dataset, add_prefix: bool) -> Dataset:
         return dataset.map(
@@ -128,30 +150,31 @@ class AbstractTask:
         self.formater = AutoType.get(task_type).formater
         if (
             split_validation_test
-            and self.name in self.small_datasets_without_all_splits
+            and self.name.replace("_text", "") in self.small_datasets_without_all_splits
             and split != "train"
         ):
             mapped_split = self.split_to_data_split["validation"]
             dataset = self.load_dataset(split=mapped_split)
-            indices = self.get_split_indices(
-                split, dataset, validation_size=len(dataset) // 2
-            )
-            dataset = self.subsample(dataset, n_obs, indices)
+            dataset = self.get_splits(split, dataset, 0.5)
+
+            if n_obs:
+                dataset = self.subsample(dataset, n_obs)
 
         elif (
             split_validation_test
-            and self.name in self.large_data_without_all_splits
+            and self.name.replace("_text", "") in self.large_data_without_all_splits
             and split != "test"
         ):
             dataset = self.load_dataset(split="train")
-            indices = self.get_split_indices(split, dataset, validation_size=1000)
-            dataset = self.subsample(dataset, n_obs, indices)
+            dataset = self.get_splits(split, dataset, 1000 / len(dataset))
 
+            if n_obs:
+                dataset = self.subsample(dataset, n_obs)
         else:
             mapped_split = self.split_to_data_split[split]
-            dataset = self.load_dataset(split=mapped_split)
+            dataset = self.load_dataset(split=mapped_split).shuffle(seed=self.seed)
 
-            if n_obs is not None:
+            if n_obs:
                 dataset = self.subsample(dataset, n_obs)
 
         return self.map_dataset(dataset, add_prefix)
@@ -168,15 +191,18 @@ class SST2(AbstractTask):
         "validation": "validation",
         "test": "validation",
     }
+    label_column_name = "label"
 
     def load_dataset(self, split) -> Dataset:
-        return datasets.load_dataset("glue", self.name, split=split)
+        return datasets.load_dataset("glue", "sst2", split=split)
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = ["sentence", example["sentence"]]
-        label_texts = [str(example["label"])]
+        label_texts = [str(example[self.label_column_name])]
 
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 
 class SST2Text(AbstractTask):
@@ -189,16 +215,19 @@ class SST2Text(AbstractTask):
         "validation": "validation",
         "test": "validation",
     }
+    label_column_name = "label"
     id2label = {0: "negative", 1: "positive"}
 
     def load_dataset(self, split) -> Dataset:
-        return datasets.load_dataset("glue", self.name, split=split)
+        return datasets.load_dataset("glue", "sst2", split=split)
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = ["sentence", example["sentence"]]
-        label_texts = [str(example["label"])]
+        label_texts = [str(example[self.label_column_name])]
 
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 
 class YelpPolarity(AbstractTask):
@@ -207,14 +236,17 @@ class YelpPolarity(AbstractTask):
     metrics = [accuracy_with_invalid]
     metric_names = ["accuracy_with_invalid"]
     split_to_data_split = {"train": "train", "test": "test"}
+    label_column_name = "label"
 
     def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("yelp_polarity")[split]
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = ["sentence:", example["text"]]
-        label_texts = [str(example["label"])]
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
+        label_texts = [str(example[self.label_column_name])]
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 
 class YelpPolarityText(AbstractTask):
@@ -223,6 +255,7 @@ class YelpPolarityText(AbstractTask):
     metrics = [accuracy_with_invalid]
     metric_names = ["accuracy_with_invalid"]
     split_to_data_split = {"train": "train", "test": "test"}
+    label_column_name = "label"
     id2label = {0: "negative", 1: "positive"}
 
     def load_dataset(self, split) -> Dataset:
@@ -230,8 +263,10 @@ class YelpPolarityText(AbstractTask):
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = ["sentence:", example["text"]]
-        label_texts = [self.id2label[example["label"]]]
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
+        label_texts = [self.id2label[example[self.label_column_name]]]
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 
 # Natural language inference
@@ -245,9 +280,10 @@ class QNLI(AbstractTask):
         "validation": "validation",
         "test": "validation",
     }
+    label_column_name = "label"
 
     def load_dataset(self, split) -> Dataset:
-        return datasets.load_dataset("glue", self.name, split=split)
+        return datasets.load_dataset("glue", "qnli", split=split)
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = [
@@ -256,9 +292,11 @@ class QNLI(AbstractTask):
             "sentence:",
             example["sentence"],
         ]
-        label_texts = [str(example["label"])]
+        label_texts = [str(example[self.label_column_name])]
 
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 
 class QNLIText(AbstractTask):
@@ -271,10 +309,11 @@ class QNLIText(AbstractTask):
         "validation": "validation",
         "test": "validation",
     }
+    label_column_name = "label"
     id2label = {0: "entailment", 1: "not_entailment"}
 
     def load_dataset(self, split) -> Dataset:
-        return datasets.load_dataset("glue", self.name, split=split)
+        return datasets.load_dataset("glue", "qnli", split=split)
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = [
@@ -283,9 +322,11 @@ class QNLIText(AbstractTask):
             "sentence:",
             example["sentence"],
         ]
-        label_texts = [self.id2label[example["label"]]]
+        label_texts = [self.id2label[example[self.label_column_name]]]
 
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 
 class MNLI(AbstractTask):
@@ -298,9 +339,10 @@ class MNLI(AbstractTask):
         "validation": "validation_mismatched",
         "test": "validation_matched",
     }
+    label_column_name = "label"
 
     def load_dataset(self, split) -> Dataset:
-        return datasets.load_dataset("glue", self.name, split=split)
+        return datasets.load_dataset("glue", "mnli", split=split)
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = [
@@ -309,9 +351,11 @@ class MNLI(AbstractTask):
             "hypothesis:",
             example["hypothesis"],
         ]
-        label_texts = [str(example["label"])]
+        label_texts = [str(example[self.label_column_name])]
 
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 
 class MNLIText(AbstractTask):
@@ -324,10 +368,11 @@ class MNLIText(AbstractTask):
         "validation": "validation_mismatched",
         "test": "validation_matched",
     }
+    label_column_name = "label"
     id2label = {0: "entailment", 1: "neutral", 2: "contradiction"}
 
     def load_dataset(self, split) -> Dataset:
-        return datasets.load_dataset("glue", self.name, split=split)
+        return datasets.load_dataset("glue", "mnli", split=split)
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = [
@@ -336,9 +381,11 @@ class MNLIText(AbstractTask):
             "hypothesis:",
             example["hypothesis"],
         ]
-        label_texts = [self.id2label[example["label"]]]
+        label_texts = [self.id2label[example[self.label_column_name]]]
 
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 
 class SciTail(AbstractTask):
@@ -347,9 +394,12 @@ class SciTail(AbstractTask):
     metrics = [accuracy_with_invalid]
     metric_names = ["accuracy_with_invalid"]
     split_to_data_split = {"train": "train", "validation": "validation", "test": "test"}
+    label_column_name = "gold_label"
 
     def load_dataset(self, split):
-        return datasets.load_dataset("scitail", "snli_format", split=split)
+        return datasets.load_dataset(
+            "scitail", "snli_format", split=split
+        ).class_encode_column(self.label_column_name)
 
     def preprocessor(self, example, add_prefix=True):
         label2id = {"entailment": "0", "neutral": "1"}
@@ -359,9 +409,89 @@ class SciTail(AbstractTask):
             "hypothesis:",
             example["sentence2"],
         ]
-        label_texts = [label2id[example["gold_label"]]]
+        label_texts = [label2id[example[self.label_column_name]]]
 
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class SciTailText(AbstractTask):
+    name = "scitail_text"
+    labels_list = ["entailment", "neutral"]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy_with_invalid"]
+    split_to_data_split = {"train": "train", "validation": "validation", "test": "test"}
+    label_column_name = "gold_label"
+
+    def load_dataset(self, split):
+        return datasets.load_dataset(
+            "scitail", "snli_format", split=split
+        ).class_encode_column(self.label_column_name)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "premise:",
+            example["sentence1"],
+            "hypothesis:",
+            example["sentence2"],
+        ]
+        label_texts = [example[self.label_column_name]]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class SNLI(AbstractTask):
+    name = "snli"
+    labels_list = ["0", "1", "2"]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy_with_invalid"]
+    split_to_data_split = {"train": "train", "validation": "validation", "test": "test"}
+    label_column_name = "label"
+
+    def load_dataset(self, split):
+        return datasets.load_dataset("snli", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "premise:",
+            example["premise"],
+            "hypothesis:",
+            example["hypothesis"],
+        ]
+        label_texts = [str(example[self.label_column_name])]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class SNLIText(AbstractTask):
+    name = "snli_text"
+    labels_list = ["entailment", "neutral", "contradiction"]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy_with_invalid"]
+    split_to_data_split = {"train": "train", "validation": "validation", "test": "test"}
+    label_column_name = "label"
+    id2label = {0: "entailment", 1: "neutral", 2: "contradiction"}
+
+    def load_dataset(self, split):
+        return datasets.load_dataset("snli", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "premise:",
+            example["sentence1"],
+            "hypothesis:",
+            example["sentence2"],
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 
 class WNLI(AbstractTask):
@@ -374,6 +504,7 @@ class WNLI(AbstractTask):
         "validation": "validation",
         "test": "validation",
     }
+    label_column_name = "label"
 
     def load_dataset(self, split):
         return datasets.load_dataset("glue", "wnli", split=split)
@@ -385,8 +516,39 @@ class WNLI(AbstractTask):
             "sentence2:",
             example["sentence2"],
         ]
-        label_texts = [str(example["label"])]
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
+        label_texts = [str(example[self.label_column_name])]
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class WNLIText(AbstractTask):
+    name = "wnli_text"
+    labels_list = ["not_entailment", "entailment"]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy_with_invalid"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+    id2label = {0: "not_entailment", 1: "entailment"}
+
+    def load_dataset(self, split):
+        return datasets.load_dataset("glue", "wnli", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "sentence1:",
+            example["sentence1"],
+            "sentence2:",
+            example["sentence2"],
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 
 # Multi task question classification
@@ -396,15 +558,141 @@ class TRECFine(AbstractTask):
     metrics = [accuracy_with_invalid]
     metric_names = ["accuracy"]
     split_to_data_split = {"train": "train", "validation": "test"}
+    label_column_name = "fine_label"
 
     def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("trec", split=split, trust_remote_code=True)
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = ["sentence:", example["text"]]
-        label_texts = [str(example["fine_label"])]
+        label_texts = [str(example[self.label_column_name])]
 
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class TRECFineText(AbstractTask):
+    name = "trec_fine_text"
+    labels_list = [
+        "abbreviation",
+        "expression abbreviated",
+        "an animal",
+        "an organ of the body",
+        "a color",
+        "creative piece",
+        "currency",
+        "disease or medicine",
+        "event",
+        "food",
+        "musical instrument",
+        "language",
+        "letter",
+        "other entity",
+        "plant",
+        "product",
+        "religion",
+        "sport",
+        "substance",
+        "symbol",
+        "technique",
+        "term",
+        "vehicle",
+        "word",
+        "definition",
+        "description",
+        "manner of action",
+        "reason",
+        "group",
+        "individual",
+        "title",
+        "description",
+        "city",
+        "country",
+        "mountain",
+        "other location",
+        "state",
+        "code",
+        "count",
+        "date",
+        "distance",
+        "price",
+        "order",
+        "other number",
+        "period of time",
+        "percentage",
+        "speed",
+        "temperature",
+        "size",
+        "weight",
+    ]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy"]
+    split_to_data_split = {"train": "train", "validation": "test"}
+    label_column_name = "fine_label"
+    id2label = {
+        0: "abbreviation",
+        1: "expression abbreviated",
+        2: "an animal",
+        3: "an organ of the body",
+        4: "a color",
+        5: "creative piece",
+        6: "currency",
+        7: "disease or medicine",
+        8: "event",
+        9: "food",
+        10: "musical instrument",
+        11: "language",
+        12: "letter",
+        13: "other entity",
+        14: "plant",
+        15: "product",
+        16: "religion",
+        17: "sport",
+        18: "substance",
+        19: "symbol",
+        20: "technique",
+        21: "term",
+        22: "vehicle",
+        23: "word",
+        24: "definition",
+        25: "description",
+        26: "manner of action",
+        27: "reason",
+        28: "group",
+        29: "individual",
+        30: "title",
+        31: "description",
+        32: "city",
+        33: "country",
+        34: "mountain",
+        35: "other location",
+        36: "state",
+        37: "code",
+        38: "count",
+        39: "date",
+        40: "distance",
+        41: "price",
+        42: "order",
+        43: "other number",
+        44: "period of time",
+        45: "percentage",
+        46: "speed",
+        47: "temperature",
+        48: "size",
+        49: "weight",
+    }
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("trec", split=split, trust_remote_code=True)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = ["sentence:", example["text"]]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 
 class TRECCoarse(AbstractTask):
@@ -413,15 +701,53 @@ class TRECCoarse(AbstractTask):
     metrics = [accuracy_with_invalid]
     metric_names = ["accuracy"]
     split_to_data_split = {"train": "train", "validation": "test"}
+    label_column_name = "coarse_label"
 
     def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("trec", split=split, trust_remote_code=True)
 
     def preprocessor(self, example, add_prefix=True):
-        input_texts = ["sentence:", example["text"]]
-        label_texts = [str(example["coarse_label"])]
+        input_texts = ["What is this question asking for:", example["text"]]
+        label_texts = [str(example[self.label_column_name])]
 
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class TRECCoarseText(AbstractTask):
+    name = "trec_coarse_text"
+    labels_list = [
+        "Abbreviation",
+        "Entity",
+        "Description",
+        "Person",
+        "Location",
+        "Quantity",
+    ]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy"]
+    split_to_data_split = {"train": "train", "validation": "test"}
+    label_column_name = "coarse_label"
+    id2label = {
+        0: "Abbreviation",
+        1: "Entity",
+        2: "Description",
+        3: "Person",
+        4: "Location",
+        5: "Quantity",
+    }
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("trec", split=split, trust_remote_code=True)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = ["What is this question asking for:", example["text"]]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 
 class DBPEDIA(AbstractTask):
@@ -430,6 +756,7 @@ class DBPEDIA(AbstractTask):
     metrics = [accuracy_with_invalid]
     metric_names = ["accuracy"]
     split_to_data_split = {"train": "train", "test": "test"}
+    label_column_name = "label"
 
     def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("dbpedia_14", split=split)
@@ -441,9 +768,67 @@ class DBPEDIA(AbstractTask):
             "content:",
             example["content"],
         ]
-        label_texts = [str(example["label"])]
+        label_texts = [str(example[self.label_column_name])]
 
-        return self.formater(self.name, input_texts, label_texts, add_prefix)
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class DBPEDIAText(AbstractTask):
+    name = "dbpedia_text"
+    labels_list = [
+        "Company",
+        "Educational Institution",
+        "Artist",
+        "Athlete",
+        "Office Holder",
+        "Mean Of Transportation",
+        "Building",
+        "Natural Place",
+        "Village",
+        "Animal",
+        "Plant",
+        "Album",
+        "Film",
+        "Written Work",
+    ]
+    metrics = [accuracy_with_invalid]
+    metric_names = ["accuracy"]
+    split_to_data_split = {"train": "train", "test": "test"}
+    label_column_name = "label"
+    id2label = {
+        0: "Company",
+        1: "Educational Institution",
+        2: "Artist",
+        3: "Athlete",
+        4: "Office Holder",
+        5: "Mean Of Transportation",
+        6: "Building",
+        7: "Natural Place",
+        8: "Village",
+        9: "Animal",
+        10: "Plant",
+        11: "Album",
+        12: "Film",
+        13: "Written Work",
+    }
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("dbpedia_14", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "What is the category for following text: title:",
+            example["title"],
+            "content:",
+            example["content"],
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 
 TASK_MAPPING = OrderedDict(
@@ -455,12 +840,18 @@ TASK_MAPPING = OrderedDict(
         ("mnli", MNLI),
         ("mnli_text", MNLIText),
         ("scitail", SciTail),
+        ("scitail_text", SciTailText),
+        ("snli", SNLI),
+        ("snli_text", SNLIText),
         ("wnli", WNLI),
         ("yelp_polarity", YelpPolarity),
         ("yelp_polarity_text", YelpPolarityText),
         ("trec_fine", TRECFine),
+        ("trec_fine_text", TRECFineText),
         ("trec_coarse", TRECCoarse),
+        ("trec_coarse_text", TRECCoarseText),
         ("dbpedia", DBPEDIA),
+        ("dbpedia_text", DBPEDIAText),
     ]
 )
 
