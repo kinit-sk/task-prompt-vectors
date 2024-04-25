@@ -402,14 +402,13 @@ class SciTail(AbstractTask):
         ).class_encode_column(self.label_column_name)
 
     def preprocessor(self, example, add_prefix=True):
-        label2id = {"entailment": "0", "neutral": "1"}
         input_texts = [
             "premise:",
             example["sentence1"],
             "hypothesis:",
             example["sentence2"],
         ]
-        label_texts = [label2id[example[self.label_column_name]]]
+        label_texts = [str(example[self.label_column_name])]
 
         return self.formater(
             self.name.replace("_text", ""), input_texts, label_texts, add_prefix
