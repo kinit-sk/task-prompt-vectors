@@ -8,12 +8,14 @@ from .type import AutoType
 from collections import OrderedDict
 from typing import Mapping
 
-from typing import List
+from typing import List, Dict, Callable
 
 from evaluate import Metric
 from datasets import Dataset
 
-from metrics import accuracy_with_invalid
+from metrics import exact_match, macro_f1, f1
+
+from transformers import EvalPrediction
 
 
 class AbstractTask:
@@ -48,12 +50,9 @@ class AbstractTask:
         self.seed = seed
 
     def postprocessor(
-        self, preds, labels, tokenizer, ignore_pad_token_for_loss, data_info=None
+        self, preds, labels, tokenizer
     ):
         decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
-        if ignore_pad_token_for_loss:
-            labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
-
         decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
 
         decoded_preds = [pred.strip() for pred in decoded_preds]
@@ -81,11 +80,6 @@ class AbstractTask:
 
     def subsample(self, dataset: Dataset, n_obs=None):
         num_samples = len(dataset)
-        # n_obs = self.check_n_obs(n_obs, num_samples)
-        # if indices is None:
-        #     indices = self.shuffled_indices(dataset)
-        # indices = indices[:n_obs]
-        # return dataset.select(indices)
 
         if n_obs >= num_samples:
             return dataset
@@ -127,17 +121,32 @@ class AbstractTask:
             self.name, self.dataset_config_name, split=split, script_version="master"
         )
 
-    def compute_metrics(self, tokenizer, eval_preds):
-        preds, labels = eval_preds
+    def get_compute_metrics(self, tokenizer) -> Callable[[EvalPrediction], Dict]:
+        def compute_metrics(eval_preds: EvalPrediction) -> Dict:
+            preds, labels = eval_preds
 
-        decoded_preds, decoded_lables = self.postprocessor(
-            preds, labels, tokenizer, ignore_pad_token_for_loss=True
-        )
+            preds[preds == -100] = tokenizer.pad_token_id
+            labels[labels == -100] = tokenizer.pad_token_id
 
-        return {
-            n: m(decoded_preds, decoded_lables)
-            for n, m in zip(self.metric_names, self.metrics)
-        }
+            decoded_preds, decoded_labels = self.postprocessor(
+                preds, labels, tokenizer
+            )
+
+            # print(decoded_labels, decoded_preds)
+
+            metrics = {}
+            # TODO: to get rid of the zip, make classes from metrics and add metric name to it
+            for m, n in zip(self.metrics, self.metric_names):
+                if "f1" in n:
+                    metrics.update(m(decoded_preds, decoded_labels, self.labels_list))
+                else:
+                    metrics.update(m(decoded_preds, decoded_labels))
+
+                
+
+            return metrics
+        
+        return compute_metrics
 
     def get(
         self,
@@ -184,8 +193,8 @@ class AbstractTask:
 class SST2(AbstractTask):
     name = "sst2"
     labels_list = ["0", "1"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation",
@@ -208,8 +217,8 @@ class SST2(AbstractTask):
 class SST2Text(AbstractTask):
     name = "sst2_text"
     labels_list = ["negative", "positive"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation",
@@ -233,8 +242,8 @@ class SST2Text(AbstractTask):
 class YelpPolarity(AbstractTask):
     name = "yelp_polarity"
     labels_list = ["0", "1"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {"train": "train", "test": "test"}
     label_column_name = "label"
 
@@ -252,8 +261,8 @@ class YelpPolarity(AbstractTask):
 class YelpPolarityText(AbstractTask):
     name = "yelp_polarity_text"
     labels_list = ["negative", "positive"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {"train": "train", "test": "test"}
     label_column_name = "label"
     id2label = {0: "negative", 1: "positive"}
@@ -273,8 +282,8 @@ class YelpPolarityText(AbstractTask):
 class QNLI(AbstractTask):
     name = "qnli"
     labels_list = ["0", "1"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation",
@@ -302,8 +311,8 @@ class QNLI(AbstractTask):
 class QNLIText(AbstractTask):
     name = "qnli_text"
     labels_list = ["entailment", "not_entailment"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation",
@@ -332,8 +341,8 @@ class QNLIText(AbstractTask):
 class MNLI(AbstractTask):
     name = "mnli"
     labels_list = ["0", "1", "2"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation_mismatched",
@@ -361,8 +370,8 @@ class MNLI(AbstractTask):
 class MNLIText(AbstractTask):
     name = "mnli_text"
     labels_list = ["entailment", "neutral", "contradiction"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation_mismatched",
@@ -391,8 +400,8 @@ class MNLIText(AbstractTask):
 class SciTail(AbstractTask):
     name = "scitail"
     labels_list = ["0", "1"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {"train": "train", "validation": "validation", "test": "test"}
     label_column_name = "gold_label"
 
@@ -418,8 +427,8 @@ class SciTail(AbstractTask):
 class SciTailText(AbstractTask):
     name = "scitail_text"
     labels_list = ["entailment", "neutral"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {"train": "train", "validation": "validation", "test": "test"}
     label_column_name = "gold_label"
 
@@ -445,8 +454,8 @@ class SciTailText(AbstractTask):
 class SNLI(AbstractTask):
     name = "snli"
     labels_list = ["0", "1", "2"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
     split_to_data_split = {"train": "train", "validation": "validation", "test": "test"}
     label_column_name = "label"
 
@@ -470,8 +479,8 @@ class SNLI(AbstractTask):
 class SNLIText(AbstractTask):
     name = "snli_text"
     labels_list = ["entailment", "neutral", "contradiction"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
     split_to_data_split = {"train": "train", "validation": "validation", "test": "test"}
     label_column_name = "label"
     id2label = {0: "entailment", 1: "neutral", 2: "contradiction"}
@@ -496,8 +505,8 @@ class SNLIText(AbstractTask):
 class WNLI(AbstractTask):
     name = "wnli"
     labels_list = ["0", "1"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation",
@@ -524,8 +533,8 @@ class WNLI(AbstractTask):
 class WNLIText(AbstractTask):
     name = "wnli_text"
     labels_list = ["not_entailment", "entailment"]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy_with_invalid"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation",
@@ -554,8 +563,8 @@ class WNLIText(AbstractTask):
 class TRECFine(AbstractTask):
     name = "trec_fine"
     labels_list = [str(i) for i in list(range(50))]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
     split_to_data_split = {"train": "train", "validation": "test"}
     label_column_name = "fine_label"
 
@@ -625,8 +634,8 @@ class TRECFineText(AbstractTask):
         "size",
         "weight",
     ]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
     split_to_data_split = {"train": "train", "validation": "test"}
     label_column_name = "fine_label"
     id2label = {
@@ -697,8 +706,8 @@ class TRECFineText(AbstractTask):
 class TRECCoarse(AbstractTask):
     name = "trec_coarse"
     labels_list = [str(i) for i in list(range(6))]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
     split_to_data_split = {"train": "train", "validation": "test"}
     label_column_name = "coarse_label"
 
@@ -724,8 +733,8 @@ class TRECCoarseText(AbstractTask):
         "Location",
         "Quantity",
     ]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
     split_to_data_split = {"train": "train", "validation": "test"}
     label_column_name = "coarse_label"
     id2label = {
@@ -752,8 +761,8 @@ class TRECCoarseText(AbstractTask):
 class DBPEDIA(AbstractTask):
     name = "dbpedia"
     labels_list = [str(i) for i in list(range(14))]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
     split_to_data_split = {"train": "train", "test": "test"}
     label_column_name = "label"
 
@@ -792,8 +801,8 @@ class DBPEDIAText(AbstractTask):
         "Film",
         "Written Work",
     ]
-    metrics = [accuracy_with_invalid]
-    metric_names = ["accuracy"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
     split_to_data_split = {"train": "train", "test": "test"}
     label_column_name = "label"
     id2label = {

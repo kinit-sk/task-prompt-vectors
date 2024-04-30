@@ -1,59 +1,28 @@
-import numpy as np
-import torch
+from sklearn.metrics import f1_score
+from metrics.utils import check_data_state, binary_reverse
 
-from .utils import binary_reverse, string_to_float
+import numpy as np
 
 import evaluate
 
-eval_f1: evaluate.EvaluationModule = evaluate.load("f1")
-eval_accuracy: evaluate.EvaluationModule = evaluate.load("accuracy")
-eval_pearsonr = evaluate.load("pearsonr")
-eval_spearmanr = evaluate.load("spearmanr")
+def exact_match(preds, targets):
+    check_data_state(preds, targets)
 
+    metric = evaluate.load("exact_match", keep_in_memory=True)
 
-def f1_score_with_invalid(preds, targets):
-    assert len(preds) == len(targets)
+    return metric.compute(predictions=preds, references=targets)
 
-    preds, targets = np.asarray(preds), np.asarray(targets)
-
-    invalid_idx_mask = np.logical_and(preds != "0", preds != "1")
-    preds[invalid_idx_mask] = binary_reverse(targets[invalid_idx_mask])
-
-    preds, targets = torch.tensor(preds.astype(np.int32)), torch.tensor(
-        targets.astype(np.int32)
-    )
-
-    return eval_f1.compute(predictions=preds, references=targets)
-
-
-def accuracy_with_invalid(preds, targets):
-    assert len(preds) == len(targets)
+def f1(preds, targets, labels):
+    check_data_state(preds, targets)
 
     preds, targets = np.asarray(preds), np.asarray(targets)
+    invalid_idx_mask = np.logical_and(preds != labels[0], preds != labels[1])
 
-    invalid_idx_mask = np.logical_and(preds != "0", preds != "1")
-    preds[invalid_idx_mask] = binary_reverse(targets[invalid_idx_mask])
+    preds[invalid_idx_mask] = binary_reverse(targets[invalid_idx_mask], labels)
 
-    preds, targets = torch.tensor(preds.astype(np.int32)), torch.tensor(
-        targets.astype(np.int32)
-    )
+    return {"f1": f1_score(targets, preds, labels=labels, pos_label=labels[1])}
 
-    return eval_accuracy.compute(predictions=preds, references=targets)
+def macro_f1(preds, targets, labels):
+    check_data_state(preds, targets)
 
-
-def pearsonr(preds, targets):
-    assert len(preds) == len(targets)
-
-    targets = [string_to_float(t) for t in targets]
-    preds = [string_to_float(p) for p in preds]
-
-    return eval_pearsonr.compute(predictions=preds, references=targets)
-
-
-def spearmanr(preds, targets):
-    assert len(preds) == len(targets)
-
-    targets = [string_to_float(t) for t in targets]
-    preds = [string_to_float(p) for p in preds]
-
-    return eval_spearmanr.compute(predictions=preds, references=targets)
+    return {"macro_f1": f1_score(targets, preds, labels=labels, average="macro")}
