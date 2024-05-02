@@ -23,37 +23,6 @@ from tasks import AutoTask
 timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
 
 
-# For now it will be this kind of shitty, TODO replace with compute metrics from tasks.py
-# def compute_metrics(eval_preds):
-
-#     tokenizer = AutoTokenizer.from_pretrained(
-#         "t5-base", model_max_length=512, use_fast=True
-#     )
-#     preds, labels = eval_preds
-#     # print(tokenizer.pad_token_id)
-
-#     preds[preds == -100] = tokenizer.pad_token_id
-#     labels[labels == -100] = tokenizer.pad_token_id
-
-#     # print(preds, labels)
-#     preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
-#     labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
-
-#     preds = [pred.strip() for pred in preds]
-#     labels = [label.strip() for label in labels]
-
-#     # print(preds, labels)
-
-#     correct = 0
-#     total = 0
-#     for pred, true in zip(preds, labels):
-#         if pred.strip() == true.strip():
-#             correct += 1
-#         total += 1
-#     accuracy = correct / total
-#     return {"accuracy": accuracy}
-
-
 parser = ArgumentParser(
     (TrainingArguments, DataTrainingArguments, PromptArithmeticsConfig)
 )

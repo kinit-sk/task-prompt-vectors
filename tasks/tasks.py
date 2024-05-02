@@ -52,8 +52,8 @@ class AbstractTask:
     def postprocessor(
         self, preds, labels, tokenizer
     ):
-        decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
-        decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+        decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True, return_tensors="pt")
+        decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True, return_tensors="pt")
 
         decoded_preds = [pred.strip() for pred in decoded_preds]
         decoded_labels = [label.strip() for label in decoded_labels]
@@ -132,7 +132,7 @@ class AbstractTask:
                 preds, labels, tokenizer
             )
 
-            # print(decoded_labels, decoded_preds)
+            # print("compute_metrics:", decoded_labels, decoded_labels)
 
             metrics = {}
             # TODO: to get rid of the zip, make classes from metrics and add metric name to it
@@ -232,7 +232,7 @@ class SST2Text(AbstractTask):
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = ["sentence", example["sentence"]]
-        label_texts = [str(example[self.label_column_name])]
+        label_texts = [self.id2label[example[self.label_column_name]]]
 
         return self.formater(
             self.name.replace("_text", ""), input_texts, label_texts, add_prefix
