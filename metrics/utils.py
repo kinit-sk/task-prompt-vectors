@@ -80,5 +80,6 @@ def string_to_float(string, default=-1.0):
     except ValueError:
         return default
 
+
 def check_data_state(preds, targets):
     assert len(preds) == len(targets)

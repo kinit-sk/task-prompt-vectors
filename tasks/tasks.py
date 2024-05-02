@@ -49,11 +49,13 @@ class AbstractTask:
         self.dataset_config_name = "en"
         self.seed = seed
 
-    def postprocessor(
-        self, preds, labels, tokenizer
-    ):
-        decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True, return_tensors="pt")
-        decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True, return_tensors="pt")
+    def postprocessor(self, preds, labels, tokenizer):
+        decoded_preds = tokenizer.batch_decode(
+            preds, skip_special_tokens=True, return_tensors="pt"
+        )
+        decoded_labels = tokenizer.batch_decode(
+            labels, skip_special_tokens=True, return_tensors="pt"
+        )
 
         decoded_preds = [pred.strip() for pred in decoded_preds]
         decoded_labels = [label.strip() for label in decoded_labels]
@@ -128,9 +130,7 @@ class AbstractTask:
             preds[preds == -100] = tokenizer.pad_token_id
             labels[labels == -100] = tokenizer.pad_token_id
 
-            decoded_preds, decoded_labels = self.postprocessor(
-                preds, labels, tokenizer
-            )
+            decoded_preds, decoded_labels = self.postprocessor(preds, labels, tokenizer)
 
             # print("compute_metrics:", decoded_labels, decoded_labels)
 
@@ -142,10 +142,8 @@ class AbstractTask:
                 else:
                     metrics.update(m(decoded_preds, decoded_labels))
 
-                
-
             return metrics
-        
+
         return compute_metrics
 
     def get(

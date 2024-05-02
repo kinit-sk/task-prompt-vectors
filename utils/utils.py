@@ -4,7 +4,10 @@ from typing import List, Dict
 
 from arithmetics import TaskPrompt, PromptArithmeticsConfig
 
-def get_task_prompts(pa_config : PromptArithmeticsConfig, dataset_names : List[str], device : str = "cuda") -> Dict[str, List[TaskPrompt]]:
+
+def get_task_prompts(
+    pa_config: PromptArithmeticsConfig, dataset_names: List[str], device: str = "cuda"
+) -> Dict[str, List[TaskPrompt]]:
     return {
         origin_prompt: [
             TaskPrompt(
