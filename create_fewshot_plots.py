@@ -50,8 +50,7 @@ for d in data_dict:
     print(x)
 
     plt.plot(x, y, label=d, marker="o")
-    plt.fill_between(x, y-error, y+error,alpha=0.2)
+    plt.fill_between(x, y - error, y + error, alpha=0.2)
 
 plt.legend()
 plt.savefig("visuals/fewshot_mnli_qnli.png")
-

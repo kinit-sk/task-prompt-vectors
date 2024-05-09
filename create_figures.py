@@ -5,16 +5,63 @@ import matplotlib.pyplot as plt
 
 import glob
 
+import argparse
+
+from collections import defaultdict
+
+
+argparse_parser = argparse.ArgumentParser(
+    prog="Create figures from results",
+    description="Compute average and std over all results.",
+)
+
+argparse_parser.add_argument("results_dir", help="Path to the results directory.")
+args = argparse_parser.parse_args()
 
 dfs = []
 
-for file in sorted(glob.glob("results_origin*.csv")):
+for file in sorted(glob.glob(f"{args.results_dir}results_origin*.csv")):
 
+    # print(file)
     df = pd.read_csv(file, index_col=0)
 
     df["tasks"] = df["tasks"].map(lambda x: " ".join(sorted(x.split(" "))))
 
     dfs.append(df)
+
+accuracy_per_task = defaultdict(lambda: defaultdict(list))
+for df in dfs:
+    for t in df["tasks"]:
+        for tt in t.split(" "):
+            accuracy_per_task[t][tt].append(df[df["tasks"] == t][f"{tt}_accuracy"].values[0])
+
+print(accuracy_per_task)
+
+
+for t in accuracy_per_task:
+    boxplot_dict = defaultdict(list)
+
+    t_split = t.split(" ")
+    
+    if len(t_split) > 1:
+        for tt in t_split:
+            boxplot_dict["tasks"] += [tt]*len(accuracy_per_task[tt][tt])
+            boxplot_dict["accuracy"] += accuracy_per_task[tt][tt]
+
+            boxplot_dict["tasks"] += [f"add({tt})"]*len(accuracy_per_task[t][tt])
+            boxplot_dict["accuracy"] += accuracy_per_task[t][tt]
+
+        bdf = pd.DataFrame.from_dict(boxplot_dict)
+        # print(bdf)
+
+        boxplot = sns.boxplot(bdf, y="accuracy", x="tasks")
+        fig = boxplot.get_figure()
+        boxplot.set_title(t)
+        fig.savefig(f"./visuals/results_box_{t}.png", bbox_inches="tight")
+        
+        plt.close()
+
+exit()
 
 mean_dfs = pd.concat(dfs).groupby("tasks", as_index=False).mean()
 mean_dfs_std = pd.concat(dfs).groupby("tasks", as_index=False).std()

@@ -1,0 +1,7 @@
+,tasks,dbpedia_accuracy,mnli_accuracy,qnli_accuracy,sst2_accuracy,trec_coarse_accuracy,yelp_polarity_accuracy
+0,dbpedia,0.9895,,,,,
+1,mnli,,0.844727457972491,,,,
+2,qnli,,,0.8938312282628592,,,
+3,sst2,,,,0.8876146788990825,,
+4,trec_coarse,,,,,0.04,
+5,yelp_polarity,,,,,,0.9676842105263158
