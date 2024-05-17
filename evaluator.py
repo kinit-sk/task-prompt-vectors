@@ -1,6 +1,8 @@
 from typing import List, Dict
 from arithmetics import TaskPrompt, PromptArithmeticsModel
 from args import TrainingArguments
+from tasks import AutoTask
+
 
 from transformers import (
     Seq2SeqTrainer,
@@ -20,34 +22,34 @@ import pandas as pd
 import numpy as np
 
 
-def compute_metrics(eval_preds):
+# def compute_metrics(eval_preds):
 
-    tokenizer = AutoTokenizer.from_pretrained(
-        "t5-base", model_max_length=512, use_fast=True
-    )
-    preds, labels = eval_preds
-    # print(tokenizer.pad_token_id)
+#     tokenizer = AutoTokenizer.from_pretrained(
+#         "t5-base", model_max_length=512, use_fast=True
+#     )
+#     preds, labels = eval_preds
+#     # print(tokenizer.pad_token_id)
 
-    preds[preds == -100] = tokenizer.pad_token_id
-    labels[labels == -100] = tokenizer.pad_token_id
+#     preds[preds == -100] = tokenizer.pad_token_id
+#     labels[labels == -100] = tokenizer.pad_token_id
 
-    # print(preds, labels)
-    preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
-    labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+#     # print(preds, labels)
+#     preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
+#     labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
 
-    preds = [pred.strip() for pred in preds]
-    labels = [label.strip() for label in labels]
+#     preds = [pred.strip() for pred in preds]
+#     labels = [label.strip() for label in labels]
 
-    # print(preds, labels)
+#     # print(preds, labels)
 
-    correct = 0
-    total = 0
-    for pred, true in zip(preds, labels):
-        if pred.strip() == true.strip():
-            correct += 1
-        total += 1
-    accuracy = correct / total
-    return {"accuracy": accuracy}
+#     correct = 0
+#     total = 0
+#     for pred, true in zip(preds, labels):
+#         if pred.strip() == true.strip():
+#             correct += 1
+#         total += 1
+#     exact_match = correct / total
+#     return {"exact_match": exact_match}
 
 
 class ArithmeticsEvaluator:
@@ -93,7 +95,7 @@ class ArithmeticsEvaluator:
             best_acc = 0
             if len(tp.tasks) > 1:
                 for coef in self.scaling_coefs:
-                    eval_acc = []
+                    eval_em = []
                     for dataset_name in tp.tasks:
                         print(dataset_name, coef)
 
@@ -101,6 +103,10 @@ class ArithmeticsEvaluator:
                         print(
                             f"Current PT weights: {self.model.prompt_encoder.default.embedding.weight}"
                         )
+
+                        compute_metrics = AutoTask.get(
+                            dataset_name
+                        ).get_compute_metrics(self.tokenizer)
 
                         trainer = Seq2SeqTrainer(
                             model=self.model,
@@ -116,9 +122,9 @@ class ArithmeticsEvaluator:
                         )
                         print(eval_res)
 
-                        eval_acc.append(eval_res[f"eval_{dataset_name}_accuracy"])
+                        eval_em.append(eval_res[f"eval_{dataset_name}_exact_match"])
 
-                    mean_acc = torch.tensor(eval_acc).mean()
+                    mean_acc = torch.tensor(eval_em).mean()
                     if mean_acc > best_acc:
                         print(f"New best mean acc: {mean_acc} with coef: {coef}")
                         best_acc = mean_acc
@@ -131,6 +137,10 @@ class ArithmeticsEvaluator:
                 self.set_task(tp, coef=best_coef)
                 print(
                     f"Current PT weights: {self.model.prompt_encoder.default.embedding.weight}"
+                )
+
+                compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(
+                    self.tokenizer
                 )
 
                 trainer = Seq2SeqTrainer(
@@ -147,14 +157,32 @@ class ArithmeticsEvaluator:
                 )
                 print(test_res)
 
-                self.results.append(
-                    {
-                        "tasks": " ".join(tp.tasks),
-                        f"{dataset_name}_accuracy": test_res[
-                            f"test_{dataset_name}_accuracy"
-                        ],
-                    }
-                )
+                if f"test_{dataset_name}_exact_match" in test_res.keys():
+                    self.results.append(
+                        {
+                            "tasks": " ".join(tp.tasks),
+                            f"{dataset_name}_exact_match": test_res[
+                                f"test_{dataset_name}_exact_match"
+                            ],
+                        }
+                    )
+
+                if f"test_{dataset_name}_macro_f1" in test_res.keys():
+                    self.results.append(
+                        {
+                            "tasks": " ".join(tp.tasks),
+                            f"{dataset_name}_macro_f1": test_res[
+                                f"test_{dataset_name}_macro_f1"
+                            ],
+                        }
+                    )
+                elif f"test_{dataset_name}_f1" in test_res.keys():
+                    self.results.append(
+                        {
+                            "tasks": " ".join(tp.tasks),
+                            f"{dataset_name}_f1": test_res[f"test_{dataset_name}_f1"],
+                        }
+                    )
 
             if wandb.run:
                 wandb.finish()

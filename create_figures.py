@@ -33,7 +33,9 @@ accuracy_per_task = defaultdict(lambda: defaultdict(list))
 for df in dfs:
     for t in df["tasks"]:
         for tt in t.split(" "):
-            accuracy_per_task[t][tt].append(df[df["tasks"] == t][f"{tt}_accuracy"].values[0])
+            accuracy_per_task[t][tt].append(
+                df[df["tasks"] == t][f"{tt}_accuracy"].values[0]
+            )
 
 print(accuracy_per_task)
 
@@ -42,13 +44,13 @@ for t in accuracy_per_task:
     boxplot_dict = defaultdict(list)
 
     t_split = t.split(" ")
-    
+
     if len(t_split) > 1:
         for tt in t_split:
-            boxplot_dict["tasks"] += [tt]*len(accuracy_per_task[tt][tt])
+            boxplot_dict["tasks"] += [tt] * len(accuracy_per_task[tt][tt])
             boxplot_dict["accuracy"] += accuracy_per_task[tt][tt]
 
-            boxplot_dict["tasks"] += [f"add({tt})"]*len(accuracy_per_task[t][tt])
+            boxplot_dict["tasks"] += [f"add({tt})"] * len(accuracy_per_task[t][tt])
             boxplot_dict["accuracy"] += accuracy_per_task[t][tt]
 
         bdf = pd.DataFrame.from_dict(boxplot_dict)
@@ -58,7 +60,7 @@ for t in accuracy_per_task:
         fig = boxplot.get_figure()
         boxplot.set_title(t)
         fig.savefig(f"./visuals/results_box_{t}.png", bbox_inches="tight")
-        
+
         plt.close()
 
 exit()

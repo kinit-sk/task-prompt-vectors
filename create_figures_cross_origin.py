@@ -10,8 +10,14 @@ argparse_parser = argparse.ArgumentParser(
 )
 
 argparse_parser.add_argument("results_dir", help="Path to the results directory.")
-argparse_parser.add_argument("--repeat", action="store_true",  help="Also include results with same origin comparison (repeating origins).")
-argparse_parser.add_argument("--only", action="store_true", help="Only include same origin comparison.")
+argparse_parser.add_argument(
+    "--repeat",
+    action="store_true",
+    help="Also include results with same origin comparison (repeating origins).",
+)
+argparse_parser.add_argument(
+    "--only", action="store_true", help="Only include same origin comparison."
+)
 args = argparse_parser.parse_args()
 
 dfs = []

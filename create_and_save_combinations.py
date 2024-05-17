@@ -20,7 +20,15 @@ origin_prompts = [
     "origin_8",
     "origin_9",
 ]
-dataset_names = ["mnli", "qnli"]
+
+# NLI tasks
+# dataset_names = ["mnli_text", "qnli_text"]
+
+# classificaiton tasks
+# dataset_names = ["dbpedia_text", "trec_coarse_text"]
+
+# sentiment tasks
+dataset_names = ["sst2_text", "yelp_polarity_text"]
 
 
 def get_task_prompts(origin_prompts, dataset_names, device="cuda"):

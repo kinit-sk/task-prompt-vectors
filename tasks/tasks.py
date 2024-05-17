@@ -33,7 +33,7 @@ class AbstractTask:
         "validation": "validation",
         "test": "test",
     }
-    small_datasets_without_all_splits = ["trec_fine", "trec_coarse", "wnli"]
+    small_datasets_without_all_splits = ["trec_fine", "trec_coarse", "wnli", "sst5"]
     large_data_without_all_splits = [
         "qnli",
         "sst2",
@@ -41,6 +41,10 @@ class AbstractTask:
         "yelp_polarity",
         "dbpedia",
         "scitail",
+        "snli",
+        "ag_news",
+        "yahoo",
+        "imdb",
     ]
     id2label = NotImplemented
     label_column_name = NotImplemented
@@ -237,6 +241,62 @@ class SST2Text(AbstractTask):
         )
 
 
+class SST5(AbstractTask):
+    name = "sst5"
+    labels_list = ["0", "1", "2", "3", "4"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("SetFit/sst5", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = ["sentence", example["sentence"]]
+        label_texts = [str(example[self.label_column_name])]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class SST5Text(AbstractTask):
+    name = "sst5_text"
+    labels_list = ["very negative", "negative", "neutral", "positive", "very positive"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    id2label = {
+        0: "very negative",
+        1: "negative",
+        2: "neutral",
+        3: "positive",
+        4: "very positive",
+    }
+
+    label_column_name = "label_text"
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("SetFit/sst5", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = ["sentence", example["sentence"]]
+        label_texts = [example[self.label_column_name]]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
 class YelpPolarity(AbstractTask):
     name = "yelp_polarity"
     labels_list = ["0", "1"]
@@ -275,6 +335,43 @@ class YelpPolarityText(AbstractTask):
             self.name.replace("_text", ""), input_texts, label_texts, add_prefix
         )
 
+class IMDB(AbstractTask):
+    name = "imdb"
+    labels_list = ["0", "1"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
+    split_to_data_split = {"train": "train", "test": "test"}
+    label_column_name = "label"
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("imdb")[split]
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = ["sentence:", example["text"]]
+        label_texts = [str(example[self.label_column_name])]
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class IMDBText(AbstractTask):
+    name = "imdb_text"
+    labels_list = ["negative", "positive"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
+    split_to_data_split = {"train": "train", "test": "test"}
+    label_column_name = "label"
+    id2label = {0: "negative", 1: "positive"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("imdb")[split]
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = ["sentence:", example["text"]]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
 
 # Natural language inference
 class QNLI(AbstractTask):
@@ -429,6 +526,7 @@ class SciTailText(AbstractTask):
     metric_names = ["exact_match", "f1"]
     split_to_data_split = {"train": "train", "validation": "validation", "test": "test"}
     label_column_name = "gold_label"
+    id2label = {0: "entailment", 1: "neutral"}
 
     def load_dataset(self, split):
         return datasets.load_dataset(
@@ -442,7 +540,7 @@ class SciTailText(AbstractTask):
             "hypothesis:",
             example["sentence2"],
         ]
-        label_texts = [example[self.label_column_name]]
+        label_texts = [self.id2label[example[self.label_column_name]]]
 
         return self.formater(
             self.name.replace("_text", ""), input_texts, label_texts, add_prefix
@@ -458,7 +556,9 @@ class SNLI(AbstractTask):
     label_column_name = "label"
 
     def load_dataset(self, split):
-        return datasets.load_dataset("snli", split=split)
+        return datasets.load_dataset("snli", split=split).filter(
+            lambda x: x["label"] != -1
+        )
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = [
@@ -484,14 +584,16 @@ class SNLIText(AbstractTask):
     id2label = {0: "entailment", 1: "neutral", 2: "contradiction"}
 
     def load_dataset(self, split):
-        return datasets.load_dataset("snli", split=split)
+        return datasets.load_dataset("snli", split=split).filter(
+            lambda x: x["label"] != -1
+        )
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = [
             "premise:",
-            example["sentence1"],
+            example["premise"],
             "hypothesis:",
-            example["sentence2"],
+            example["hypothesis"],
         ]
         label_texts = [self.id2label[example[self.label_column_name]]]
 
@@ -769,7 +871,7 @@ class DBPEDIA(AbstractTask):
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = [
-            "title:",
+            "What is the category for following text: title:",
             example["title"],
             "content:",
             example["content"],
@@ -837,6 +939,140 @@ class DBPEDIAText(AbstractTask):
         )
 
 
+class AGNews(AbstractTask):
+    name = "ag_news"
+    labels_list = [str(i) for i in list(range(4))]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {"train": "train", "test": "test"}
+    label_column_name = "label"
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("ag_news", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "What is the category for following text:",
+            example["text"],
+        ]
+        label_texts = [str(example[self.label_column_name])]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class AGNewsText(AbstractTask):
+    name = "ag_news_text"
+    labels_list = [
+        "World",
+        "Sports",
+        "Business",
+        "Sci/Tech",
+    ]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {"train": "train", "test": "test"}
+    label_column_name = "label"
+    id2label = {
+        0: "World",
+        1: "Sports",
+        2: "Business",
+        3: "Sci/Tech",
+    }
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("ag_news", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "What is the category for following text:",
+            example["text"],
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class Yahoo(AbstractTask):
+    name = "yahoo"
+    labels_list = [str(i) for i in list(range(10))]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {"train": "train", "test": "test"}
+    label_column_name = "topic"
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("yahoo_answers_topics", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "What is the category for following text: title:",
+            example["question_title"],
+            "content:",
+            example["question_content"],
+            "answer:",
+            example["best_answer"],
+        ]
+        label_texts = [str(example[self.label_column_name])]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class YahooText(AbstractTask):
+    name = "yahoo_text"
+    labels_list = [
+        "Society",
+        "Science",
+        "Health",
+        "Education",
+        "Computers",
+        "Sports",
+        "Business",
+        "Entertainment",
+        "Family",
+        "Politics",
+    ]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {"train": "train", "test": "test"}
+    label_column_name = "topic"
+    id2label = {
+        0: "Society",
+        1: "Science",
+        2: "Health",
+        3: "Education",
+        4: "Computers",
+        5: "Sports",
+        6: "Business",
+        7: "Entertainment",
+        8: "Family",
+        9: "Politics",
+    }
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("yahoo_answers_topics", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "What is the category for following text: title:",
+            example["question_title"],
+            "content:",
+            example["question_content"],
+            "answer:",
+            example["best_answer"],
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
 TASK_MAPPING = OrderedDict(
     [
         ("sst2", SST2),
@@ -858,6 +1094,14 @@ TASK_MAPPING = OrderedDict(
         ("trec_coarse_text", TRECCoarseText),
         ("dbpedia", DBPEDIA),
         ("dbpedia_text", DBPEDIAText),
+        ("ag_news", AGNews),
+        ("ag_news_text", AGNewsText),
+        ("yahoo", Yahoo),
+        ("yahoo_text", YahooText),
+        ("imdb", IMDB),
+        ("imdb_text", IMDBText),
+        ("sst5", SST5),
+        ("sst5_text", SST2Text),
     ]
 )
 

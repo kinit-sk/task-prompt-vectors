@@ -17,7 +17,8 @@ def exact_match(preds, targets):
 def f1(preds, targets, labels):
     check_data_state(preds, targets)
 
-    preds, targets = np.asarray(preds), np.asarray(targets)
+    preds, targets = np.asarray(preds, dtype="<U16"), np.asarray(targets, dtype="<U16")
+    
     invalid_idx_mask = np.logical_and(preds != labels[0], preds != labels[1])
 
     preds[invalid_idx_mask] = binary_reverse(targets[invalid_idx_mask], labels)

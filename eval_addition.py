@@ -58,7 +58,10 @@ parser = ArgumentParser(
     (TrainingArguments, DataTrainingArguments, PromptArithmeticsConfig)
 )
 
-training_args, data_args, pa_config = parser.parse_toml_file("configs/addition.toml")
+# training_args, data_args, pa_config = parser.parse_toml_file("configs/addition.toml")
+training_args, data_args, pa_config = parser.parse_toml_file(
+    "configs/addition_text.toml"
+)
 
 os.environ["WANDB_PROJECT"] = training_args.wandb_project
 

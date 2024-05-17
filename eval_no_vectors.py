@@ -2,7 +2,7 @@ from evaluator import ArithmeticsEvaluator
 from args import TrainingArguments, DataTrainingArguments, ArgumentParser
 from arithmetics import PromptArithmeticsConfig
 from tasks import Preprocessor, AutoTask
-from utils import get_task_prompts 
+from utils import get_task_prompts
 
 import torch
 
@@ -19,7 +19,6 @@ import numpy as np
 from datetime import datetime
 
 import wandb
-
 
 
 timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
@@ -65,7 +64,9 @@ for origin_prompt in task_prompts:
         mnli_weights = torch.load(f"soft_prompts/{origin_prompt}/mnli.bin")
         qnli_weights = torch.load(f"soft_prompts/{origin_prompt}/qnli.bin")
 
-        model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(qnli_weights + mnli_weights)
+        model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(
+            qnli_weights + mnli_weights
+        )
 
         data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, return_tensors="pt")
 
@@ -93,4 +94,3 @@ for origin_prompt in task_prompts:
 
         if wandb.run is not None:
             wandb.finish()
-

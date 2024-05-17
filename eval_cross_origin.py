@@ -58,8 +58,12 @@ def get_tpv_comparison(
                     function(tpv1.prompt, tpv2.prompt).item()
                 )
 
-        cross_origin_comparisons[data_args.dataset_names[i]] = torch.Tensor(cross_origin_comparisons[data_args.dataset_names[i]])
-        cross_origin_comparisons[data_args.dataset_names[i]] /= cross_origin_comparisons[data_args.dataset_names[i]].max()
+        cross_origin_comparisons[data_args.dataset_names[i]] = torch.Tensor(
+            cross_origin_comparisons[data_args.dataset_names[i]]
+        )
+        cross_origin_comparisons[
+            data_args.dataset_names[i]
+        ] /= cross_origin_comparisons[data_args.dataset_names[i]].max()
 
     return cross_origin_comparisons
 
@@ -83,7 +87,9 @@ def get_task_cs(
                     cosine_sim(tp1, tp2).item()
                 )
 
-        cross_origin_task_cs[data_args.dataset_names[i]] = torch.Tensor(cross_origin_task_cs[data_args.dataset_names[i]])
+        cross_origin_task_cs[data_args.dataset_names[i]] = torch.Tensor(
+            cross_origin_task_cs[data_args.dataset_names[i]]
+        )
 
     return cross_origin_task_cs
 
@@ -94,7 +100,9 @@ parser = ArgumentParser(
     (TrainingArguments, DataTrainingArguments, PromptArithmeticsConfig)
 )
 
-training_args, data_args, pa_config = parser.parse_toml_file("configs/cross_origin.toml")
+training_args, data_args, pa_config = parser.parse_toml_file(
+    "configs/cross_origin.toml"
+)
 data_args.dataset_names = sorted(data_args.dataset_names)
 
 
@@ -111,7 +119,11 @@ for fname in name_func_map:
         data_args, task_prompt_vectors, name_func_map[fname]
     )
 
-    create_heatmaps(cross_origin_comparisons, filename_prefix=f"tpv_{fname}_{timestamp}", save_dir=f"./visuals/{timestamp}")
+    create_heatmaps(
+        cross_origin_comparisons,
+        filename_prefix=f"tpv_{fname}_{timestamp}",
+        save_dir=f"./visuals/{timestamp}",
+    )
 
 # create heatmaps for task prompts
 task_prompts = get_task_prompts(
@@ -119,19 +131,33 @@ task_prompts = get_task_prompts(
 )
 
 cross_origin_task_cs = get_task_cs(data_args, task_prompts)
-create_heatmaps(cross_origin_task_cs, filename_prefix=f"tp_cosine_{timestamp}", save_dir=f"./visuals/{timestamp}")
+create_heatmaps(
+    cross_origin_task_cs,
+    filename_prefix=f"tp_cosine_{timestamp}",
+    save_dir=f"./visuals/{timestamp}",
+)
 
 print("average cross origin task prompt cosine similarity:")
 for dataset_name in cross_origin_task_cs:
     n = len(cross_origin_task_cs[dataset_name])
-    no_diag = cross_origin_task_cs[dataset_name].masked_select(~torch.eye(n, dtype=bool)).view(n, n - 1)
+    no_diag = (
+        cross_origin_task_cs[dataset_name]
+        .masked_select(~torch.eye(n, dtype=bool))
+        .view(n, n - 1)
+    )
     print(dataset_name, no_diag.mean().item(), no_diag.std().item())
 
 print("average cross origin task prompt vector cosine similarity:")
-cross_origin_tpv_cs = get_tpv_comparison(data_args, task_prompt_vectors, name_func_map["cosine"])
+cross_origin_tpv_cs = get_tpv_comparison(
+    data_args, task_prompt_vectors, name_func_map["cosine"]
+)
 for dataset_name in cross_origin_tpv_cs:
     n = len(cross_origin_tpv_cs[dataset_name])
-    no_diag = cross_origin_tpv_cs[dataset_name].masked_select(~torch.eye(n, dtype=bool)).view(n, n - 1)
+    no_diag = (
+        cross_origin_tpv_cs[dataset_name]
+        .masked_select(~torch.eye(n, dtype=bool))
+        .view(n, n - 1)
+    )
     print(dataset_name, no_diag.mean().item(), no_diag.std().item())
 
 # cross origin evaluation on datasets

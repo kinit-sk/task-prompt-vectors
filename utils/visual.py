@@ -11,9 +11,11 @@ from pathlib import Path
 import numpy as np
 
 
-
 def create_heatmaps(
-    data: Dict[str, List[List[float]]], filename_prefix: str = "", n_rows=2, save_dir = "./visuals",
+    data: Dict[str, List[List[float]]],
+    filename_prefix: str = "",
+    n_rows=2,
+    save_dir="./visuals",
 ) -> None:
     Path(save_dir).mkdir(parents=True, exist_ok=True)
 
@@ -23,7 +25,9 @@ def create_heatmaps(
         df = pd.DataFrame(data[name])
 
         plt.figure(figsize=(10, 8))
-        sns.heatmap(df, annot=True, fmt=".2f", cmap="crest", mask=np.eye(len(data[name])))
+        sns.heatmap(
+            df, annot=True, fmt=".2f", cmap="crest", mask=np.eye(len(data[name]))
+        )
         plt.savefig(
             f"{save_dir}/{filename_prefix}_{name}_heatmap.png", bbox_inches="tight"
         )
@@ -36,15 +40,26 @@ def create_heatmaps(
 
             df = pd.DataFrame(list(data.values())[i * n_cols + j])
 
-
             axs[i, j].set_title(list(data.keys())[i * n_cols + j])
 
-            sns.heatmap(df, annot=True, fmt=".2f", cmap="crest", ax=axs[i, j], mask=np.eye(len(data[name])))
+            sns.heatmap(
+                df,
+                annot=True,
+                fmt=".2f",
+                cmap="crest",
+                ax=axs[i, j],
+                mask=np.eye(len(data[name])),
+            )
 
     plt.savefig(f"{save_dir}/{filename_prefix}_heatmaps.png", bbox_inches="tight")
 
     plt.close()
 
 
-def create_plots(data, filename_prefix, n_rows, save_dir = "./visuals",) -> None:
+def create_plots(
+    data,
+    filename_prefix,
+    n_rows,
+    save_dir="./visuals",
+) -> None:
     Path(save_dir).mkdir(parents=True, exist_ok=True)
