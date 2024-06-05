@@ -21,37 +21,6 @@ from peft import PeftModel
 import pandas as pd
 import numpy as np
 
-
-# def compute_metrics(eval_preds):
-
-#     tokenizer = AutoTokenizer.from_pretrained(
-#         "t5-base", model_max_length=512, use_fast=True
-#     )
-#     preds, labels = eval_preds
-#     # print(tokenizer.pad_token_id)
-
-#     preds[preds == -100] = tokenizer.pad_token_id
-#     labels[labels == -100] = tokenizer.pad_token_id
-
-#     # print(preds, labels)
-#     preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
-#     labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
-
-#     preds = [pred.strip() for pred in preds]
-#     labels = [label.strip() for label in labels]
-
-#     # print(preds, labels)
-
-#     correct = 0
-#     total = 0
-#     for pred, true in zip(preds, labels):
-#         if pred.strip() == true.strip():
-#             correct += 1
-#         total += 1
-#     exact_match = correct / total
-#     return {"exact_match": exact_match}
-
-
 class ArithmeticsEvaluator:
     task_prompts: List[TaskPrompt] = None
 
@@ -164,6 +133,7 @@ class ArithmeticsEvaluator:
                             f"{dataset_name}_exact_match": test_res[
                                 f"test_{dataset_name}_exact_match"
                             ],
+                            "best_coef": best_coef,
                         }
                     )
 
@@ -174,6 +144,7 @@ class ArithmeticsEvaluator:
                             f"{dataset_name}_macro_f1": test_res[
                                 f"test_{dataset_name}_macro_f1"
                             ],
+                            "best_coef": best_coef,
                         }
                     )
                 elif f"test_{dataset_name}_f1" in test_res.keys():
@@ -181,6 +152,7 @@ class ArithmeticsEvaluator:
                         {
                             "tasks": " ".join(tp.tasks),
                             f"{dataset_name}_f1": test_res[f"test_{dataset_name}_f1"],
+                            "best_coef": best_coef,
                         }
                     )
 

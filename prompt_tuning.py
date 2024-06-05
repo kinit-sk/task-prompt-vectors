@@ -19,15 +19,26 @@ import torch
 
 from tasks import AutoTask
 
+import argparse
+
 
 timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
+
+
+argparse_parser = argparse.ArgumentParser(
+    prog="Run prompt tuning",
+    description="Run prompt tuning to train soft-prompts.",
+)
+
+argparse_parser.add_argument("filename", help="Filename of a config to run.")
+args = argparse_parser.parse_args()
 
 
 parser = ArgumentParser(
     (TrainingArguments, DataTrainingArguments, PromptArithmeticsConfig)
 )
 
-training_args, data_args, pt_args = parser.parse_toml_file("configs/prompt_tuning.toml")
+training_args, data_args, pt_args = parser.parse_toml_file(args.filename)
 print(training_args)
 
 os.environ["WANDB_PROJECT"] = training_args.wandb_project
@@ -42,7 +53,10 @@ for origin_prompt in pt_args.origin_prompts:
     training_args.origin_prompt_name = origin_prompt
 
     for dataset_name in data_args.dataset_names:
-        training_args.train_dataset_names = [dataset_name]
+        training_args.train_dataset_names = dataset_name
+
+        if not isinstance(dataset_name, list):
+            training_args.train_dataset_names = [dataset_name]
 
         model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
         model = get_peft_model(model, peft_config=pt_args)
@@ -58,15 +72,15 @@ for origin_prompt in pt_args.origin_prompts:
 
         model.print_trainable_parameters()
 
-        print(f"task: {dataset_name}")
+        print(f"task: {training_args.train_dataset_names}")
 
-        preprocessor = Preprocessor([dataset_name], data_args, training_args)
+        preprocessor = Preprocessor(training_args.train_dataset_names, data_args, training_args)
 
         training_args.output_dir = (
-            f"{output_dir}_{timestamp}_{dataset_name}_{origin_prompt}"
+            f"{output_dir}_{timestamp}_{'_'.join(training_args.train_dataset_names)}_{origin_prompt}"
         )
         training_args.run_name = (
-            f"prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}"
+            f"prompt_tuning_{timestamp}_{'_'.join(training_args.train_dataset_names)}_{origin_prompt}"
         )
 
         train_dataset, valid_datasets, test_datasets = preprocessor.get_data()
@@ -74,7 +88,13 @@ for origin_prompt in pt_args.origin_prompts:
 
         data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, return_tensors="pt")
 
-        compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer)
+        compute_metrics = None
+        if isinstance(dataset_name, list):
+            compute_metrics = {}
+            for dm in dataset_name:
+                compute_metrics[dm] = AutoTask.get(dm).get_compute_metrics(tokenizer)
+        else:
+            compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer)
 
         trainer = MultiTaskSeq2SeqTrainer(
             model=model,
@@ -87,15 +107,29 @@ for origin_prompt in pt_args.origin_prompts:
         )
         trainer.train()
 
-        print(
-            trainer.evaluate(
-                eval_dataset=test_datasets[dataset_name], metric_key_prefix="test"
+        if isinstance(dataset_name, list):
+            for dm in dataset_name:
+                print(
+                    trainer.evaluate(
+                        eval_dataset=test_datasets[dm], metric_key_prefix=f"test_{dm}"
+                    )
+                )
+        else:
+            print(
+                trainer.evaluate(
+                    eval_dataset=test_datasets[dataset_name], metric_key_prefix="test"
+                )
             )
-        )
 
-        save_name = (
-            f"./saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"
-        )
+        if isinstance(dataset_name, list):
+            save_name = (
+                f"./saves/prompt_tuning_{timestamp}_{'_'.join(dataset_name)}_{origin_prompt}_best"
+            )
+        else:
+            save_name = (
+                f"./saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"
+            )
+
         model.save_pretrained(save_name)
 
         if wandb.run is not None:

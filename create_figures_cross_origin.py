@@ -43,5 +43,5 @@ for file in sorted(glob.glob(f"{args.results_dir}/results_origin*.csv")):
 mean_dfs = pd.concat(dfs).groupby("tasks", as_index=False).mean()
 mean_dfs_std = pd.concat(dfs).groupby("tasks", as_index=False).std()
 
-mean_dfs.to_csv(f"{args.results_dir}/average_10.csv")
-mean_dfs_std.to_csv(f"{args.results_dir}/std_10.csv")
+mean_dfs.to_csv(f"{args.results_dir}/average_co_10.csv")
+mean_dfs_std.to_csv(f"{args.results_dir}/std_co_10.csv")

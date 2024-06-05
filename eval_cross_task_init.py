@@ -21,7 +21,6 @@ import argparse
 
 timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
 
-
 argparse_parser = argparse.ArgumentParser(
     prog="Eval cross-task PA",
     description="Evaluate cross-task performance of prompt arithmetics.",

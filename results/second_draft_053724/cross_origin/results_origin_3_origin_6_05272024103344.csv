@@ -1,0 +1,7 @@
+,tasks,dbpedia_text_exact_match,best_coef,dbpedia_text_macro_f1,mnli_text_exact_match,mnli_text_macro_f1,qnli_text_exact_match,qnli_text_f1,sst2_text_exact_match,sst2_text_f1,trec_coarse_text_exact_match,trec_coarse_text_macro_f1,yelp_polarity_text_exact_match,yelp_polarity_text_f1
+0,dbpedia_text,0.9905428571428572,1,0.9905477066940579,,,,,,,,,,
+1,mnli_text,,1,,0.8524707080998472,0.8519719086210665,,,,,,,,
+2,qnli_text,,1,,,,0.9311733479773019,0.9308060360691941,,,,,,
+3,sst2_text,,1,,,,,,0.9380733944954128,0.9394618834080717,,,,
+4,trec_coarse_text,,1,,,,,,,,0.092,0.11111111111111112,,
+5,yelp_polarity_text,,1,,,,,,,,,,0.9700526315789474,0.9700542076732803
