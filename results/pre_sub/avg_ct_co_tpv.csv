@@ -1,0 +1,7 @@
+,mean,std
+DBPedia,"{'DBPedia': 0.09, 'MNLI': 0.02, 'QNLI': 0.01, 'SST2': 0.01, 'TREC': 0.02, 'Yelp': 0.03}","{'DBPedia': 0.02, 'MNLI': 0.01, 'QNLI': 0.01, 'SST2': 0.01, 'TREC': 0.01, 'Yelp': 0.01}"
+MNLI,"{'DBPedia': 0.02, 'MNLI': 0.09, 'QNLI': 0.04, 'SST2': 0.03, 'TREC': 0.02, 'Yelp': 0.03}","{'DBPedia': 0.01, 'MNLI': 0.01, 'QNLI': 0.01, 'SST2': 0.01, 'TREC': 0.01, 'Yelp': 0.01}"
+QNLI,"{'DBPedia': 0.01, 'MNLI': 0.04, 'QNLI': 0.09, 'SST2': 0.03, 'TREC': 0.02, 'Yelp': 0.01}","{'DBPedia': 0.01, 'MNLI': 0.01, 'QNLI': 0.01, 'SST2': 0.01, 'TREC': 0.01, 'Yelp': 0.01}"
+SST2,"{'DBPedia': 0.01, 'MNLI': 0.03, 'QNLI': 0.03, 'SST2': 0.1, 'TREC': 0.01, 'Yelp': 0.03}","{'DBPedia': 0.01, 'MNLI': 0.01, 'QNLI': 0.01, 'SST2': 0.02, 'TREC': 0.01, 'Yelp': 0.01}"
+TREC,"{'DBPedia': 0.02, 'MNLI': 0.02, 'QNLI': 0.02, 'SST2': 0.01, 'TREC': 0.06, 'Yelp': 0.01}","{'DBPedia': 0.01, 'MNLI': 0.01, 'QNLI': 0.01, 'SST2': 0.01, 'TREC': 0.01, 'Yelp': 0.01}"
+Yelp,"{'DBPedia': 0.03, 'MNLI': 0.02, 'QNLI': 0.01, 'SST2': 0.03, 'TREC': 0.01, 'Yelp': 0.08}","{'DBPedia': 0.01, 'MNLI': 0.01, 'QNLI': 0.01, 'SST2': 0.01, 'TREC': 0.01, 'Yelp': 0.01}"

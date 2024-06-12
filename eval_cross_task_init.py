@@ -49,6 +49,9 @@ for origin_prompt in pt_args.origin_prompts:
     for prompt in [origin_prompt] + pt_args.init_prompts:
         training_args.origin_prompt_name = prompt
 
+        if prompt == origin_prompt and "avg" in pt_args.init_prompts[0]:
+            continue
+
         for dataset_name in data_args.dataset_names:
             training_args.train_dataset_names = [dataset_name]
 

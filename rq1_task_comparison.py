@@ -112,9 +112,46 @@ ticks = ax.get_yticks()
 ax.set_yticks(ticks[1:])
 
 
-plt.title('Cross Task Comparison of Task Prompt Vectors')
+# plt.title('Cross Task Comparison of Task Prompt Vectors')
 plt.savefig(f"rq1_heatmap.png", bbox_inches="tight")
 plt.savefig(f"rq1_heatmap.pdf", bbox_inches="tight")
 
 plt.close()
 
+df_mean = pd.read_csv("avg_ct_co_tpv_mean.csv", index_col=0)
+df_std = pd.read_csv("avg_ct_co_tpv_std.csv", index_col=0)
+
+print(df_mean)
+
+ax = sns.heatmap(
+                df_mean,
+                annot=True,
+                fmt=".2f",
+                cmap="crest",
+                mask=np.invert(np.tril(np.ones((len(df.axes[0]),len(df.axes[0])),dtype=bool))),
+            )
+
+# plt.title('Cross Task Comparison of Task Prompt Vectors')
+plt.savefig(f"rq1_heatmap2.png", bbox_inches="tight")
+plt.savefig(f"rq1_heatmap2.pdf", bbox_inches="tight")
+
+plt.close()
+
+df_mean = pd.read_csv("avg_ct_co_task_mean.csv", index_col=0)
+df_std = pd.read_csv("avg_ct_co_task_std.csv", index_col=0)
+
+print(df_mean)
+
+ax = sns.heatmap(
+                df_mean,
+                annot=True,
+                fmt=".2f",
+                cmap="crest",
+                mask=np.invert(np.tril(np.ones((len(df.axes[0]),len(df.axes[0])),dtype=bool))),
+            )
+
+# plt.title('Cross Task Comparison of Task Prompt Vectors')
+plt.savefig(f"rq1_heatmap3.png", bbox_inches="tight")
+plt.savefig(f"rq1_heatmap3.pdf", bbox_inches="tight")
+
+plt.close()
