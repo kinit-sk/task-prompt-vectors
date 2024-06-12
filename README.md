@@ -1,10 +1,14 @@
-A + B
+# Task prompt vectors
+This repository serves as supplementary material to our experiments with Task Prompt Vectors. The current state is **experimental and in progress** and we are working on refactoring our code in this repository to be more replicable and self-explanatory.
 
-A = O + dA
+## Install requirements
+`pip install -r requirements.txt`
 
-B = O + dB
+## Download pre-trained soft-prompts and taks prompt vectors
+`wget LINK`
 
-A + B = O + dA + O + dB = 2O + dA + dB != O + dA + dB
+## Run fewshot Experiments
+`./run_fewshot [nli, cls, sent]`
 
-if A is to B as C is to D
-p_d = p_c + (p_b - p_a)
+## Run Prompt Tuning
+`python prompt_tuning.py {path_to_config}`
