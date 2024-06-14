@@ -32,7 +32,14 @@ origin_prompts = [
 # sentiment tasks
 # dataset_names = ["sst2_text", "yelp_polarity_text"]
 
-dataset_names = ["mnli_text", "qnli_text", "dbpedia_text", "trec_coarse_text", "sst2_text", "yelp_polarity_text"]
+dataset_names = [
+    "mnli_text",
+    "qnli_text",
+    "dbpedia_text",
+    "trec_coarse_text",
+    "sst2_text",
+    "yelp_polarity_text",
+]
 
 
 def get_task_prompts(origin_prompts, dataset_names, device="cuda"):
@@ -67,7 +74,7 @@ def create_task_combinations(
 def average_task_prompts(task_prompts_dict):
     # Extract the list of origins
     origins = list(task_prompts_dict.keys())
-    
+
     # Initialize the array for average vectors
     avg_tpvs = {}
 
@@ -78,15 +85,16 @@ def average_task_prompts(task_prompts_dict):
     for i in range(num_task_prompts):
         # Collect all vectors for the current task prompt index from each origin
         tpvs = [task_prompts_dict[origin][i] for origin in origins]
-        
+
         # Compute the average vector
         avg_tpv = reduce(operator.add, tpvs)
         avg_tpv.prompt /= num_task_prompts
 
         # Append the average vector to the result list
         avg_tpvs[list(avg_tpv.tasks)[0]] = avg_tpv
-    
+
     return avg_tpvs
+
 
 task_prompts_per_origin = get_task_prompts(origin_prompts, dataset_names)
 
@@ -115,7 +123,7 @@ for origin_prompt in origin_prompts:
                 "prompt_embeddings"
             ].to("cuda")
         )
-        
+
         torch.save(
             prompt,
             f"soft_prompts/{origin_prompt}/{task}_avg_10.bin",

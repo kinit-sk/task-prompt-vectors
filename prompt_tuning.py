@@ -74,14 +74,12 @@ for origin_prompt in pt_args.origin_prompts:
 
         print(f"task: {training_args.train_dataset_names}")
 
-        preprocessor = Preprocessor(training_args.train_dataset_names, data_args, training_args)
+        preprocessor = Preprocessor(
+            training_args.train_dataset_names, data_args, training_args
+        )
 
-        training_args.output_dir = (
-            f"{output_dir}_{timestamp}_{'_'.join(training_args.train_dataset_names)}_{origin_prompt}"
-        )
-        training_args.run_name = (
-            f"prompt_tuning_{timestamp}_{'_'.join(training_args.train_dataset_names)}_{origin_prompt}"
-        )
+        training_args.output_dir = f"{output_dir}_{timestamp}_{'_'.join(training_args.train_dataset_names)}_{origin_prompt}"
+        training_args.run_name = f"prompt_tuning_{timestamp}_{'_'.join(training_args.train_dataset_names)}_{origin_prompt}"
 
         train_dataset, valid_datasets, test_datasets = preprocessor.get_data()
         # print(train_dataset, valid_datasets, test_datasets)
@@ -122,9 +120,7 @@ for origin_prompt in pt_args.origin_prompts:
             )
 
         if isinstance(dataset_name, list):
-            save_name = (
-                f"./saves/prompt_tuning_{timestamp}_{'_'.join(dataset_name)}_{origin_prompt}_best"
-            )
+            save_name = f"./saves/prompt_tuning_{timestamp}_{'_'.join(dataset_name)}_{origin_prompt}_best"
         else:
             save_name = (
                 f"./saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"

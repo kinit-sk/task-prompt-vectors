@@ -1,0 +1,100 @@
+{
+    "QNLI": {
+        "Prompt tuning vs Random init (QNLI)": {
+            "Prompt tuning": {
+                "score": 93.3,
+                "std": 0
+            },
+            "Random init": {
+                "score": 93.2,
+                "std": 0.1
+            },
+            "p-value": 0.005391156430458724,
+            "significance": true
+        }
+    },
+    "MNLI": {
+        "Prompt tuning vs Random init (MNLI)": {
+            "Prompt tuning": {
+                "score": 85.4,
+                "std": 0.1
+            },
+            "Random init": {
+                "score": 85.3,
+                "std": 0.2
+            },
+            "p-value": 0.1743634883988357,
+            "significance": false
+        }
+    },
+    "TREC Coarse": {
+        "Prompt tuning vs Random init (TREC Coarse)": {
+            "Prompt tuning": {
+                "score": 95.5,
+                "std": 1.7
+            },
+            "Random init": {
+                "score": 26.5,
+                "std": 18.2
+            },
+            "p-value": 5.49332873778176e-10,
+            "significance": true
+        }
+    },
+    "DBpedia": {
+        "Prompt tuning vs Random init (DBpedia)": {
+            "Prompt tuning": {
+                "score": 99.1,
+                "std": 0
+            },
+            "Random init": {
+                "score": 99,
+                "std": 0.1
+            },
+            "p-value": 0.005391156430458724,
+            "significance": true
+        }
+    },
+    "SST2": {
+        "Prompt tuning vs Random init (SST2)": {
+            "Prompt tuning": {
+                "score": 93.8,
+                "std": 0.3
+            },
+            "Random init": {
+                "score": 93.2,
+                "std": 0.6
+            },
+            "p-value": 0.011136413095855039,
+            "significance": false
+        }
+    },
+    "Yelp": {
+        "Prompt tuning vs Random init (Yelp)": {
+            "Prompt tuning": {
+                "score": 97.2,
+                "std": 0
+            },
+            "Random init": {
+                "score": 97.1,
+                "std": 0.1
+            },
+            "p-value": 0.005391156430453406,
+            "significance": true
+        }
+    },
+    "avg": {
+        "Prompt tuning vs Random init (avg)": {
+            "Prompt tuning": {
+                "score": 93.8,
+                "std": 0.08
+            },
+            "Random init": {
+                "score": 93.6,
+                "std": 0.26
+            },
+            "p-value": 0.03196908616450595,
+            "significance": false
+        }
+    }
+}

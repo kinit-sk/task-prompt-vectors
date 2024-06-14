@@ -1,9 +1,20 @@
 from transformers import Seq2SeqTrainer
-from transformers.trainer_utils import speed_metrics, EvalLoopOutput, has_length, EvalPrediction, denumpify_detensorize
+from transformers.trainer_utils import (
+    speed_metrics,
+    EvalLoopOutput,
+    has_length,
+    EvalPrediction,
+    denumpify_detensorize,
+)
 from transformers.debug_utils import DebugOption
 from transformers.utils import is_torch_tpu_available, logging
 from transformers.integrations import deepspeed_init
-from transformers.trainer_pt_utils import IterableDatasetShard, find_batch_size, nested_numpify, nested_concat
+from transformers.trainer_pt_utils import (
+    IterableDatasetShard,
+    find_batch_size,
+    nested_numpify,
+    nested_concat,
+)
 
 from torch.utils.data import DataLoader
 
@@ -22,6 +33,7 @@ if is_torch_tpu_available(check_device=False):
     import torch_xla.debug.metrics as met
 
 logger = logging.get_logger(__name__)
+
 
 class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
     def _compute_avg_metrics(self, metrics):
@@ -144,7 +156,11 @@ class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
         """
         args = self.args
 
-        prediction_loss_only = prediction_loss_only if prediction_loss_only is not None else args.prediction_loss_only
+        prediction_loss_only = (
+            prediction_loss_only
+            if prediction_loss_only is not None
+            else args.prediction_loss_only
+        )
 
         # if eval is called w/o train, handle model prep here
         if self.is_deepspeed_enabled and self.deepspeed is None:
@@ -222,9 +238,15 @@ class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
                     batch_size = observed_batch_size
 
             # Prediction step
-            loss, logits, labels = self.prediction_step(model, inputs, prediction_loss_only, ignore_keys=ignore_keys)
+            loss, logits, labels = self.prediction_step(
+                model, inputs, prediction_loss_only, ignore_keys=ignore_keys
+            )
             main_input_name = getattr(self.model, "main_input_name", "input_ids")
-            inputs_decode = self._prepare_input(inputs[main_input_name]) if args.include_inputs_for_metrics else None
+            inputs_decode = (
+                self._prepare_input(inputs[main_input_name])
+                if args.include_inputs_for_metrics
+                else None
+            )
 
             if is_torch_tpu_available():
                 xm.mark_step()
@@ -232,11 +254,19 @@ class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
             # Update containers on host
             if loss is not None:
                 losses = self.gather_function((loss.repeat(batch_size)))
-                losses_host = losses if losses_host is None else nested_concat(losses_host, losses, padding_index=-100)
+                losses_host = (
+                    losses
+                    if losses_host is None
+                    else nested_concat(losses_host, losses, padding_index=-100)
+                )
             if labels is not None:
-                labels = self.accelerator.pad_across_processes(labels, dim=1, pad_index=-100)
+                labels = self.accelerator.pad_across_processes(
+                    labels, dim=1, pad_index=-100
+                )
             if inputs_decode is not None:
-                inputs_decode = self.accelerator.pad_across_processes(inputs_decode, dim=1, pad_index=-100)
+                inputs_decode = self.accelerator.pad_across_processes(
+                    inputs_decode, dim=1, pad_index=-100
+                )
                 inputs_decode = self.gather_function((inputs_decode))
                 inputs_host = (
                     inputs_decode
@@ -244,41 +274,73 @@ class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
                     else nested_concat(inputs_host, inputs_decode, padding_index=-100)
                 )
             if logits is not None:
-                logits = self.accelerator.pad_across_processes(logits, dim=1, pad_index=-100)
+                logits = self.accelerator.pad_across_processes(
+                    logits, dim=1, pad_index=-100
+                )
                 if self.preprocess_logits_for_metrics is not None:
                     logits = self.preprocess_logits_for_metrics(logits, labels)
                 logits = self.gather_function((logits))
-                preds_host = logits if preds_host is None else nested_concat(preds_host, logits, padding_index=-100)
+                preds_host = (
+                    logits
+                    if preds_host is None
+                    else nested_concat(preds_host, logits, padding_index=-100)
+                )
 
             if labels is not None:
                 labels = self.gather_function((labels))
-                labels_host = labels if labels_host is None else nested_concat(labels_host, labels, padding_index=-100)
+                labels_host = (
+                    labels
+                    if labels_host is None
+                    else nested_concat(labels_host, labels, padding_index=-100)
+                )
 
-            self.control = self.callback_handler.on_prediction_step(args, self.state, self.control)
+            self.control = self.callback_handler.on_prediction_step(
+                args, self.state, self.control
+            )
 
             # Gather all tensors and put them back on the CPU if we have done enough accumulation steps.
-            if args.eval_accumulation_steps is not None and (step + 1) % args.eval_accumulation_steps == 0:
+            if (
+                args.eval_accumulation_steps is not None
+                and (step + 1) % args.eval_accumulation_steps == 0
+            ):
                 if losses_host is not None:
                     losses = nested_numpify(losses_host)
-                    all_losses = losses if all_losses is None else np.concatenate((all_losses, losses), axis=0)
+                    all_losses = (
+                        losses
+                        if all_losses is None
+                        else np.concatenate((all_losses, losses), axis=0)
+                    )
                 if preds_host is not None:
                     logits = nested_numpify(preds_host)
-                    all_preds = logits if all_preds is None else nested_concat(all_preds, logits, padding_index=-100)
+                    all_preds = (
+                        logits
+                        if all_preds is None
+                        else nested_concat(all_preds, logits, padding_index=-100)
+                    )
                 if inputs_host is not None:
                     inputs_decode = nested_numpify(inputs_host)
                     all_inputs = (
                         inputs_decode
                         if all_inputs is None
-                        else nested_concat(all_inputs, inputs_decode, padding_index=-100)
+                        else nested_concat(
+                            all_inputs, inputs_decode, padding_index=-100
+                        )
                     )
                 if labels_host is not None:
                     labels = nested_numpify(labels_host)
                     all_labels = (
-                        labels if all_labels is None else nested_concat(all_labels, labels, padding_index=-100)
+                        labels
+                        if all_labels is None
+                        else nested_concat(all_labels, labels, padding_index=-100)
                     )
 
                 # Set back to None to begin a new accumulation
-                losses_host, preds_host, inputs_host, labels_host = None, None, None, None
+                losses_host, preds_host, inputs_host, labels_host = (
+                    None,
+                    None,
+                    None,
+                    None,
+                )
 
         # After all calls to `.gather_function`, reset to `gather_for_metrics`:
         self.gather_function = self.accelerator.gather_for_metrics
@@ -289,25 +351,42 @@ class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
         # Gather all remaining tensors and put them back on the CPU
         if losses_host is not None:
             losses = nested_numpify(losses_host)
-            all_losses = losses if all_losses is None else np.concatenate((all_losses, losses), axis=0)
+            all_losses = (
+                losses
+                if all_losses is None
+                else np.concatenate((all_losses, losses), axis=0)
+            )
         if preds_host is not None:
             logits = nested_numpify(preds_host)
-            all_preds = logits if all_preds is None else nested_concat(all_preds, logits, padding_index=-100)
+            all_preds = (
+                logits
+                if all_preds is None
+                else nested_concat(all_preds, logits, padding_index=-100)
+            )
         if inputs_host is not None:
             inputs_decode = nested_numpify(inputs_host)
             all_inputs = (
-                inputs_decode if all_inputs is None else nested_concat(all_inputs, inputs_decode, padding_index=-100)
+                inputs_decode
+                if all_inputs is None
+                else nested_concat(all_inputs, inputs_decode, padding_index=-100)
             )
         if labels_host is not None:
             labels = nested_numpify(labels_host)
-            all_labels = labels if all_labels is None else nested_concat(all_labels, labels, padding_index=-100)
+            all_labels = (
+                labels
+                if all_labels is None
+                else nested_concat(all_labels, labels, padding_index=-100)
+            )
 
         # Number of samples
         if has_length(eval_dataset):
             num_samples = len(eval_dataset)
         # The instance check is weird and does not actually check for the type, but whether the dataset has the right
         # methods. Therefore we need to make sure it also has the attribute.
-        elif isinstance(eval_dataset, IterableDatasetShard) and getattr(eval_dataset, "num_examples", 0) > 0:
+        elif (
+            isinstance(eval_dataset, IterableDatasetShard)
+            and getattr(eval_dataset, "num_examples", 0) > 0
+        ):
             num_samples = eval_dataset.num_examples
         else:
             if has_length(dataloader):
@@ -320,21 +399,37 @@ class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
         eval_dataset_name = metric_key_prefix.replace("eval_", "").replace("test_", "")
 
         # Metrics!
-        if self.compute_metrics is not None and all_preds is not None and all_labels is not None:
+        if (
+            self.compute_metrics is not None
+            and all_preds is not None
+            and all_labels is not None
+        ):
             if isinstance(self.compute_metrics, dict):
                 if args.include_inputs_for_metrics:
                     metrics = self.compute_metrics[eval_dataset_name](
-                        EvalPrediction(predictions=all_preds, label_ids=all_labels, inputs=all_inputs)
+                        EvalPrediction(
+                            predictions=all_preds,
+                            label_ids=all_labels,
+                            inputs=all_inputs,
+                        )
                     )
                 else:
-                    metrics = self.compute_metrics[eval_dataset_name](EvalPrediction(predictions=all_preds, label_ids=all_labels))
+                    metrics = self.compute_metrics[eval_dataset_name](
+                        EvalPrediction(predictions=all_preds, label_ids=all_labels)
+                    )
             else:
                 if args.include_inputs_for_metrics:
                     metrics = self.compute_metrics(
-                        EvalPrediction(predictions=all_preds, label_ids=all_labels, inputs=all_inputs)
+                        EvalPrediction(
+                            predictions=all_preds,
+                            label_ids=all_labels,
+                            inputs=all_inputs,
+                        )
                     )
                 else:
-                    metrics = self.compute_metrics(EvalPrediction(predictions=all_preds, label_ids=all_labels))
+                    metrics = self.compute_metrics(
+                        EvalPrediction(predictions=all_preds, label_ids=all_labels)
+                    )
         else:
             metrics = {}
 
@@ -344,16 +439,25 @@ class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
         if all_losses is not None:
             metrics[f"{metric_key_prefix}_loss"] = all_losses.mean().item()
         if hasattr(self, "jit_compilation_time"):
-            metrics[f"{metric_key_prefix}_jit_compilation_time"] = self.jit_compilation_time
+            metrics[f"{metric_key_prefix}_jit_compilation_time"] = (
+                self.jit_compilation_time
+            )
 
         # Prefix all keys with metric_key_prefix + '_'
         for key in list(metrics.keys()):
             if not key.startswith(f"{metric_key_prefix}_"):
                 metrics[f"{metric_key_prefix}_{key}"] = metrics.pop(key)
 
-        return EvalLoopOutput(predictions=all_preds, label_ids=all_labels, metrics=metrics, num_samples=num_samples)
+        return EvalLoopOutput(
+            predictions=all_preds,
+            label_ids=all_labels,
+            metrics=metrics,
+            num_samples=num_samples,
+        )
 
-    def _maybe_log_save_evaluate(self, tr_loss, model, trial, epoch, ignore_keys_for_eval):
+    def _maybe_log_save_evaluate(
+        self, tr_loss, model, trial, epoch, ignore_keys_for_eval
+    ):
         if self.control.should_log:
             if is_torch_tpu_available():
                 xm.mark_step()
@@ -366,7 +470,11 @@ class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
             # reset tr_loss to zero
             tr_loss -= tr_loss
 
-            logs["loss"] = round(tr_loss_scalar / (self.state.global_step - self._globalstep_last_logged), 4)
+            logs["loss"] = round(
+                tr_loss_scalar
+                / (self.state.global_step - self._globalstep_last_logged),
+                4,
+            )
             logs["learning_rate"] = self._get_learning_rate()
 
             self._total_loss_scalar += tr_loss_scalar
@@ -390,17 +498,16 @@ class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
                 metrics = self.evaluate(ignore_keys=ignore_keys_for_eval)
             self._report_to_hp_search(trial, self.state.global_step, metrics)
 
-
             avg_metrics = self._compute_avg_metrics(metrics)
 
-            metrics.update(
-                {"eval_average_loss": avg_metrics}
-            )
+            metrics.update({"eval_average_loss": avg_metrics})
 
             self.log({"eval_average_loss": avg_metrics})
 
             # Run delayed LR scheduler now that metrics are populated
-            if isinstance(self.lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+            if isinstance(
+                self.lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau
+            ):
                 metric_to_check = self.args.metric_for_best_model
                 if not metric_to_check.startswith("eval_"):
                     metric_to_check = f"eval_{metric_to_check}"
@@ -408,4 +515,6 @@ class MultiTaskSeq2SeqTrainer(Seq2SeqTrainer):
 
         if self.control.should_save:
             self._save_checkpoint(model, trial, metrics=metrics)
-            self.control = self.callback_handler.on_save(self.args, self.state, self.control)
+            self.control = self.callback_handler.on_save(
+                self.args, self.state, self.control
+            )

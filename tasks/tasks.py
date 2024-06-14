@@ -335,6 +335,7 @@ class YelpPolarityText(AbstractTask):
             self.name.replace("_text", ""), input_texts, label_texts, add_prefix
         )
 
+
 class IMDB(AbstractTask):
     name = "imdb"
     labels_list = ["0", "1"]
@@ -372,6 +373,7 @@ class IMDBText(AbstractTask):
         return self.formater(
             self.name.replace("_text", ""), input_texts, label_texts, add_prefix
         )
+
 
 # Natural language inference
 class QNLI(AbstractTask):
