@@ -45,7 +45,12 @@ tokenizer = AutoTokenizer.from_pretrained(
 
 output_dir = training_args.output_dir
 
+
 for origin_prompt in pt_args.origin_prompts:
+    all_init_prompts = [origin_prompt] + pt_args.init_prompts
+    if "spot" in pt_args.init_prompts[0]:
+        all_init_prompts = pt_args.init_prompts
+
     for prompt in [origin_prompt] + pt_args.init_prompts:
         training_args.origin_prompt_name = prompt
 

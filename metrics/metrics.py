@@ -6,12 +6,21 @@ import numpy as np
 import evaluate
 
 
+# def exact_match(preds, targets):
+#     check_data_state(preds, targets)
+
+#     metric = evaluate.load("exact_match", keep_in_memory=True)
+
+#     return metric.compute(predictions=preds, references=targets)
+
+
 def exact_match(preds, targets):
     check_data_state(preds, targets)
 
-    metric = evaluate.load("exact_match", keep_in_memory=True)
+    preds, targets = np.asarray(preds, dtype="<U16"), np.asarray(targets, dtype="<U16")
 
-    return metric.compute(predictions=preds, references=targets)
+    # print(preds, targets)
+    return {"exact_match": np.sum(preds == targets) / preds.size}
 
 
 def f1(preds, targets, labels):

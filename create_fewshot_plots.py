@@ -28,22 +28,33 @@ tasks = ["nli", "cls", "sent"]
 
 test_datasets = {
     "nli": ["scitail_text", "snli_text"],
-    "sent": ["sst5_text", "imdb_text"],
+    "sent": ["imdb_text", "sst5_text"],
     "cls": ["ag_news_text", "yahoo_text"],
 }
 
 train_datasets = {
-    "nli": ["origin_.?.", "mnli_text", "qnli_text", "mnli_text_qnli_text"],
+    "nli": [
+        "origin_.?.",
+        "mnli_text",
+        "qnli_text",
+        "mnli_text_qnli_text_spot",
+        "mnli_text_qnli_text_attempt",
+        "mnli_text_qnli_text",
+    ],
     "sent": [
         "origin_.?.",
         "sst2_text",
         "yelp_polarity_text",
+        "sst2_text_yelp_polarity_text_spot",
+        "sst2_text_yelp_polarity_text_attempt",
         "sst2_text_yelp_polarity_text",
     ],
     "cls": [
         "origin_.?.",
         "dbpedia_text",
         "trec_coarse_text",
+        "dbpedia_text_trec_coarse_text_spot",
+        "dbpedia_text_trec_coarse_text_attempt",
         "dbpedia_text_trec_coarse_text",
     ],
 }
@@ -53,12 +64,18 @@ formating_map = {
     "dbpedia_text": "DBPedia (SPoT)",
     "trec_coarse_text": "TREC Coarse (SPoT)",
     "dbpedia_text_trec_coarse_text": "DBPedia + TREC Coarse (Ours)",
+    "dbpedia_text_trec_coarse_text_spot": "DBPedia + TREC Coarse (SPoT)",
+    "dbpedia_text_trec_coarse_text_attempt": "DBPedia + TREC Coarse (ATTEMPT)",
     "sst2_text": "SST2 (SPoT)",
     "yelp_polarity_text": "Yelp (SPoT)",
     "sst2_text_yelp_polarity_text": "SST2 + Yelp (Ours)",
+    "sst2_text_yelp_polarity_text_spot": "SST2 + Yelp (SPoT)",
+    "sst2_text_yelp_polarity_text_attempt": "SST2 + Yelp (ATTEMPT)",
     "mnli_text": "MNLI (SPoT)",
     "qnli_text": "QNLI (SPoT)",
     "mnli_text_qnli_text": "MNLI + QNLI (Ours)",
+    "mnli_text_qnli_text_spot": "MNLI + QNLI (SPoT)",
+    "mnli_text_qnli_text_attempt": "MNLI + QNLI (ATTEMPT)",
     "scitail_text": "SciTail",
     "snli_text": "SNLI",
     "sst5_text": "SST5",
@@ -77,10 +94,10 @@ n_classes = {
     "yahoo_text": 10,
 }
 
-matplotlib.rc("font", size=17)
+matplotlib.rc("font", size=18)
 
 
-fig, axs = plt.subplots(nrows=len(tasks), ncols=2, figsize=(25, 15))
+fig, axs = plt.subplots(nrows=len(tasks), ncols=2, figsize=(25, 20))
 # fig, axs = plt.subplots(nrows=1, ncols=len(tasks), figsize=(23,8))
 
 for ti, t in enumerate(tasks):
@@ -99,7 +116,7 @@ for ti, t in enumerate(tasks):
             print(metric, std, shots)
 
             axs[ti, i].plot(shots, metric, label=formating_map[d], marker="o")
-            axs[ti, i].fill_between(shots, metric - std, metric + std, alpha=0.2)
+            # axs[ti, i].fill_between(shots, metric - std, metric + std, alpha=0.2)
 
         axs[ti, i].set_xscale("log")
 
@@ -109,21 +126,15 @@ for ti, t in enumerate(tasks):
         axs[ti, i].set_title(formating_map[td])
         axs[ti, i].set_xlabel("N shots")
         axs[ti, i].set_ylabel("Macro F1")
-        axs[ti, i].legend()
+        if i % 2 == 0:
+            axs[ti, i].legend(
+                loc="upper center",
+                bbox_to_anchor=(0.5, -0.2),
+                fancybox=True,
+                shadow=True,
+                ncol=2,
+            )
 
-        #     axs[ti].plot(shots, metric, label=formating_map[d], marker="o")
-        #     axs[ti].fill_between(shots, metric - std, metric + std, alpha=0.2)
-
-        # axs[ti].set_xscale("log")
-
-        # axs[ti].set_xticks(shots)
-
-        # axs[ti].get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
-
-        # axs[ti].set_title(formating_map[td])
-        # axs[ti].set_xlabel("N shots")
-        # axs[ti].set_ylabel("Macro F1")
-        # axs[ti].legend()
 
 fig.tight_layout(pad=1.0)
 
@@ -140,7 +151,7 @@ test_datasets = {
 }
 
 # 3 figures
-fig, axs = plt.subplots(nrows=1, ncols=len(tasks), figsize=(23, 8))
+fig, axs = plt.subplots(nrows=1, ncols=len(tasks), figsize=(36, 10))
 
 for ti, t in enumerate(tasks):
     df = pd.read_csv(f"wandb_results_{t}.csv", index_col=0)
@@ -157,8 +168,10 @@ for ti, t in enumerate(tasks):
 
             print(metric, std, shots)
 
-            axs[ti].plot(shots, metric, label=formating_map[d], marker="o")
-            axs[ti].fill_between(shots, metric - std, metric + std, alpha=0.2)
+            axs[ti].plot(
+                shots, metric, label=formating_map[d], marker="o", linewidth=3.0
+            )
+            # axs[ti].fill_between(shots, metric - std, metric + std, alpha=0.2)
 
         axs[ti].set_xscale("log")
 
@@ -169,7 +182,13 @@ for ti, t in enumerate(tasks):
         axs[ti].set_title(formating_map[td])
         axs[ti].set_xlabel("N shots")
         axs[ti].set_ylabel("Macro F1")
-        axs[ti].legend()
+        axs[ti].legend(
+            loc="upper center",
+            bbox_to_anchor=(0.5, -0.1),
+            fancybox=True,
+            shadow=True,
+            ncol=2,
+        )
 
 fig.tight_layout(pad=1.0)
 

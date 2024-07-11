@@ -18,6 +18,14 @@ data = {
             "0 shots": {"F1": 57.7, "std": 13.1},
             "100 shots": {"F1": 77.7, "std": 1.3},
         },
+        "QNLI + MNLI (SPoT)": {
+            "0 shots": {"F1": 70.4, "std": 1.2},
+            "100 shots": {"F1": 87.7, "std": 0.6},
+        },
+        "QNLI + MNLI (ATTEMPT)": {
+            "0 shots": {"F1": 63.8, "std": 4.2},
+            "100 shots": {"F1": 83.6, "std": 3.0},
+        },
         "QNLI + MNLI (ours)": {
             "0 shots": {"F1": 71.5, "std": 0.8},
             "100 shots": {"F1": 88.1, "std": 0.9},
@@ -25,20 +33,28 @@ data = {
     },
     "AG News (Classification)": {
         "Random": {
-            "0 shots": {"F1": 0, "std": 0},
+            "0 shots": {"F1": 0.0, "std": 0.0},
             "100 shots": {"F1": 50.4, "std": 11.2},
         },
         "DBPedia (SPoT)": {
-            "0 shots": {"F1": 0, "std": 0},
+            "0 shots": {"F1": 0.0, "std": 0.0},
             "100 shots": {"F1": 83.4, "std": 0.6},
         },
         "TREC (SPoT)": {
-            "0 shots": {"F1": 0, "std": 0},
+            "0 shots": {"F1": 0.0, "std": 0.0},
             "100 shots": {"F1": 65.7, "std": 5.6},
         },
+        "DBPedia + TREC (SPoT)": {
+            "0 shots": {"F1": None, "std": None},
+            "100 shots": {"F1": None, "std": None},
+        },
+        "DBPedia + TREC (ATTEMPT)": {
+            "0 shots": {"F1": 11.5, "std": 1.7},
+            "100 shots": {"F1": 20.7, "std": 2.8},
+        },
         "DBPedia + TREC (ours)": {
-            "0 shots": {"F1": 0, "std": 0},
-            "100 shots": {"F1": 83, "std": 0.9},
+            "0 shots": {"F1": 0.0, "std": 0.0},
+            "100 shots": {"F1": 83.0, "std": 0.9},
         },
     },
     "IMDB (Sentiment)": {
@@ -47,12 +63,20 @@ data = {
             "100 shots": {"F1": 89.4, "std": 0.4},
         },
         "SST2 (SPoT)": {
-            "0 shots": {"F1": 88, "std": 0.6},
+            "0 shots": {"F1": 88.0, "std": 0.6},
             "100 shots": {"F1": 90.2, "std": 0.3},
         },
         "Yelp (SPoT)": {
-            "0 shots": {"F1": 90, "std": 0.3},
+            "0 shots": {"F1": 90.0, "std": 0.3},
             "100 shots": {"F1": 90.3, "std": 0.2},
+        },
+        "SST2 + Yelp (SPoT)": {
+            "0 shots": {"F1": 90.8, "std": 0.2},
+            "100 shots": {"F1": 90.8, "std": 0.2},
+        },
+        "SST2 + Yelp (ATTEMPT)": {
+            "0 shots": {"F1": 79.2, "std": 6.0},
+            "100 shots": {"F1": 89.4, "std": 0.8},
         },
         "SST2 + Yelp (ours)": {
             "0 shots": {"F1": 90.1, "std": 0.5},
@@ -72,6 +96,14 @@ data = {
             "0 shots": {"F1": 47.1, "std": 0.3},
             "100 shots": {"F1": 49.1, "std": 0.9},
         },
+        "QNLI + MNLI (SPoT)": {
+            "0 shots": {"F1": 79.6, "std": 0.2},
+            "100 shots": {"F1": 81.0, "std": 0.4},
+        },
+        "QNLI + MNLI (ATTEMPT)": {
+            "0 shots": {"F1": 78.5, "std": 0.5},
+            "100 shots": {"F1": 79.6, "std": 1.6},
+        },
         "QNLI + MNLI (ours)": {
             "0 shots": {"F1": 79.2, "std": 1.4},
             "100 shots": {"F1": 80.3, "std": 0.3},
@@ -79,34 +111,50 @@ data = {
     },
     "Yahoo Answers (Classification)": {
         "Random": {
-            "0 shots": {"F1": 0, "std": 0},
+            "0 shots": {"F1": 0.0, "std": 0.0},
             "100 shots": {"F1": 27.6, "std": 10.6},
         },
         "DBPedia (SPoT)": {
-            "0 shots": {"F1": 0, "std": 0},
+            "0 shots": {"F1": 0.0, "std": 0.0},
             "100 shots": {"F1": 61.3, "std": 1.1},
         },
         "TREC (SPoT)": {
-            "0 shots": {"F1": 0, "std": 0},
+            "0 shots": {"F1": 0.0, "std": 0.0},
             "100 shots": {"F1": 36.5, "std": 8.7},
         },
+        "DBPedia + TREC (SPoT)": {
+            "0 shots": {"F1": None, "std": None},
+            "100 shots": {"F1": None, "std": None},
+        },
+        "DBPedia + TREC (ATTEMPT)": {
+            "0 shots": {"F1": 0.1, "std": 0.0},
+            "100 shots": {"F1": 8.1, "std": 5.6},
+        },
         "DBPedia + TREC (ours)": {
-            "0 shots": {"F1": 0, "std": 0},
+            "0 shots": {"F1": 0.0, "std": 0.0},
             "100 shots": {"F1": 61.1, "std": 0.9},
         },
     },
     "SST5 (Sentiment)": {
         "Random": {
-            "0 shots": {"F1": 0, "std": 0},
+            "0 shots": {"F1": 0.0, "std": 0.0},
             "100 shots": {"F1": 83.2, "std": 5.8},
         },
         "SST2 (SPoT)": {
-            "0 shots": {"F1": 94, "std": 0.3},
+            "0 shots": {"F1": 94.0, "std": 0.3},
             "100 shots": {"F1": 93.9, "std": 0.3},
         },
         "Yelp (SPoT)": {
             "0 shots": {"F1": 88.6, "std": 0.8},
             "100 shots": {"F1": 90.6, "std": 0.5},
+        },
+        "SST2 + Yelp (SPoT)": {
+            "0 shots": {"F1": 93.7, "std": 0.5},
+            "100 shots": {"F1": 93.8, "std": 0.5},
+        },
+        "SST2 + Yelp (ATTEMPT)": {
+            "0 shots": {"F1": 16.4, "std": 4.5},
+            "100 shots": {"F1": 37.8, "std": 7.0},
         },
         "SST2 + Yelp (ours)": {
             "0 shots": {"F1": 89.9, "std": 0.8},
