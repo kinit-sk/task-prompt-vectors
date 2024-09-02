@@ -4,26 +4,49 @@ from datasets import concatenate_datasets
 
 from .tasks import AutoTask
 from args import DataTrainingArguments, TrainingArguments
+from arithmetics import PromptArithmeticsConfig
 
 import functools
 
-
+import torch
+from torch.nn.utils.rnn import pad_sequence
 class Preprocessor:
     def __init__(
         self,
         tasks: List[str],
         data_args: DataTrainingArguments,
         training_args: TrainingArguments,
+        pa_args: PromptArithmeticsConfig,
+        tokenizer: AutoTokenizer,
     ):
         self.tasks = tasks
         self.data_args = data_args
         self.training_args = training_args
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True
-        )
+        self.pa_args = pa_args
+        self.tokenizer = tokenizer
+
+
+    def _update_attention_mask(self, row):
+        idx = (row == self.tokenizer.bos_token_id).nonzero()[0]
+
+        return torch.cat((torch.zeros(idx, dtype=torch.long), torch.ones(len(row)-idx, dtype=torch.long)))
+
+    def _move_trailing_pads_to_beginning(self, row):
+        first_non_pad_index = len(row) -1
+
+        while first_non_pad_index >= 0 and row[first_non_pad_index] == self.tokenizer.pad_token_id:
+            first_non_pad_index -= 1
+
+        non_trailing_pads = row[:first_non_pad_index + 1]
+        trailing_pads = row[first_non_pad_index + 1:]
+
+        return torch.cat((trailing_pads, non_trailing_pads))
 
     def preprocess_function(self, examples, max_target_length: int):
         padding = "max_length"
+
+        if self.data_args.pad_to_max_length:
+            max_target_length = self.data_args.max_source_length
 
         inputs = self.tokenizer(
             examples["source"],
@@ -41,7 +64,18 @@ class Preprocessor:
             return_tensors="pt",
         )
 
-        inputs["labels"] = labels["input_ids"]
+        if self.pa_args.task_type == "CAUSAL_LM":
+            inputs["labels"] = torch.cat((labels["input_ids"] , torch.full((labels["input_ids"].shape[0], 1), self.tokenizer.eos_token_id)), dim=1)
+
+            inputs["labels"][inputs["labels"] == self.tokenizer.bos_token_id] = -100
+            inputs["labels"][inputs["labels"] == self.tokenizer.pad_token_id] = -100
+
+            inputs["input_ids"] = torch.cat((inputs["input_ids"], inputs["labels"]), dim=1)
+            inputs["input_ids"] = pad_sequence([row[row != -100] for row in inputs["input_ids"]], padding_value=self.tokenizer.pad_token_id, batch_first=True)
+            
+            inputs["input_ids"] = torch.stack([self._move_trailing_pads_to_beginning(row) for row in inputs["input_ids"]])
+            inputs["attention_mask"] = torch.stack([self._update_attention_mask(row) for row in inputs["input_ids"]])
+            inputs["labels"] = torch.cat((torch.full((labels["input_ids"].shape[0],inputs["input_ids"].shape[1] - inputs["labels"].shape[1]), -100), inputs["labels"]), dim=1)
 
         return inputs
 
@@ -68,6 +102,7 @@ class Preprocessor:
                     split_validation_test=self.data_args.split_validation_test,
                     add_prefix=True,
                     n_obs=(self.data_args.max_train_samples),
+                    task_type=self.pa_args.task_type,
                 )
                 for dataset_name in self.tasks
             ]
@@ -94,6 +129,7 @@ class Preprocessor:
                     split_validation_test=self.data_args.split_validation_test,
                     add_prefix=True,
                     n_obs=(self.data_args.max_valid_samples),
+                    task_type=self.pa_args.task_type,
                 )
                 for dataset_name in self.tasks
             }
@@ -121,6 +157,7 @@ class Preprocessor:
                     split_validation_test=self.data_args.split_validation_test,
                     add_prefix=True,
                     n_obs=(self.data_args.max_test_samples),
+                    task_type=self.pa_args.task_type,
                 )
                 for dataset_name in self.tasks
             }

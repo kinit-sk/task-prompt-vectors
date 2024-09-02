@@ -45,8 +45,8 @@ data = {
             "100 shots": {"F1": 65.7, "std": 5.6},
         },
         "DBPedia + TREC (SPoT)": {
-            "0 shots": {"F1": None, "std": None},
-            "100 shots": {"F1": None, "std": None},
+            "0 shots": {"F1": 0.0, "std": 0.0},
+            "100 shots": {"F1": 82.1, "std": 0.9},
         },
         "DBPedia + TREC (ATTEMPT)": {
             "0 shots": {"F1": 11.5, "std": 1.7},
@@ -123,8 +123,8 @@ data = {
             "100 shots": {"F1": 36.5, "std": 8.7},
         },
         "DBPedia + TREC (SPoT)": {
-            "0 shots": {"F1": None, "std": None},
-            "100 shots": {"F1": None, "std": None},
+            "0 shots": {"F1": 0.0, "std": 0.0},
+            "100 shots": {"F1": 60.7, "std": 2.0},
         },
         "DBPedia + TREC (ATTEMPT)": {
             "0 shots": {"F1": 0.1, "std": 0.0},
@@ -167,24 +167,37 @@ n = 10
 
 
 def compute_significance(mean1, std1, n1, mean2, std2, n2):
-    t_stat, p_value = ttest_ind_from_stats(mean1, std1, n1, mean2, std2, n2)
+    equal_var = True
+    if n1 != n2:
+        equal_var = False
+
+    # print(equal_var)
+    t_stat, p_value = ttest_ind_from_stats(
+        mean1, std1, n1, mean2, std2, n2, equal_var=equal_var
+    )
     return p_value
 
 
 # pprint.pprint(data)
 
 comparisons = [
-    ("SciTail (NLI)", "QNLI + MNLI (ours)", "MNLI (SPoT)"),
-    ("SNLI (NLI)", "QNLI + MNLI (ours)", "MNLI (SPoT)"),
-    ("AG News (Classification)", "DBPedia + TREC (ours)", "DBPedia (SPoT)"),
-    ("Yahoo Answers (Classification)", "DBPedia + TREC (ours)", "DBPedia (SPoT)"),
-    ("IMDB (Sentiment)", "SST2 + Yelp (ours)", "Yelp (SPoT)"),
-    ("SST5 (Sentiment)", "SST2 + Yelp (ours)", "SST2 (SPoT)"),
+    ("SciTail (NLI)", "QNLI + MNLI (ours)", "MNLI (SPoT)", 10, 10),
+    ("SNLI (NLI)", "QNLI + MNLI (SPoT)", "MNLI (SPoT)", 3, 10),
+    ("AG News (Classification)", "DBPedia + TREC (ours)", "DBPedia (SPoT)", 10, 10),
+    (
+        "Yahoo Answers (Classification)",
+        "DBPedia + TREC (ours)",
+        "DBPedia (SPoT)",
+        10,
+        10,
+    ),
+    ("IMDB (Sentiment)", "SST2 + Yelp (ours)", "SST2 + Yelp (SPoT)", 10, 3),
+    ("SST5 (Sentiment)", "SST2 + Yelp (SPoT)", "SST2 (SPoT)", 3, 10),
 ]
 
 comparison_results = {}
 
-for dataset, task1, task2 in comparisons:
+for dataset, task1, task2, n1, n2 in comparisons:
     comparison_results[dataset] = {}
     for shots in ["0 shots", "100 shots"]:
         mean1 = data[dataset][task1][shots]["F1"]
@@ -192,11 +205,13 @@ for dataset, task1, task2 in comparisons:
         mean2 = data[dataset][task2][shots]["F1"]
         std2 = data[dataset][task2][shots]["std"]
 
-        p_value = compute_significance(mean1, std1, n, mean2, std2, n)
+        p_value = compute_significance(mean1, std1, n1, mean2, std2, n2)
 
         comparison_results[dataset][f"{task1} vs {task2} ({shots})"] = {
             "task1": {"F1": mean1, "std": std1},
             "task2": {"F1": mean2, "std": std2},
+            "n1": n1,
+            "n2": n2,
             "p-value": p_value,
             "significance": bool(p_value <= 0.05 / len(comparisons)),
         }

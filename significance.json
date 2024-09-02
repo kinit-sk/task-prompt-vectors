@@ -1,0 +1,182 @@
+{
+    "SciTail (NLI)": {
+        "QNLI + MNLI (ours) vs MNLI (SPoT) (0 shots)": {
+            "task1": {
+                "F1": 71.5,
+                "std": 0.8
+            },
+            "task2": {
+                "F1": 70.4,
+                "std": 0.4
+            },
+            "n1": 10,
+            "n2": 10,
+            "p-value": 0.0010752496581150621,
+            "significance": true
+        },
+        "QNLI + MNLI (ours) vs MNLI (SPoT) (100 shots)": {
+            "task1": {
+                "F1": 88.1,
+                "std": 0.9
+            },
+            "task2": {
+                "F1": 87.8,
+                "std": 0.9
+            },
+            "n1": 10,
+            "n2": 10,
+            "p-value": 0.46567878083649017,
+            "significance": false
+        }
+    },
+    "SNLI (NLI)": {
+        "QNLI + MNLI (SPoT) vs MNLI (SPoT) (0 shots)": {
+            "task1": {
+                "F1": 79.6,
+                "std": 0.2
+            },
+            "task2": {
+                "F1": 79.5,
+                "std": 0.3
+            },
+            "n1": 3,
+            "n2": 10,
+            "p-value": 0.532520180171945,
+            "significance": false
+        },
+        "QNLI + MNLI (SPoT) vs MNLI (SPoT) (100 shots)": {
+            "task1": {
+                "F1": 81.0,
+                "std": 0.4
+            },
+            "task2": {
+                "F1": 80.8,
+                "std": 0.4
+            },
+            "n1": 3,
+            "n2": 10,
+            "p-value": 0.49792734514097403,
+            "significance": false
+        }
+    },
+    "AG News (Classification)": {
+        "DBPedia + TREC (ours) vs DBPedia (SPoT) (0 shots)": {
+            "task1": {
+                "F1": 0.0,
+                "std": 0.0
+            },
+            "task2": {
+                "F1": 0.0,
+                "std": 0.0
+            },
+            "n1": 10,
+            "n2": 10,
+            "p-value": NaN,
+            "significance": false
+        },
+        "DBPedia + TREC (ours) vs DBPedia (SPoT) (100 shots)": {
+            "task1": {
+                "F1": 83.0,
+                "std": 0.9
+            },
+            "task2": {
+                "F1": 83.4,
+                "std": 0.6
+            },
+            "n1": 10,
+            "n2": 10,
+            "p-value": 0.2574911755001479,
+            "significance": false
+        }
+    },
+    "Yahoo Answers (Classification)": {
+        "DBPedia + TREC (ours) vs DBPedia (SPoT) (0 shots)": {
+            "task1": {
+                "F1": 0.0,
+                "std": 0.0
+            },
+            "task2": {
+                "F1": 0.0,
+                "std": 0.0
+            },
+            "n1": 10,
+            "n2": 10,
+            "p-value": NaN,
+            "significance": false
+        },
+        "DBPedia + TREC (ours) vs DBPedia (SPoT) (100 shots)": {
+            "task1": {
+                "F1": 61.1,
+                "std": 0.9
+            },
+            "task2": {
+                "F1": 61.3,
+                "std": 1.1
+            },
+            "n1": 10,
+            "n2": 10,
+            "p-value": 0.661628872205266,
+            "significance": false
+        }
+    },
+    "IMDB (Sentiment)": {
+        "SST2 + Yelp (ours) vs SST2 + Yelp (SPoT) (0 shots)": {
+            "task1": {
+                "F1": 90.1,
+                "std": 0.5
+            },
+            "task2": {
+                "F1": 90.8,
+                "std": 0.2
+            },
+            "n1": 10,
+            "n2": 3,
+            "p-value": 0.005687125383164572,
+            "significance": true
+        },
+        "SST2 + Yelp (ours) vs SST2 + Yelp (SPoT) (100 shots)": {
+            "task1": {
+                "F1": 90.4,
+                "std": 0.2
+            },
+            "task2": {
+                "F1": 90.8,
+                "std": 0.2
+            },
+            "n1": 10,
+            "n2": 3,
+            "p-value": 0.04916880566036615,
+            "significance": false
+        }
+    },
+    "SST5 (Sentiment)": {
+        "SST2 + Yelp (SPoT) vs SST2 (SPoT) (0 shots)": {
+            "task1": {
+                "F1": 93.7,
+                "std": 0.5
+            },
+            "task2": {
+                "F1": 94.0,
+                "std": 0.3
+            },
+            "n1": 3,
+            "n2": 10,
+            "p-value": 0.410776104358127,
+            "significance": false
+        },
+        "SST2 + Yelp (SPoT) vs SST2 (SPoT) (100 shots)": {
+            "task1": {
+                "F1": 93.8,
+                "std": 0.5
+            },
+            "task2": {
+                "F1": 93.9,
+                "std": 0.3
+            },
+            "n1": 3,
+            "n2": 10,
+            "p-value": 0.7681568840991666,
+            "significance": false
+        }
+    }
+}

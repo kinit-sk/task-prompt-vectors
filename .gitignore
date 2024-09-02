@@ -5,3 +5,5 @@ wandb
 bin
 saves
 soft_prompts
+visuals
+results*

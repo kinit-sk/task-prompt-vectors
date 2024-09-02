@@ -94,7 +94,7 @@ n_classes = {
     "yahoo_text": 10,
 }
 
-matplotlib.rc("font", size=18)
+matplotlib.rc("font", size=42)
 
 
 fig, axs = plt.subplots(nrows=len(tasks), ncols=2, figsize=(25, 20))
@@ -115,7 +115,23 @@ for ti, t in enumerate(tasks):
 
             print(metric, std, shots)
 
-            axs[ti, i].plot(shots, metric, label=formating_map[d], marker="o")
+            if (
+                d == "dbpedia_text_trec_coarse_text"
+                or d == "sst2_text_yelp_polarity_text"
+                or d == "mnli_text_qnli_text"
+            ):
+                axs[ti, i].plot(
+                    shots, metric, label=formating_map[d], marker="o", linewidth=3.0
+                )
+            else:
+                axs[ti, i].plot(
+                    shots,
+                    metric,
+                    label=formating_map[d],
+                    marker="o",
+                    linestyle="--",
+                    linewidth=3.0,
+                )
             # axs[ti, i].fill_between(shots, metric - std, metric + std, alpha=0.2)
 
         axs[ti, i].set_xscale("log")
@@ -151,7 +167,7 @@ test_datasets = {
 }
 
 # 3 figures
-fig, axs = plt.subplots(nrows=1, ncols=len(tasks), figsize=(36, 10))
+fig, axs = plt.subplots(nrows=1, ncols=len(tasks), figsize=(57, 18))
 
 for ti, t in enumerate(tasks):
     df = pd.read_csv(f"wandb_results_{t}.csv", index_col=0)
@@ -168,9 +184,23 @@ for ti, t in enumerate(tasks):
 
             print(metric, std, shots)
 
-            axs[ti].plot(
-                shots, metric, label=formating_map[d], marker="o", linewidth=3.0
-            )
+            if (
+                d == "dbpedia_text_trec_coarse_text"
+                or d == "sst2_text_yelp_polarity_text"
+                or d == "mnli_text_qnli_text"
+            ):
+                axs[ti].plot(
+                    shots, metric, label=formating_map[d], marker="o", linewidth=3.5
+                )
+            else:
+                axs[ti].plot(
+                    shots,
+                    metric,
+                    label=formating_map[d],
+                    marker="o",
+                    linestyle="--",
+                    linewidth=3.0,
+                )
             # axs[ti].fill_between(shots, metric - std, metric + std, alpha=0.2)
 
         axs[ti].set_xscale("log")
@@ -184,7 +214,7 @@ for ti, t in enumerate(tasks):
         axs[ti].set_ylabel("Macro F1")
         axs[ti].legend(
             loc="upper center",
-            bbox_to_anchor=(0.5, -0.1),
+            bbox_to_anchor=(0.5, -0.15),
             fancybox=True,
             shadow=True,
             ncol=2,

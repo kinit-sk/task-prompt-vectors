@@ -257,21 +257,25 @@ for fname in name_func_map:
         save_dir=f"./visuals/{timestamp}",
     )
 
-tpv_ct_cs = get_tpv_ct_comparison(data_args, task_prompt_vectors, cosine_sim)
+dup_tpv_ct_cs = get_tpv_ct_comparison(data_args, task_prompt_vectors, cosine_sim)
 # print(tpv_ct_cs)
 
 tpv_ct_cs = dict(
-    filter(lambda x: x[0] in remove_duplicates(tpv_ct_cs.keys()), tpv_ct_cs.items())
+    filter(
+        lambda x: x[0] in remove_duplicates(dup_tpv_ct_cs.keys()), dup_tpv_ct_cs.items()
+    )
 )
 
+print(f"tpv_ct_cs_{timestamp}")
 create_heatmaps(
     tpv_ct_cs,
     filename_prefix=f"tpv_ct_cs_{timestamp}",
     save_dir=f"./visuals/{timestamp}",
     n_rows=7,
-    figsize=(40, 55),
+    figsize=(25, 40),
 )
 
+tpv_ct_cs = dup_tpv_ct_cs
 avg_ct_co_tpv_mean = defaultdict(lambda: defaultdict(dict))
 avg_ct_co_tpv_std = defaultdict(lambda: defaultdict(dict))
 print("average cross origin, cross tasks, task prompt vector cosine similarity:")
@@ -283,9 +287,8 @@ for dataset_name in tpv_ct_cs:
             torch.tril(torch.ones(n, n, dtype=bool), diagonal=-1)
         )
     else:
-        no_diag = tpv_ct_cs[dataset_name].masked_select(
-            torch.tril(torch.ones(n, n, dtype=bool))
-        )
+        no_diag = tpv_ct_cs[dataset_name]
+
     print(no_diag.shape)
     # print(dataset_name, np.round(no_diag.mean().item(), 2), np.round(no_diag.std().item(), 2))
     avg_ct_co_tpv_mean[mapping[dataset_name].split(" ")[0]][
@@ -307,27 +310,36 @@ task_prompts = get_task_prompts(
     pa_config=pa_config, dataset_names=data_args.dataset_names
 )
 
-task_ct_cs = get_task_ct_cs(data_args, task_prompts)
+dup_task_ct_cs = get_task_ct_cs(data_args, task_prompts)
 task_ct_cs = dict(
-    filter(lambda x: x[0] in remove_duplicates(task_ct_cs.keys()), task_ct_cs.items())
+    filter(
+        lambda x: x[0] in remove_duplicates(dup_task_ct_cs.keys()),
+        dup_task_ct_cs.items(),
+    )
 )
 
+print(f"task_ct_cs_{timestamp}")
 create_heatmaps(
     task_ct_cs,
     filename_prefix=f"task_ct_cs_{timestamp}",
     save_dir=f"./visuals/{timestamp}",
     n_rows=7,
-    figsize=(40, 55),
+    figsize=(25, 40),
 )
 
+task_ct_cs = dup_task_ct_cs
 avg_ct_co_task_mean = defaultdict(lambda: defaultdict(dict))
 avg_ct_co_task_std = defaultdict(lambda: defaultdict(dict))
 print("average cross origin, cross tasks, task prompt cosine similarity:")
 for dataset_name in task_ct_cs:
     n = len(task_ct_cs[dataset_name])
-    no_diag = task_ct_cs[dataset_name].masked_select(
-        torch.tril(torch.ones(n, n, dtype=bool), diagonal=-1)
-    )
+    if mapping[dataset_name].split(" ")[0] == mapping[dataset_name].split(" ")[1]:
+        no_diag = task_ct_cs[dataset_name].masked_select(
+            torch.tril(torch.ones(n, n, dtype=bool), diagonal=-1)
+        )
+    else:
+        no_diag = tpv_ct_cs[dataset_name]
+
     # print(no_diag)
     # print(dataset_name, np.round(no_diag.mean().item(), 2), np.round(no_diag.std().item(), 2))
     avg_ct_co_task_mean[mapping[dataset_name].split(" ")[0]][

@@ -136,7 +136,7 @@ class AbstractTask:
 
             decoded_preds, decoded_labels = self.postprocessor(preds, labels, tokenizer)
 
-            # print("compute_metrics:", decoded_labels, decoded_labels)
+            print("compute_metrics:", decoded_preds)
 
             metrics = {}
             # TODO: to get rid of the zip, make classes from metrics and add metric name to it
@@ -153,7 +153,7 @@ class AbstractTask:
     def get(
         self,
         split,
-        task_type="seq_2_seq_lm",
+        task_type="SEQ_2_SEQ_LM",
         add_prefix=True,
         n_obs=None,
         split_validation_test=False,

@@ -29,7 +29,7 @@ class DataTrainingArguments:
     )
 
     data_tokenizer_name_or_path: Optional[str] = field(
-        default="t5-base",
+        default=None,
         metadata={"help": "Specify tokenizer to use while train/test/eval."},
     )
 
@@ -68,4 +68,8 @@ class DataTrainingArguments:
             "help": "For debugging purposes or quicker training, truncate the number of test examples to this "
             "value if set."
         },
+    )
+
+    pad_to_max_length: Optional[bool] = field(
+        default=False, metadata={"help": "Pad labels to the size of the input leght"}
     )

@@ -11,47 +11,47 @@ from pathlib import Path
 import numpy as np
 
 mapping = {
-    "dbpedia_text_dbpedia_text": "DBPedia",
+    "dbpedia_text_dbpedia_text": "DBPedia/DBPedia",
     "dbpedia_text": "DBPedia",
-    "dbpedia_text_mnli_text": "DBPedia MNLI",
-    "dbpedia_text_qnli_text": "DBPedia QNLI",
-    "dbpedia_text_sst2_text": "DBPedia SST2",
-    "dbpedia_text_trec_coarse_text": "DBPedia TREC",
-    "dbpedia_text_yelp_polarity_text": "DBPedia Yelp",
-    "mnli_text_dbpedia_text": "MNLI DBPedia",
-    "mnli_text_mnli_text": "MNLI",
+    "dbpedia_text_mnli_text": "DBPedia/MNLI",
+    "dbpedia_text_qnli_text": "DBPedia/QNLI",
+    "dbpedia_text_sst2_text": "DBPedia/SST2",
+    "dbpedia_text_trec_coarse_text": "DBPedia/TREC",
+    "dbpedia_text_yelp_polarity_text": "DBPedia/Yelp",
+    "mnli_text_dbpedia_text": "MNLI/DBPedia",
+    "mnli_text_mnli_text": "MNLI/MNLI",
     "mnli_text": "MNLI",
-    "mnli_text_qnli_text": "MNLI QNLI",
-    "mnli_text_sst2_text": "MNLI SST2",
-    "mnli_text_trec_coarse_text": "MNLI TREC",
-    "mnli_text_yelp_polarity_text": "MNLI Yelp",
-    "qnli_text_dbpedia_text": "QNLI DBPedia",
-    "qnli_text_mnli_text": "QNLI MNLI",
-    "qnli_text_qnli_text": "QNLI",
+    "mnli_text_qnli_text": "MNLI/QNLI",
+    "mnli_text_sst2_text": "MNLI/SST2",
+    "mnli_text_trec_coarse_text": "MNLI/TREC",
+    "mnli_text_yelp_polarity_text": "MNLI/Yelp",
+    "qnli_text_dbpedia_text": "QNLI/DBPedia",
+    "qnli_text_mnli_text": "QNLI/MNLI",
+    "qnli_text_qnli_text": "QNLI/QNLI",
     "qnli_text": "QNLI",
-    "qnli_text_sst2_text": "QNLI SST2",
-    "qnli_text_trec_coarse_text": "QNLI TREC",
-    "qnli_text_yelp_polarity_text": "QNLI Yelp",
-    "sst2_text_dbpedia_text": "SST2 DBPedia",
-    "sst2_text_mnli_text": "SST2 MNLI",
-    "sst2_text_qnli_text": "SST2 QNLI",
-    "sst2_text_sst2_text": "SST2",
+    "qnli_text_sst2_text": "QNLI/SST2",
+    "qnli_text_trec_coarse_text": "QNLI/TREC",
+    "qnli_text_yelp_polarity_text": "QNLI/Yelp",
+    "sst2_text_dbpedia_text": "SST2/DBPedia",
+    "sst2_text_mnli_text": "SST2/MNLI",
+    "sst2_text_qnli_text": "SST2/QNLI",
+    "sst2_text_sst2_text": "SST2/SST2",
     "sst2_text": "SST2",
-    "sst2_text_trec_coarse_text": "SST2 TREC",
-    "sst2_text_yelp_polarity_text": "SST2 Yelp",
-    "trec_coarse_text_dbpedia_text": "TREC DBPedia",
-    "trec_coarse_text_mnli_text": "TREC MNLI",
-    "trec_coarse_text_qnli_text": "TREC QNLI",
-    "trec_coarse_text_sst2_text": "TREC SST2",
-    "trec_coarse_text_trec_coarse_text": "TREC",
+    "sst2_text_trec_coarse_text": "SST2/TREC",
+    "sst2_text_yelp_polarity_text": "SST2/Yelp",
+    "trec_coarse_text_dbpedia_text": "TREC/DBPedia",
+    "trec_coarse_text_mnli_text": "TREC/MNLI",
+    "trec_coarse_text_qnli_text": "TREC/QNLI",
+    "trec_coarse_text_sst2_text": "TREC/SST2",
+    "trec_coarse_text_trec_coarse_text": "TREC/TREC",
     "trec_coarse_text": "TREC",
-    "trec_coarse_text_yelp_polarity_text": "TREC Yelp",
-    "yelp_polarity_text_dbpedia_text": "Yelp DBPedia",
-    "yelp_polarity_text_mnli_text": "Yelp MNLI",
-    "yelp_polarity_text_qnli_text": "Yelp QNLI",
-    "yelp_polarity_text_sst2_text": "Yelp SST2",
-    "yelp_polarity_text_trec_coarse_text": "Yelp TREC",
-    "yelp_polarity_text_yelp_polarity_text": "Yelp",
+    "trec_coarse_text_yelp_polarity_text": "TREC/Yelp",
+    "yelp_polarity_text_dbpedia_text": "Yelp/DBPedia",
+    "yelp_polarity_text_mnli_text": "Yelp/MNLI",
+    "yelp_polarity_text_qnli_text": "Yelp/QNLI",
+    "yelp_polarity_text_sst2_text": "Yelp/SST2",
+    "yelp_polarity_text_trec_coarse_text": "Yelp/TREC",
+    "yelp_polarity_text_yelp_polarity_text": "Yelp/Yelp",
     "yelp_polarity_text": "Yelp",
 }
 
@@ -62,10 +62,11 @@ def create_heatmaps(
     n_rows=2,
     save_dir="./visuals",
     figsize=(35, 15),
+    save_pages=1,
 ) -> None:
     Path(save_dir).mkdir(parents=True, exist_ok=True)
 
-    n_cols = len(data.values()) // n_rows
+    n_cols = round(len(data.values()) / n_rows)
     # for name in data:
 
     #     df = pd.DataFrame(data[name])
@@ -81,16 +82,34 @@ def create_heatmaps(
 
     fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize)
 
+    print(n_rows, n_cols)
+
     for i in range(n_rows):
         for j in range(n_cols):
 
-            df = pd.DataFrame(list(data.values())[i * n_cols + j])
-
-            axs[i, j].set_title(mapping[list(data.keys())[i * n_cols + j]])
-
-            if len(mapping[list(data.keys())[i * n_cols + j]].split(" ")) == 1:
-                mask = np.triu(np.ones((len(df.axes[0]), len(df.axes[0])), dtype=bool))
+            # print(list(data.values())[i * n_cols + j])
+            if (
+                len(mapping[list(data.keys())[i * n_cols + j]].split("/")) != 1
+                and mapping[list(data.keys())[i * n_cols + j]].split("/")[0]
+                == mapping[list(data.keys())[i * n_cols + j]].split("/")[1]
+            ):
+                df = pd.DataFrame(list(data.values())[i * n_cols + j][1:, :-1])
+                # print(df)
             else:
+                df = pd.DataFrame(list(data.values())[i * n_cols + j])
+                # print(df)
+
+            if len(mapping[list(data.keys())[i * n_cols + j]].split("/")) == 1:
+                axs[i, j].set_title(mapping[list(data.keys())[i * n_cols + j]])
+
+            mask = None
+
+            if len(mapping[list(data.keys())[i * n_cols + j]].split("/")) == 1:
+                mask = np.triu(np.ones((len(df.axes[0]), len(df.axes[0])), dtype=bool))
+            elif (
+                mapping[list(data.keys())[i * n_cols + j]].split("/")[0]
+                == mapping[list(data.keys())[i * n_cols + j]].split("/")[1]
+            ):
                 mask = np.invert(
                     np.tril(np.ones((len(df.axes[0]), len(df.axes[0])), dtype=bool))
                 )
@@ -104,15 +123,37 @@ def create_heatmaps(
                 mask=mask,
             )
 
-            if len(mapping[list(data.keys())[i * n_cols + j]].split(" ")) == 1:
+            if len(mapping[list(data.keys())[i * n_cols + j]].split("/")) != 1:
+                ax.set_ylabel(mapping[list(data.keys())[i * n_cols + j]].split("/")[0])
+                ax.set_xlabel(mapping[list(data.keys())[i * n_cols + j]].split("/")[1])
+
+            if len(mapping[list(data.keys())[i * n_cols + j]].split("/")) == 1:
                 ticks = ax.get_xticks()
                 ax.set_xticks(ticks[:-1])
 
                 ticks = ax.get_yticks()
                 ax.set_yticks(ticks[1:])
 
+            if (
+                len(mapping[list(data.keys())[i * n_cols + j]].split("/")) != 1
+                and mapping[list(data.keys())[i * n_cols + j]].split("/")[0]
+                == mapping[list(data.keys())[i * n_cols + j]].split("/")[1]
+            ):
+
+                labels = ax.get_yticklabels()
+
+                # print(labels)
+                new_labels = np.arange(len(labels)) + 1
+
+                for k, nl in enumerate(new_labels):
+                    labels[k] = str(nl)
+
+                ax.set_yticklabels(labels)
+                # print(ax.get_yticklabels())
+
             ax.invert_yaxis()
 
+    fig.tight_layout()
     plt.savefig(f"{save_dir}/{filename_prefix}_heatmaps.png", bbox_inches="tight")
     plt.savefig(f"{save_dir}/{filename_prefix}_heatmaps.pdf", bbox_inches="tight")
 

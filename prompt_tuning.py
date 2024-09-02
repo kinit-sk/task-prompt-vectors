@@ -6,7 +6,10 @@ from trainer import MultiTaskSeq2SeqTrainer
 from transformers import (
     AutoTokenizer,
     AutoModelForSeq2SeqLM,
+    AutoModelForCausalLM,
     DataCollatorForSeq2Seq,
+    Trainer,
+    DataCollatorForLanguageModeling,
 )
 from peft import get_peft_model
 
@@ -39,13 +42,23 @@ parser = ArgumentParser(
 )
 
 training_args, data_args, pt_args = parser.parse_toml_file(args.filename)
-print(training_args)
+# print(training_args)
 
 os.environ["WANDB_PROJECT"] = training_args.wandb_project
 
-tokenizer = AutoTokenizer.from_pretrained(
-    data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True
-)
+if pt_args.task_type == "CAUSAL_LM":
+    tokenizer = AutoTokenizer.from_pretrained(
+        data_args.data_tokenizer_name_or_path,
+        model_max_length=512,
+        use_fast=True,
+        padding_side="left",
+    )
+
+    tokenizer.add_special_tokens({"pad_token": "<|reserved_special_token_0|>"})
+else:
+    tokenizer = AutoTokenizer.from_pretrained(
+        data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True
+    )
 
 output_dir = training_args.output_dir
 
@@ -58,15 +71,26 @@ for origin_prompt in pt_args.origin_prompts:
         if not isinstance(dataset_name, list):
             training_args.train_dataset_names = [dataset_name]
 
-        model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
+        if pt_args.task_type == "CAUSAL_LM":
+            model = AutoModelForCausalLM.from_pretrained(
+                training_args.model_name_or_path, torch_dtype=torch.bfloat16
+            ).to("cuda")
+        else:
+            model = AutoModelForSeq2SeqLM.from_pretrained(
+                training_args.model_name_or_path
+            )
+            model.generation_config.max_new_tokens = data_args.max_target_length
+
         model = get_peft_model(model, peft_config=pt_args)
+
+        model.config.pad_token_id = tokenizer.pad_token_id
+        model.generation_config.pad_token_id = tokenizer.pad_token_id
 
         model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(
             torch.load(f"saves/{origin_prompt}/{origin_prompt}.bin")[
                 "prompt_embeddings"
-            ]
+            ].to("cuda")
         )
-        model.base_model.generation_config.max_new_tokens = data_args.max_target_length
 
         print("current PT weights:", model.prompt_encoder.default.embedding.weight)
 
@@ -75,7 +99,7 @@ for origin_prompt in pt_args.origin_prompts:
         print(f"task: {training_args.train_dataset_names}")
 
         preprocessor = Preprocessor(
-            training_args.train_dataset_names, data_args, training_args
+            training_args.train_dataset_names, data_args, training_args, pt_args, tokenizer
         )
 
         training_args.output_dir = f"{output_dir}_{timestamp}_{'_'.join(training_args.train_dataset_names)}_{origin_prompt}"
@@ -84,7 +108,14 @@ for origin_prompt in pt_args.origin_prompts:
         train_dataset, valid_datasets, test_datasets = preprocessor.get_data()
         # print(train_dataset, valid_datasets, test_datasets)
 
-        data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, return_tensors="pt")
+        if pt_args.task_type == "CAUSAL_LM":
+            data_collator = DataCollatorForLanguageModeling(
+                tokenizer=tokenizer, mlm=False, return_tensors="pt"
+            )
+        else:
+            data_collator = DataCollatorForSeq2Seq(
+                tokenizer=tokenizer, return_tensors="pt"
+            )
 
         compute_metrics = None
         if isinstance(dataset_name, list):
@@ -94,15 +125,25 @@ for origin_prompt in pt_args.origin_prompts:
         else:
             compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer)
 
-        trainer = MultiTaskSeq2SeqTrainer(
-            model=model,
-            tokenizer=tokenizer,
-            args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=valid_datasets,
-            data_collator=data_collator,
-            compute_metrics=compute_metrics,
-        )
+        if pt_args.task_type == "CAUSAL_LM":
+            trainer = Trainer(
+                model=model,
+                tokenizer=tokenizer,
+                args=training_args,
+                train_dataset=train_dataset,
+                eval_dataset=list(valid_datasets.values())[0],
+                data_collator=data_collator,
+            )
+        else:
+            trainer = MultiTaskSeq2SeqTrainer(
+                model=model,
+                tokenizer=tokenizer,
+                args=training_args,
+                train_dataset=train_dataset,
+                eval_dataset=valid_datasets,
+                data_collator=data_collator,
+                compute_metrics=compute_metrics,
+            )
         trainer.train()
 
         if isinstance(dataset_name, list):
