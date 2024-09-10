@@ -4,6 +4,8 @@ from typing import List, Dict
 
 from arithmetics import TaskPrompt, PromptArithmeticsConfig
 
+from safetensors.torch import safe_open
+
 
 def get_task_prompt_vectors(
     pa_config: PromptArithmeticsConfig, dataset_names: List[str], device: str = "cuda"
@@ -36,3 +38,13 @@ def get_task_prompts(
         ]
         for origin_prompt in pa_config.origin_prompts
     }
+
+def get_task_prompt_from_safetensor(save: str):
+    tensors = {}
+
+    with safe_open(f"{save}/adapter_model.safetensors", framework="pt", device=0) as f:
+        for k in f.keys():
+            tensors[k] = f.get_tensor(k)
+
+    return torch.nn.Parameter(tensors["prompt_embeddings"])
+

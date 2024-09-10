@@ -9,7 +9,7 @@ from transformers import (
     AutoModelForCausalLM,
     DataCollatorForSeq2Seq,
     Trainer,
-    DataCollatorForLanguageModeling,
+    default_data_collator,
 )
 from peft import get_peft_model
 
@@ -109,7 +109,7 @@ for origin_prompt in pt_args.origin_prompts:
         # print(train_dataset, valid_datasets, test_datasets)
 
         if pt_args.task_type == "CAUSAL_LM":
-            data_collator = DataCollatorForLanguageModeling(
+            data_collator = default_data_collator(
                 tokenizer=tokenizer, mlm=False, return_tensors="pt"
             )
         else:

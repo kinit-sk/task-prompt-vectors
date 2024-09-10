@@ -42,7 +42,7 @@ class Preprocessor:
 
         return torch.cat((trailing_pads, non_trailing_pads))
 
-    def preprocess_function(self, examples, max_target_length: int):
+    def preprocess_function(self, examples, max_target_length: int, include_labels: True):
         padding = "max_length"
 
         if self.data_args.pad_to_max_length:
@@ -64,7 +64,7 @@ class Preprocessor:
             return_tensors="pt",
         )
 
-        if self.pa_args.task_type == "CAUSAL_LM":
+        if self.pa_args.task_type == "CAUSAL_LM" and include_labels:
             inputs["labels"] = torch.cat((labels["input_ids"] , torch.full((labels["input_ids"].shape[0], 1), self.tokenizer.eos_token_id)), dim=1)
 
             inputs["labels"][inputs["labels"] == self.tokenizer.bos_token_id] = -100
@@ -76,6 +76,9 @@ class Preprocessor:
             inputs["input_ids"] = torch.stack([self._move_trailing_pads_to_beginning(row) for row in inputs["input_ids"]])
             inputs["attention_mask"] = torch.stack([self._update_attention_mask(row) for row in inputs["input_ids"]])
             inputs["labels"] = torch.cat((torch.full((labels["input_ids"].shape[0],inputs["input_ids"].shape[1] - inputs["labels"].shape[1]), -100), inputs["labels"]), dim=1)
+
+        elif self.pa_args.task_type == "CAUSAL_LM":
+            inputs["labels"] = labels["input_ids"]
 
         return inputs
 
@@ -112,6 +115,7 @@ class Preprocessor:
                     functools.partial(
                         self.preprocess_function,
                         max_target_length=max_target_lengths[i],
+                        include_labels=True,
                     ),
                     batched=True,
                     load_from_cache_file=False,
@@ -140,6 +144,7 @@ class Preprocessor:
                     functools.partial(
                         self.preprocess_function,
                         max_target_length=max_target_lengths[i],
+                        include_labels=False,
                     ),
                     batched=True,
                     load_from_cache_file=False,
@@ -168,6 +173,7 @@ class Preprocessor:
                     functools.partial(
                         self.preprocess_function,
                         max_target_length=max_target_lengths[i],
+                        include_labels=False,
                     ),
                     batched=True,
                     load_from_cache_file=False,
