@@ -31,13 +31,17 @@ class CausalLM(AbstractTaskType):
         labels: List[str],
         add_prefix: bool,
         prefix: Optional[str] = None,
+        instruct = False,
     ):
-        input_prefix = task_name if prefix is None else prefix
-        inputs = [input_prefix] + inputs if add_prefix else inputs
-        return {
-            "source": f"{' '.join(inputs)} label: ",
-            "target": " ".join(labels),
-        }
+        if instruct:
+            return {"content": f"{'\n'.join(inputs)}\nlabel: ", "target": " ".join(labels), "role": "user"}
+        else:
+            input_prefix = task_name if prefix is None else prefix
+            inputs = [input_prefix] + inputs if add_prefix else inputs
+            return {
+                "source": f"{' '.join(inputs)} label: ",
+                "target": " ".join(labels),
+            }
 
 
 TYPE_MAPPING: OrderedDict[str, AbstractTaskType] = OrderedDict(

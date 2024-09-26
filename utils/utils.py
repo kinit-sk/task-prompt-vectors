@@ -39,6 +39,7 @@ def get_task_prompts(
         for origin_prompt in pa_config.origin_prompts
     }
 
+
 def get_task_prompt_from_safetensor(save: str):
     tensors = {}
 
@@ -47,4 +48,3 @@ def get_task_prompt_from_safetensor(save: str):
             tensors[k] = f.get_tensor(k)
 
     return torch.nn.Parameter(tensors["prompt_embeddings"])
-

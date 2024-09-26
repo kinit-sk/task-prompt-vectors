@@ -127,7 +127,9 @@ class AbstractTask:
             self.name, self.dataset_config_name, split=split, script_version="master"
         )
 
-    def get_compute_metrics(self, tokenizer) -> Callable[[EvalPrediction], Dict]:
+    def get_compute_metrics(
+        self, tokenizer, task_type
+    ) -> Callable[[EvalPrediction], Dict]:
         def compute_metrics(eval_preds: EvalPrediction) -> Dict:
             preds, labels = eval_preds
 
@@ -135,6 +137,12 @@ class AbstractTask:
             labels[labels == -100] = tokenizer.pad_token_id
 
             decoded_preds, decoded_labels = self.postprocessor(preds, labels, tokenizer)
+
+            if task_type == "CAUSAL_LM":
+                decoded_preds = [
+                    dpred.split("label: ")[1] if "label: " in dpred else dpred
+                    for dpred in tokenizer.batch_decode(preds, skip_special_tokens=True)
+                ]
 
             print("compute_metrics:", decoded_preds)
 
@@ -161,7 +169,8 @@ class AbstractTask:
         self.formater = AutoType.get(task_type).formater
         if (
             split_validation_test
-            and self.name.replace("_text", "") in self.small_datasets_without_all_splits
+            and self.name.replace("_text", "").replace("_instruct", "")
+            in self.small_datasets_without_all_splits
             and split != "train"
         ):
             mapped_split = self.split_to_data_split["validation"]
@@ -173,7 +182,8 @@ class AbstractTask:
 
         elif (
             split_validation_test
-            and self.name.replace("_text", "") in self.large_data_without_all_splits
+            and self.name.replace("_text", "").replace("_instruct", "")
+            in self.large_data_without_all_splits
             and split != "test"
         ):
             dataset = self.load_dataset(split="train")
@@ -208,7 +218,7 @@ class SST2(AbstractTask):
         return datasets.load_dataset("glue", "sst2", split=split)
 
     def preprocessor(self, example, add_prefix=True):
-        input_texts = ["sentence", example["sentence"]]
+        input_texts = ["sentence:", example["sentence"]]
         label_texts = [str(example[self.label_column_name])]
 
         return self.formater(
@@ -233,7 +243,7 @@ class SST2Text(AbstractTask):
         return datasets.load_dataset("glue", "sst2", split=split)
 
     def preprocessor(self, example, add_prefix=True):
-        input_texts = ["sentence", example["sentence"]]
+        input_texts = ["sentence:", example["sentence"]]
         label_texts = [self.id2label[example[self.label_column_name]]]
 
         return self.formater(
@@ -257,7 +267,7 @@ class SST5(AbstractTask):
         return datasets.load_dataset("SetFit/sst5", split=split)
 
     def preprocessor(self, example, add_prefix=True):
-        input_texts = ["sentence", example["sentence"]]
+        input_texts = ["sentence:", example["sentence"]]
         label_texts = [str(example[self.label_column_name])]
 
         return self.formater(
@@ -435,6 +445,39 @@ class QNLIText(AbstractTask):
         )
 
 
+class QNLITextInstruct(AbstractTask):
+    name = "qnli_text_instruct"
+    labels_list = ["entailment", "not entailment"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+    id2label = {0: "entailment", 1: "not entailment"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "qnli", split=split)
+
+    def preprocessor(self, example, add_prefix=False):
+        input_texts = [
+            f"Classify the question and sentence pair into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
+            f"question: {example['question']}",
+            f"sentence: {example['sentence']}",
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+        )
+
+
 class MNLI(AbstractTask):
     name = "mnli"
     labels_list = ["0", "1", "2"]
@@ -491,6 +534,35 @@ class MNLIText(AbstractTask):
 
         return self.formater(
             self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class MNLITextInstruct(AbstractTask):
+    name = "mnli_text_insttuct"
+    labels_list = ["entailment", "neutral", "contradiction"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation_mismatched",
+        "test": "validation_matched",
+    }
+    label_column_name = "label"
+    id2label = {0: "entailment", 1: "neutral", 2: "contradiction"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "mnli", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            f"Classify the premise and hypothesis pair into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
+            f"premise: {example['premise']}",
+            f"hypothesis: {example['hypothesis']}",
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text_instruct", ""), input_texts, label_texts, add_prefix, instruct=True
         )
 
 
@@ -1081,8 +1153,10 @@ TASK_MAPPING = OrderedDict(
         ("sst2_text", SST2Text),
         ("qnli", QNLI),
         ("qnli_text", QNLIText),
+        ("qnli_text_instruct", QNLITextInstruct),
         ("mnli", MNLI),
         ("mnli_text", MNLIText),
+        ("mnli_text_instruct", MNLITextInstruct),
         ("scitail", SciTail),
         ("scitail_text", SciTailText),
         ("snli", SNLI),

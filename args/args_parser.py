@@ -29,6 +29,7 @@ class ArgumentParser(HfArgumentParser):
 
         with open(Path(toml_file), "rb") as f:
             data = tomllib.load(f)
+        print(data)
 
         outputs = self.parse_dict(data, allow_extra_keys=allow_extra_keys)
         return tuple(outputs)

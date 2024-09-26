@@ -9,7 +9,9 @@ from transformers import (
     AutoModelForCausalLM,
     DataCollatorForSeq2Seq,
     Trainer,
+    Seq2SeqTrainer,
     default_data_collator,
+    GenerationConfig,
 )
 from peft import get_peft_model
 
@@ -24,9 +26,7 @@ from tasks import AutoTask
 
 import argparse
 
-
 timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
-
 
 argparse_parser = argparse.ArgumentParser(
     prog="Run prompt tuning",
@@ -79,7 +79,9 @@ for origin_prompt in pt_args.origin_prompts:
             model = AutoModelForSeq2SeqLM.from_pretrained(
                 training_args.model_name_or_path
             )
-            model.generation_config.max_new_tokens = data_args.max_target_length
+
+        model.generation_config.max_new_tokens = 16
+        model.generation_config.max_length = 256
 
         model = get_peft_model(model, peft_config=pt_args)
 
@@ -99,7 +101,11 @@ for origin_prompt in pt_args.origin_prompts:
         print(f"task: {training_args.train_dataset_names}")
 
         preprocessor = Preprocessor(
-            training_args.train_dataset_names, data_args, training_args, pt_args, tokenizer
+            training_args.train_dataset_names,
+            data_args,
+            training_args,
+            pt_args,
+            tokenizer,
         )
 
         training_args.output_dir = f"{output_dir}_{timestamp}_{'_'.join(training_args.train_dataset_names)}_{origin_prompt}"
@@ -108,10 +114,19 @@ for origin_prompt in pt_args.origin_prompts:
         train_dataset, valid_datasets, test_datasets = preprocessor.get_data()
         # print(train_dataset, valid_datasets, test_datasets)
 
+        print(tokenizer.decode(train_dataset[10]["labels"][-4:]))
+        print(tokenizer.decode(train_dataset[10]["input_ids"][-4:]))
+        print(tokenizer.decode(list(valid_datasets.values())[0][0]["labels"][-8:]))
+        print(tokenizer.decode(list(valid_datasets.values())[0][0]["input_ids"][-8:]))
+
+        print(
+            len(list(valid_datasets.values())[0][0]["labels"]),
+            len(list(valid_datasets.values())[0][0]["input_ids"]),
+            len(list(valid_datasets.values())[0][0]["attention_mask"]),
+        )
+
         if pt_args.task_type == "CAUSAL_LM":
-            data_collator = default_data_collator(
-                tokenizer=tokenizer, mlm=False, return_tensors="pt"
-            )
+            data_collator = default_data_collator
         else:
             data_collator = DataCollatorForSeq2Seq(
                 tokenizer=tokenizer, return_tensors="pt"
@@ -121,18 +136,23 @@ for origin_prompt in pt_args.origin_prompts:
         if isinstance(dataset_name, list):
             compute_metrics = {}
             for dm in dataset_name:
-                compute_metrics[dm] = AutoTask.get(dm).get_compute_metrics(tokenizer)
+                compute_metrics[dm] = AutoTask.get(dm).get_compute_metrics(
+                    tokenizer, task_type=pt_args.task_type
+                )
         else:
-            compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer)
+            compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(
+                tokenizer, task_type=pt_args.task_type
+            )
 
         if pt_args.task_type == "CAUSAL_LM":
-            trainer = Trainer(
+            trainer = Seq2SeqTrainer(
                 model=model,
                 tokenizer=tokenizer,
                 args=training_args,
                 train_dataset=train_dataset,
                 eval_dataset=list(valid_datasets.values())[0],
                 data_collator=data_collator,
+                compute_metrics=compute_metrics,
             )
         else:
             trainer = MultiTaskSeq2SeqTrainer(
