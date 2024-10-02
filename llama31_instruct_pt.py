@@ -16,6 +16,7 @@ from trl import SFTTrainer, SFTConfig, ModelConfig
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, f1_score
 
+from metrics.utils import binary_reverse
 
 
 def apply_test_template(examples):
@@ -64,27 +65,45 @@ def predict(test_dataset, model, tokenizer, labels_list):
                 break
         else:
             y_pred.append("none")
+            # print(answer)
 
     return y_pred
 
 
-def evaluate(y_pred, y_true, mapping, prefix = "eval"):
+def evaluate(y_pred, y_true, mapping, prefix="eval"):
     def map_func(x):
         return mapping.get(x, -1)
 
+    print(y_pred)
     y_pred_mapped = np.vectorize(map_func)(y_pred)
     y_true_mapped = np.vectorize(map_func)(y_true)
 
-    unique_labels = set(y_true_mapped)
+    unique_labels = list(set(y_true_mapped))
 
     accuracy = accuracy_score(y_pred=y_pred_mapped, y_true=y_true_mapped)
 
     if len(unique_labels) > 2:
-        f1 = f1_score(y_pred=y_pred_mapped, y_true=y_true_mapped, average="macro")
+        f1 = f1_score(
+            y_pred=y_pred_mapped,
+            y_true=y_true_mapped,
+            labels=unique_labels,
+            average="macro",
+        )
     else:
-        f1 = f1_score(y_pred=y_pred_mapped, y_true=y_true_mapped)
+        invalid_idx_mask = y_pred_mapped == -1
+        y_pred_mapped[invalid_idx_mask] = binary_reverse(
+            y_true_mapped[invalid_idx_mask], unique_labels
+        )
+
+        f1 = f1_score(
+            y_pred=y_pred_mapped,
+            y_true=y_true_mapped,
+            labels=unique_labels,
+            pos_label=unique_labels[1],
+        )
 
     return {f"{prefix}/accuracy": accuracy, f"{prefix}/f1": f1}
+
 
 timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
 
@@ -94,11 +113,18 @@ argparse_parser = argparse.ArgumentParser(
 )
 
 argparse_parser.add_argument("filename", help="Filename of a config to run.")
+argparse_parser.add_argument(
+    "--print_data", action="store_true", help="Print parsed data and exit."
+)
 args = argparse_parser.parse_args()
 
-parser = ArgumentParser((SFTConfig, ModelConfig, DataTrainingArguments, PromptArithmeticsConfig))
+parser = ArgumentParser(
+    (SFTConfig, ModelConfig, DataTrainingArguments, PromptArithmeticsConfig)
+)
 
-training_args, model_args, data_args, peft_config = parser.parse_toml_file(args.filename)
+training_args, model_args, data_args, peft_config = parser.parse_toml_file(
+    args.filename
+)
 
 os.environ["WANDB_PROJECT"] = "arithmetics"
 
@@ -113,7 +139,8 @@ for origin_prompt in peft_config.origin_prompts:
         training_args.run_name = f"prompt_tuning_{timestamp}_{'_'.join(data_args.dataset_names)}_{origin_prompt}"
 
         model = AutoModelForCausalLM.from_pretrained(
-            model_args.model_name_or_path, torch_dtype=torch.bfloat16,
+            model_args.model_name_or_path,
+            torch_dtype=torch.bfloat16,
         ).to("cuda")
         model.active_adapters = [
             "default"
@@ -167,20 +194,28 @@ for origin_prompt in peft_config.origin_prompts:
         chat_valid_dataset = valid_dataset.map(apply_template)
         chat_test_dataset = test_dataset.map(apply_test_template)
 
+        if args.print_data:
+            print("Train data")
+            print(chat_train_dataset["text"][0])
+
+            print("Valid data")
+            print(chat_valid_dataset["text"][0])
+
+            print("Test data")
+            print(chat_test_dataset["text"][0])
+
+            exit(0)
 
         pre_train_results = evaluate(
             predict(
                 chat_test_dataset,
                 model,
                 tokenizer,
-                AutoTask.get("qnli_text_instruct").labels_list,
+                AutoTask.get(dataset_name).labels_list,
             ),
             test_dataset["target"],
-            {
-                label: id_
-                for id_, label in AutoTask.get("qnli_text_instruct").id2label.items()
-            },
-            prefix = "test",
+            {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
+            prefix="test",
         )
 
         print(pre_train_results)
@@ -201,14 +236,11 @@ for origin_prompt in peft_config.origin_prompts:
                 chat_test_dataset,
                 model,
                 tokenizer,
-                AutoTask.get("qnli_text_instruct").labels_list,
+                AutoTask.get(dataset_name).labels_list,
             ),
             test_dataset["target"],
-            {
-                label: id_
-                for id_, label in AutoTask.get("qnli_text_instruct").id2label.items()
-            },
-            prefix = "test",
+            {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
+            prefix="test",
         )
 
         if isinstance(dataset_name, list):

@@ -251,6 +251,38 @@ class SST2Text(AbstractTask):
         )
 
 
+class SST2TextInstruct(AbstractTask):
+    name = "sst2_text_instruct"
+    labels_list = ["negative", "positive"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+    id2label = {0: "negative", 1: "positive"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "sst2", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            f"Classify the sentence into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
+            f"sentence: {example['sentence']}",
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+        )
+
+
 class SST5(AbstractTask):
     name = "sst5"
     labels_list = ["0", "1", "2", "3", "4"]
@@ -343,6 +375,33 @@ class YelpPolarityText(AbstractTask):
         label_texts = [self.id2label[example[self.label_column_name]]]
         return self.formater(
             self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class YelpPolarityTextInstruct(AbstractTask):
+    name = "yelp_polarity_text_instruct"
+    labels_list = ["negative", "positive"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
+    split_to_data_split = {"train": "train", "test": "test"}
+    label_column_name = "label"
+    id2label = {0: "negative", 1: "positive"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("yelp_polarity")[split]
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            f"Classify the sentence into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
+            f"sentence: {example['text']}",
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+        return self.formater(
+            self.name.replace("_text_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
         )
 
 
@@ -562,7 +621,11 @@ class MNLITextInstruct(AbstractTask):
         label_texts = [self.id2label[example[self.label_column_name]]]
 
         return self.formater(
-            self.name.replace("_text_instruct", ""), input_texts, label_texts, add_prefix, instruct=True
+            self.name.replace("_text_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
         )
 
 
@@ -932,6 +995,48 @@ class TRECCoarseText(AbstractTask):
         )
 
 
+class TRECCoarseTextInstruct(AbstractTask):
+    name = "trec_coarse_text_instruct"
+    labels_list = [
+        "Abbreviation",
+        "Entity",
+        "Description",
+        "Person",
+        "Location",
+        "Quantity",
+    ]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {"train": "train", "validation": "test"}
+    label_column_name = "coarse_label"
+    id2label = {
+        0: "Abbreviation",
+        1: "Entity",
+        2: "Description",
+        3: "Person",
+        4: "Location",
+        5: "Quantity",
+    }
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("trec", split=split, trust_remote_code=True)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            f"Classify the question into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
+            f"question: {example['text']}",
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+        )
+
+
 class DBPEDIA(AbstractTask):
     name = "dbpedia"
     labels_list = [str(i) for i in list(range(14))]
@@ -1010,6 +1115,65 @@ class DBPEDIAText(AbstractTask):
 
         return self.formater(
             self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class DBPEDIATextInstruct(AbstractTask):
+    name = "dbpedia_text_instruct"
+    labels_list = [
+        "Company",
+        "Educational Institution",
+        "Artist",
+        "Athlete",
+        "Office Holder",
+        "Mean Of Transportation",
+        "Building",
+        "Natural Place",
+        "Village",
+        "Animal",
+        "Plant",
+        "Album",
+        "Film",
+        "Written Work",
+    ]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {"train": "train", "test": "test"}
+    label_column_name = "label"
+    id2label = {
+        0: "Company",
+        1: "Educational Institution",
+        2: "Artist",
+        3: "Athlete",
+        4: "Office Holder",
+        5: "Mean Of Transportation",
+        6: "Building",
+        7: "Natural Place",
+        8: "Village",
+        9: "Animal",
+        10: "Plant",
+        11: "Album",
+        12: "Film",
+        13: "Written Work",
+    }
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("dbpedia_14", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            f"Classify the title and content pair into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
+            f"title: {example['title']}",
+            f"content: {example['content']}",
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
         )
 
 
@@ -1151,6 +1315,7 @@ TASK_MAPPING = OrderedDict(
     [
         ("sst2", SST2),
         ("sst2_text", SST2Text),
+        ("sst2_text_instruct", SST2TextInstruct),
         ("qnli", QNLI),
         ("qnli_text", QNLIText),
         ("qnli_text_instruct", QNLITextInstruct),
@@ -1164,12 +1329,15 @@ TASK_MAPPING = OrderedDict(
         ("wnli", WNLI),
         ("yelp_polarity", YelpPolarity),
         ("yelp_polarity_text", YelpPolarityText),
+        ("yelp_polarity_text_instruct", YelpPolarityTextInstruct),
         ("trec_fine", TRECFine),
         ("trec_fine_text", TRECFineText),
         ("trec_coarse", TRECCoarse),
         ("trec_coarse_text", TRECCoarseText),
+        ("trec_coarse_text_instruct", TRECCoarseTextInstruct),
         ("dbpedia", DBPEDIA),
         ("dbpedia_text", DBPEDIAText),
+        ("dbpedia_text_instruct", DBPEDIATextInstruct),
         ("ag_news", AGNews),
         ("ag_news_text", AGNewsText),
         ("yahoo", Yahoo),

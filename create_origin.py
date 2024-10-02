@@ -32,7 +32,9 @@ tokenizer = AutoTokenizer.from_pretrained(
 )
 
 if "llama" in model_name_or_path.lower():
-    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, torch_dtype=torch.bfloat16).to("cuda")
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name_or_path, torch_dtype=torch.bfloat16
+    ).to("cuda")
 else:
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name_or_path)
 
@@ -68,7 +70,9 @@ for i in range(n_origins):
     indices = np.random.permutation(range(5000))[:200]
 
     word_embedding_weights = (
-        peft_model.word_embeddings(torch.LongTensor(indices).to("cuda")).detach().clone()
+        peft_model.word_embeddings(torch.LongTensor(indices).to("cuda"))
+        .detach()
+        .clone()
     )
     word_embedding_weights = word_embedding_weights.to(torch.bfloat16)
 

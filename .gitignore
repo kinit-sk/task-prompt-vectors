@@ -7,3 +7,4 @@ saves
 soft_prompts
 visuals
 results*
+.ipynb_checkpoints*
