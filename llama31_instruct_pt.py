@@ -206,19 +206,19 @@ for origin_prompt in peft_config.origin_prompts:
 
             exit(0)
 
-        pre_train_results = evaluate(
-            predict(
-                chat_test_dataset,
-                model,
-                tokenizer,
-                AutoTask.get(dataset_name).labels_list,
-            ),
-            test_dataset["target"],
-            {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
-            prefix="test",
-        )
+        # pre_train_results = evaluate(
+        #     predict(
+        #         chat_test_dataset,
+        #         model,
+        #         tokenizer,
+        #         AutoTask.get(dataset_name).labels_list,
+        #     ),
+        #     test_dataset["target"],
+        #     {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
+        #     prefix="test",
+        # )
 
-        print(pre_train_results)
+        # print(pre_train_results)
 
         trainer = SFTTrainer(
             model=model,

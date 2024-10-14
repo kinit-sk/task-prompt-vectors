@@ -10,17 +10,23 @@ import torch
 import numpy as np
 
 
+# origin_prompts = [
+#     "origin_0",
+#     "origin_1",
+#     "origin_2",
+#     "origin_3",
+#     "origin_4",
+#     "origin_5",
+#     "origin_6",
+#     "origin_7",
+#     "origin_8",
+#     "origin_9",
+# ]
+
 origin_prompts = [
-    "origin_0",
-    "origin_1",
-    "origin_2",
-    "origin_3",
-    "origin_4",
-    "origin_5",
-    "origin_6",
-    "origin_7",
-    "origin_8",
-    "origin_9",
+    "origin_0_meta-llama-3.1-8b-instruct",
+    "origin_1_meta-llama-3.1-8b-instruct",
+    "origin_2_meta-llama-3.1-8b-instruct",
 ]
 
 # NLI tasks
@@ -32,15 +38,20 @@ origin_prompts = [
 # sentiment tasks
 # dataset_names = ["sst2_text", "yelp_polarity_text"]
 
-dataset_names = [
-    "mnli_text",
-    "qnli_text",
-    "dbpedia_text",
-    "trec_coarse_text",
-    "sst2_text",
-    "yelp_polarity_text",
-]
+# dataset_names = [
+#     "mnli_text",
+#     "qnli_text",
+#     "dbpedia_text",
+#     "trec_coarse_text",
+#     "sst2_text",
+#     "yelp_polarity_text",
+# ]
 
+dataset_names = [
+    "qnli_text_instruct",
+    "trec_coarse_text_instruct",
+    "sst2_text_instruct",
+]
 
 def get_task_prompts(origin_prompts, dataset_names, device="cuda"):
     return {
@@ -98,33 +109,33 @@ def average_task_prompts(task_prompts_dict):
 
 task_prompts_per_origin = get_task_prompts(origin_prompts, dataset_names)
 
-# for origin_prompt in task_prompts_per_origin:
-#     for task_prompt in create_task_combinations(task_prompts_per_origin[origin_prompt]):
-#         print(task_prompt.task_name)
-#         print(task_prompt.prompt)
+for origin_prompt in task_prompts_per_origin:
+    for task_prompt in create_task_combinations(task_prompts_per_origin[origin_prompt]):
+        print(task_prompt.task_name)
+        print(task_prompt.prompt)
 
-#         prompt = task_prompt.apply(
-#             torch.load(f"soft_prompts/{origin_prompt}/{origin_prompt}.bin")[
-#                 "prompt_embeddings"
-#             ].to("cuda")
-#         )
-#         torch.save(
-#             prompt,
-#             f"soft_prompts/{origin_prompt}/{'_'.join(task_prompt.task_name.replace('+ ', '').split(' '))}.bin",
-#         )
-
-avg_tpvs = average_task_prompts(task_prompts_per_origin)
-for origin_prompt in origin_prompts:
-    for task in avg_tpvs:
-        print(origin_prompt, avg_tpvs[task].task_name)
-
-        prompt = avg_tpvs[task].apply(
+        prompt = task_prompt.apply(
             torch.load(f"soft_prompts/{origin_prompt}/{origin_prompt}.bin")[
                 "prompt_embeddings"
             ].to("cuda")
         )
-
         torch.save(
             prompt,
-            f"soft_prompts/{origin_prompt}/{task}_avg_10.bin",
+            f"soft_prompts/{origin_prompt}/{'_'.join(task_prompt.task_name.replace('+ ', '').split(' '))}.bin",
         )
+
+# avg_tpvs = average_task_prompts(task_prompts_per_origin)
+# for origin_prompt in origin_prompts:
+#     for task in avg_tpvs:
+#         print(origin_prompt, avg_tpvs[task].task_name)
+
+#         prompt = avg_tpvs[task].apply(
+#             torch.load(f"soft_prompts/{origin_prompt}/{origin_prompt}.bin")[
+#                 "prompt_embeddings"
+#             ].to("cuda")
+#         )
+
+#         torch.save(
+#             prompt,
+#             f"soft_prompts/{origin_prompt}/{task}_avg_10.bin",
+#         )

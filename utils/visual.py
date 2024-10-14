@@ -80,9 +80,9 @@ def create_heatmaps(
     #     )
     #     plt.close()
 
-    fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize)
-
     print(n_rows, n_cols)
+
+    fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize)
 
     for i in range(n_rows):
         for j in range(n_cols):

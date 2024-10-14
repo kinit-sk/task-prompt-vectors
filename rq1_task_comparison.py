@@ -28,6 +28,12 @@ task_labels = {
     "sst2_text": "SST2",
     "trec_coarse_text": "TREC",
     "yelp_polarity_text": "Yelp",
+    "dbpedia_text_instruct": "DBPedia",
+    "mnli_text_instruct": "MNLI",
+    "qnli_text_instruct": "QNLI",
+    "sst2_text_instruct": "SST2",
+    "trec_coarse_text_instruct": "TREC",
+    "yelp_polarity_text_instruct": "Yelp",
 }
 
 
@@ -62,8 +68,11 @@ parser = ArgumentParser(
     (TrainingArguments, DataTrainingArguments, PromptArithmeticsConfig)
 )
 
+# training_args, data_args, pa_config = parser.parse_toml_file(
+#     "configs/cross_origin.toml"
+# )
 training_args, data_args, pa_config = parser.parse_toml_file(
-    "configs/cross_origin.toml"
+    "configs/prompt_tuning/single-task/llama31_8b_instruct.toml"
 )
 data_args.dataset_names = sorted(data_args.dataset_names)
 

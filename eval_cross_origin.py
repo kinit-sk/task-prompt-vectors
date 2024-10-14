@@ -85,13 +85,13 @@ def remove_duplicates(keys):
     result = []
 
     for key in keys:
-        key_parts = mapping[key].split(" ")
+        key_parts = mapping[key.replace("_instruct", "")].split(" ")
         reverse_key = " ".join(key_parts[::-1])
         # print(reverse_key, unique_keys)
 
-        if mapping[key] not in unique_keys and reverse_key not in unique_keys:
-            unique_keys.add(mapping[key])
-            result.append(key)
+        if mapping[key.replace("_instruct", "")] not in unique_keys and reverse_key not in unique_keys:
+            unique_keys.add(mapping[key.replace("_instruct", "")])
+            result.append(key.replace("_instruct", ""))
 
     return result
 
@@ -103,26 +103,26 @@ def get_tpv_comparison(
 ):
     cross_origin_comparisons = {}
     for i in tqdm(range(len(data_args.dataset_names))):
-        # print(data_args.dataset_names[i])
-        cross_origin_comparisons[data_args.dataset_names[i]] = []
+        # print(data_args.dataset_names[i].replace("_instruct", ""))
+        cross_origin_comparisons[data_args.dataset_names[i].replace("_instruct", "")] = []
         for o1 in task_prompt_vectors:
-            cross_origin_comparisons[data_args.dataset_names[i]].append([])
+            cross_origin_comparisons[data_args.dataset_names[i].replace("_instruct", "")].append([])
             for o2 in task_prompt_vectors:
                 # print(o1, o2)
                 tpv1 = task_prompt_vectors[o1][i]
                 tpv2 = task_prompt_vectors[o2][i]
 
                 # print(tpv1.task_name, tpv2.task_name)
-                cross_origin_comparisons[data_args.dataset_names[i]][-1].append(
+                cross_origin_comparisons[data_args.dataset_names[i].replace("_instruct", "")][-1].append(
                     function(tpv1.prompt, tpv2.prompt).item()
                 )
 
-        cross_origin_comparisons[data_args.dataset_names[i]] = torch.Tensor(
-            cross_origin_comparisons[data_args.dataset_names[i]]
+        cross_origin_comparisons[data_args.dataset_names[i].replace("_instruct", "")] = torch.Tensor(
+            cross_origin_comparisons[data_args.dataset_names[i].replace("_instruct", "")]
         )
         # cross_origin_comparisons[
-        #     data_args.dataset_names[i]
-        # ] /= cross_origin_comparisons[data_args.dataset_names[i]].max()
+        #     data_args.dataset_names[i].replace("_instruct", "")
+        # ] /= cross_origin_comparisons[data_args.dataset_names[i].replace("_instruct", "")].max()
 
     return cross_origin_comparisons
 
@@ -136,13 +136,13 @@ def get_tpv_ct_comparison(
     cross_origin_comparisons = {}
     for i in tqdm(range(len(data_args.dataset_names))):
         for j in tqdm(range(len(data_args.dataset_names))):
-            # print(f"{data_args.dataset_names[i]}_{data_args.dataset_names[j]}")
+            # print(f"{data_args.dataset_names[i].replace("_instruct", "")}_{data_args.dataset_names[j].replace("_instruct", "")}")
             cross_origin_comparisons[
-                f"{data_args.dataset_names[i]}_{data_args.dataset_names[j]}"
+                f"{data_args.dataset_names[i].replace("_instruct", "")}_{data_args.dataset_names[j].replace("_instruct", "")}"
             ] = []
             for o1 in task_prompt_vectors:
                 cross_origin_comparisons[
-                    f"{data_args.dataset_names[i]}_{data_args.dataset_names[j]}"
+                    f"{data_args.dataset_names[i].replace("_instruct", "")}_{data_args.dataset_names[j].replace("_instruct", "")}"
                 ].append([])
                 for o2 in task_prompt_vectors:
                     # print(o1, o2)
@@ -151,14 +151,14 @@ def get_tpv_ct_comparison(
 
                     # print(tpv1.task_name, tpv2.task_name)
                     cross_origin_comparisons[
-                        f"{data_args.dataset_names[i]}_{data_args.dataset_names[j]}"
+                        f"{data_args.dataset_names[i].replace("_instruct", "")}_{data_args.dataset_names[j].replace("_instruct", "")}"
                     ][-1].append(function(tpv1.prompt, tpv2.prompt).item())
 
             cross_origin_comparisons[
-                f"{data_args.dataset_names[i]}_{data_args.dataset_names[j]}"
+                f"{data_args.dataset_names[i].replace("_instruct", "")}_{data_args.dataset_names[j].replace("_instruct", "")}"
             ] = torch.Tensor(
                 cross_origin_comparisons[
-                    f"{data_args.dataset_names[i]}_{data_args.dataset_names[j]}"
+                    f"{data_args.dataset_names[i].replace("_instruct", "")}_{data_args.dataset_names[j].replace("_instruct", "")}"
                 ]
             )
 
@@ -172,13 +172,13 @@ def get_task_ct_cs(
     cross_origin_task_cs = {}
     for i in tqdm(range(len(data_args.dataset_names))):
         for j in tqdm(range(len(data_args.dataset_names))):
-            # print(f"{data_args.dataset_names[i]}_{data_args.dataset_names[j]}")
+            # print(f"{data_args.dataset_names[i].replace("_instruct", "")}_{data_args.dataset_names[j].replace("_instruct", "")}")
             cross_origin_task_cs[
-                f"{data_args.dataset_names[i]}_{data_args.dataset_names[j]}"
+                f"{data_args.dataset_names[i].replace("_instruct", "")}_{data_args.dataset_names[j].replace("_instruct", "")}"
             ] = []
             for o1 in task_prompts:
                 cross_origin_task_cs[
-                    f"{data_args.dataset_names[i]}_{data_args.dataset_names[j]}"
+                    f"{data_args.dataset_names[i].replace("_instruct", "")}_{data_args.dataset_names[j].replace("_instruct", "")}"
                 ].append([])
                 for o2 in task_prompts:
                     # print(o1, o2)
@@ -186,14 +186,14 @@ def get_task_ct_cs(
                     tp2 = task_prompts[o2][j]
 
                     cross_origin_task_cs[
-                        f"{data_args.dataset_names[i]}_{data_args.dataset_names[j]}"
+                        f"{data_args.dataset_names[i].replace("_instruct", "")}_{data_args.dataset_names[j].replace("_instruct", "")}"
                     ][-1].append(cosine_sim(tp1, tp2).item())
 
             cross_origin_task_cs[
-                f"{data_args.dataset_names[i]}_{data_args.dataset_names[j]}"
+                f"{data_args.dataset_names[i].replace("_instruct", "")}_{data_args.dataset_names[j].replace("_instruct", "")}"
             ] = torch.Tensor(
                 cross_origin_task_cs[
-                    f"{data_args.dataset_names[i]}_{data_args.dataset_names[j]}"
+                    f"{data_args.dataset_names[i].replace("_instruct", "")}_{data_args.dataset_names[j].replace("_instruct", "")}"
                 ]
             )
 
@@ -206,21 +206,21 @@ def get_task_cs(
 ):
     cross_origin_task_cs = {}
     for i in tqdm(range(len(data_args.dataset_names))):
-        # print(data_args.dataset_names[i])
-        cross_origin_task_cs[data_args.dataset_names[i]] = []
+        # print(data_args.dataset_names[i].replace("_instruct", ""))
+        cross_origin_task_cs[data_args.dataset_names[i].replace("_instruct", "")] = []
         for o1 in task_prompts:
-            cross_origin_task_cs[data_args.dataset_names[i]].append([])
+            cross_origin_task_cs[data_args.dataset_names[i].replace("_instruct", "")].append([])
             for o2 in task_prompts:
                 # print(o1, o2)
                 tp1 = task_prompts[o1][i]
                 tp2 = task_prompts[o2][i]
 
-                cross_origin_task_cs[data_args.dataset_names[i]][-1].append(
+                cross_origin_task_cs[data_args.dataset_names[i].replace("_instruct", "")][-1].append(
                     cosine_sim(tp1, tp2).item()
                 )
 
-        cross_origin_task_cs[data_args.dataset_names[i]] = torch.Tensor(
-            cross_origin_task_cs[data_args.dataset_names[i]]
+        cross_origin_task_cs[data_args.dataset_names[i].replace("_instruct", "")] = torch.Tensor(
+            cross_origin_task_cs[data_args.dataset_names[i].replace("_instruct", "")]
         )
 
     return cross_origin_task_cs
@@ -232,8 +232,12 @@ parser = ArgumentParser(
     (TrainingArguments, DataTrainingArguments, PromptArithmeticsConfig)
 )
 
+# training_args, data_args, pa_config = parser.parse_toml_file(
+#     "configs/cross_origin.toml"
+# )
+
 training_args, data_args, pa_config = parser.parse_toml_file(
-    "configs/cross_origin.toml"
+    "configs/prompt_tuning/single-task/llama31_8b_instruct.toml"
 )
 data_args.dataset_names = sorted(data_args.dataset_names)
 
@@ -258,7 +262,7 @@ for fname in name_func_map:
     )
 
 dup_tpv_ct_cs = get_tpv_ct_comparison(data_args, task_prompt_vectors, cosine_sim)
-# print(tpv_ct_cs)
+print(dup_tpv_ct_cs)
 
 tpv_ct_cs = dict(
     filter(
@@ -267,6 +271,7 @@ tpv_ct_cs = dict(
 )
 
 print(f"tpv_ct_cs_{timestamp}")
+print(tpv_ct_cs)
 create_heatmaps(
     tpv_ct_cs,
     filename_prefix=f"tpv_ct_cs_{timestamp}",
@@ -280,22 +285,22 @@ avg_ct_co_tpv_mean = defaultdict(lambda: defaultdict(dict))
 avg_ct_co_tpv_std = defaultdict(lambda: defaultdict(dict))
 print("average cross origin, cross tasks, task prompt vector cosine similarity:")
 for dataset_name in tpv_ct_cs:
-    n = len(tpv_ct_cs[dataset_name])
+    n = len(tpv_ct_cs[dataset_name.replace("_instruct", "")])
 
-    if mapping[dataset_name].split(" ")[0] == mapping[dataset_name].split(" ")[1]:
-        no_diag = tpv_ct_cs[dataset_name].masked_select(
+    if mapping[dataset_name.replace("_instruct", "")].split(" ")[0] == mapping[dataset_name.replace("_instruct", "")].split(" ")[1]:
+        no_diag = tpv_ct_cs[dataset_name.replace("_instruct", "")].masked_select(
             torch.tril(torch.ones(n, n, dtype=bool), diagonal=-1)
         )
     else:
-        no_diag = tpv_ct_cs[dataset_name]
+        no_diag = tpv_ct_cs[dataset_name.replace("_instruct", "")]
 
     print(no_diag.shape)
-    # print(dataset_name, np.round(no_diag.mean().item(), 2), np.round(no_diag.std().item(), 2))
-    avg_ct_co_tpv_mean[mapping[dataset_name].split(" ")[0]][
-        mapping[dataset_name].split(" ")[1]
+    # print(dataset_name.replace("_instruct", ""), np.round(no_diag.mean().item(), 2), np.round(no_diag.std().item(), 2))
+    avg_ct_co_tpv_mean[mapping[dataset_name.replace("_instruct", "")].split(" ")[0]][
+        mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
     ] = np.round(no_diag.mean().item(), 2)
-    avg_ct_co_tpv_std[mapping[dataset_name].split(" ")[0]][
-        mapping[dataset_name].split(" ")[1]
+    avg_ct_co_tpv_std[mapping[dataset_name.replace("_instruct", "")].split(" ")[0]][
+        mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
     ] = np.round(no_diag.std().item(), 2)
 
 
@@ -332,21 +337,21 @@ avg_ct_co_task_mean = defaultdict(lambda: defaultdict(dict))
 avg_ct_co_task_std = defaultdict(lambda: defaultdict(dict))
 print("average cross origin, cross tasks, task prompt cosine similarity:")
 for dataset_name in task_ct_cs:
-    n = len(task_ct_cs[dataset_name])
-    if mapping[dataset_name].split(" ")[0] == mapping[dataset_name].split(" ")[1]:
-        no_diag = task_ct_cs[dataset_name].masked_select(
+    n = len(task_ct_cs[dataset_name.replace("_instruct", "")])
+    if mapping[dataset_name.replace("_instruct", "")].split(" ")[0] == mapping[dataset_name.replace("_instruct", "")].split(" ")[1]:
+        no_diag = task_ct_cs[dataset_name.replace("_instruct", "")].masked_select(
             torch.tril(torch.ones(n, n, dtype=bool), diagonal=-1)
         )
     else:
-        no_diag = tpv_ct_cs[dataset_name]
+        no_diag = tpv_ct_cs[dataset_name.replace("_instruct", "")]
 
     # print(no_diag)
-    # print(dataset_name, np.round(no_diag.mean().item(), 2), np.round(no_diag.std().item(), 2))
-    avg_ct_co_task_mean[mapping[dataset_name].split(" ")[0]][
-        mapping[dataset_name].split(" ")[1]
+    # print(dataset_name.replace("_instruct", ""), np.round(no_diag.mean().item(), 2), np.round(no_diag.std().item(), 2))
+    avg_ct_co_task_mean[mapping[dataset_name.replace("_instruct", "")].split(" ")[0]][
+        mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
     ] = np.round(no_diag.mean().item(), 2)
-    avg_ct_co_task_std[mapping[dataset_name].split(" ")[0]][
-        mapping[dataset_name].split(" ")[1]
+    avg_ct_co_task_std[mapping[dataset_name.replace("_instruct", "")].split(" ")[0]][
+        mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
     ] = np.round(no_diag.std().item(), 2)
 
 
@@ -371,14 +376,14 @@ create_heatmaps(
 
 print("average cross origin task prompt cosine similarity:")
 for dataset_name in cross_origin_task_cs:
-    n = len(cross_origin_task_cs[dataset_name])
+    n = len(cross_origin_task_cs[dataset_name.replace("_instruct", "")])
     no_diag = (
-        cross_origin_task_cs[dataset_name]
+        cross_origin_task_cs[dataset_name.replace("_instruct", "")]
         .masked_select(~torch.eye(n, dtype=bool))
         .view(n, n - 1)
     )
     print(
-        dataset_name,
+        dataset_name.replace("_instruct", ""),
         np.round(no_diag.mean().item(), 2),
         np.round(no_diag.std().item(), 2),
     )
@@ -388,14 +393,14 @@ cross_origin_tpv_cs = get_tpv_comparison(
     data_args, task_prompt_vectors, name_func_map["cosine"]
 )
 for dataset_name in cross_origin_tpv_cs:
-    n = len(cross_origin_tpv_cs[dataset_name])
+    n = len(cross_origin_tpv_cs[dataset_name.replace("_instruct", "")])
     no_diag = (
-        cross_origin_tpv_cs[dataset_name]
+        cross_origin_tpv_cs[dataset_name.replace("_instruct", "")]
         .masked_select(~torch.eye(n, dtype=bool))
         .view(n, n - 1)
     )
     print(
-        dataset_name,
+        dataset_name.replace("_instruct", ""),
         np.round(no_diag.mean().item(), 2),
         np.round(no_diag.std().item(), 2),
     )

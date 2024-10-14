@@ -223,26 +223,48 @@ with open("significance.json", "w") as f:
     json.dump(comparison_results, f, indent=4)
 
 
+# data = {
+#     "dataset": ["QNLI", "MNLI", "TREC Coarse", "DBpedia", "SST2", "Yelp", "avg"],
+#     "Prompt tuning": {
+#         "QNLI": {"score": 93.3, "std": 0},
+#         "MNLI": {"score": 85.4, "std": 0.1},
+#         "TREC Coarse": {"score": 95.5, "std": 1.7},
+#         "DBpedia": {"score": 99.1, "std": 0},
+#         "SST2": {"score": 93.8, "std": 0.3},
+#         "Yelp": {"score": 97.2, "std": 0},
+#         "avg": {"score": 93.8, "std": 0.4},
+#     },
+#     "Random init": {
+#         "QNLI": {"score": 93.2, "std": 0.1},
+#         "MNLI": {"score": 85.3, "std": 0.2},
+#         "TREC Coarse": {"score": 26.5, "std": 18.2},
+#         "DBpedia": {"score": 99, "std": 0.1},
+#         "SST2": {"score": 93.2, "std": 0.6},
+#         "Yelp": {"score": 97.1, "std": 0.1},
+#         "avg": {"score": 93.6, "std": 0.26},
+#     },
+# }
+
 data = {
-    "dataset": ["QNLI", "MNLI", "TREC Coarse", "DBpedia", "SST2", "Yelp", "avg"],
+    "dataset": ["QNLI", "MNLI", "TREC", "DBpedia", "SST2", "Yelp", "avg"],
     "Prompt tuning": {
-        "QNLI": {"score": 93.3, "std": 0},
-        "MNLI": {"score": 85.4, "std": 0.1},
-        "TREC Coarse": {"score": 95.5, "std": 1.7},
-        "DBpedia": {"score": 99.1, "std": 0},
-        "SST2": {"score": 93.8, "std": 0.3},
-        "Yelp": {"score": 97.2, "std": 0},
-        "avg": {"score": 93.8, "std": 0.08},
-    },
-    "Random init": {
-        "QNLI": {"score": 93.2, "std": 0.1},
-        "MNLI": {"score": 85.3, "std": 0.2},
-        "TREC Coarse": {"score": 26.5, "std": 18.2},
-        "DBpedia": {"score": 99, "std": 0.1},
-        "SST2": {"score": 93.2, "std": 0.6},
-        "Yelp": {"score": 97.1, "std": 0.1},
-        "avg": {"score": 93.6, "std": 0.26},
-    },
+            "QNLI": {"score": 92.0, "std": 0},
+            "MNLI": {"score": 89.7, "std": 0.2},
+            "TREC": {"score": 95.8, "std": 0.3},
+            "DBpedia": {"score": 99.2, "std": 0},
+            "SST2": {"score": 95.9, "std": 0.4},
+            "Yelp": {"score": 98.6, "std": 0.1},
+            "avg": {"score": 95.2, "std": 0.2}
+        },
+        "Random init": {
+            "QNLI": {"score": 92.0, "std": 0.1},
+            "MNLI": {"score": 89.7, "std": 0.2},
+            "TREC": {"score": 96.0, "std": 0.3},
+            "DBpedia": {"score": 99.2, "std": 0},
+            "SST2": {"score": 96.0, "std": 0.5},
+            "Yelp": {"score": 98.6, "std": 0.1},
+            "avg": {"score": 95.3, "std": 0.2}
+        }
 }
 
 comparison_results = {}
