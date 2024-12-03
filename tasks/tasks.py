@@ -13,10 +13,11 @@ from typing import List, Dict, Callable
 from evaluate import Metric
 from datasets import Dataset
 
-from metrics import exact_match, macro_f1, f1
+from metrics import exact_match, macro_f1, f1, squad_v2_metric
 
 from transformers import EvalPrediction
 
+import re
 
 class AbstractTask:
     name: str = NotImplemented
@@ -35,6 +36,7 @@ class AbstractTask:
     }
     small_datasets_without_all_splits = ["trec_fine", "trec_coarse", "wnli", "sst5"]
     large_data_without_all_splits = [
+        "math"
         "qnli",
         "sst2",
         "mnli",
@@ -45,6 +47,8 @@ class AbstractTask:
         "ag_news",
         "yahoo",
         "imdb",
+        "squad_v2"
+        "mmlu"
     ]
     id2label = NotImplemented
     label_column_name = NotImplemented
@@ -1310,6 +1314,191 @@ class YahooText(AbstractTask):
             self.name.replace("_text", ""), input_texts, label_texts, add_prefix
         )
 
+class MATHL5InstructEvalAIMO(AbstractTask):
+    name = "math_l5_instruct_eval_aimo"
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "train",
+        "test": "train",
+    }
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("AI-MO/aimo-validation-math-level-5", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            f"Solve the Level 5 math problem.",
+            "Please answer this question by first reasoning and then providing your answer.\nPresent your reasoning and solution in the following format. Please only write your final answer in the `answer` field, e.g., answer: 42. reasoning: ___, \\n answer: ___",
+            f"Problem: {example['problem']}",
+        ]
+        label_texts = [example["answer"]]
+
+        return self.formater(
+            self.name.replace("_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+            generation=True,
+        )
+class MATHL4InstructEvalAIMO(AbstractTask):
+    name = "math_l4_instruct_eval_aimo"
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "train",
+        "test": "train",
+    }
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("AI-MO/aimo-validation-math-level-4", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            f"Solve the Level 4 math problem.",
+            "Please answer this question by first reasoning and then providing your answer.\nPresent your reasoning and solution in the following format. Please only write your final answer in the `answer` field, e.g., answer: 42. reasoning: ___, \\n answer: ___",
+            f"Problem: {example['problem']}",
+        ]
+        label_texts = [example["answer"]]
+
+        return self.formater(
+            self.name.replace("_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+            generation=True,
+        )
+class MATHInstruct(AbstractTask):
+    name = "math_instruct"
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "test",
+        "test": "test",
+    }
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("lighteval/MATH", "all", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            f"Solve the {example['level']} math problem from subject {example['type']}. Provide reasoning followed by the answer to the question.",
+            f"Problem: {example['problem']}",
+        ]
+        label_texts = [example["solution"]]
+
+        return self.formater(
+            self.name.replace("_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+            generation=True
+        )
+
+class MMLUInstruct(AbstractTask):
+    name = "mmlu_instruct"
+    labels_list = ["A", "B", "C", "D"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {
+        "train": "auxiliary_train",
+        "validation": "validation",
+        "test": "test",
+    }
+    label_column_name = "label"
+    id2label = {0: "A", 1: "B", 2: "C", 3: "D"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "mnli", split=split)
+    
+    @staticmethod
+    def combine_lists_to_string(keys, values):
+        if len(keys) != len(values):
+            raise "Error: Lists must be of the same length."
+
+        return ", ".join(f"{key}: {value}" for key, value in zip(keys, values))
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            f"Answer the question by selecting from choices {', '.join(self.labels_list)}. Reply only with the corresponding letter choice as a label.",
+            f"question: {example['question']}",
+            f"choices: {self.combine_lists_to_string(self.labels_list, example['choices'])}",
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+        )
+
+class SQuADV2Instruct(AbstractTask):
+    name = "squad_v2_instruct"
+    metrics = [squad_v2_metric]
+    metric_names = ["squad_v2_metric"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+
+    def load_dataset(self, split):
+        return datasets.load_dataset(self.name, split=split)
+
+    def preprocessor(self, example, add_prefix):
+        input_texts = [
+            "Answer the question based on the context.",
+            f"question: {example["question"]}",
+            f"context: {example["context"]}",
+        ]
+        label_texts = [example["answers"]] if type(example["answers"]) == str else example["answers"]
+
+        return self.formater(
+            self.name.replace("_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+        )
+
+class HotpotQAInstruct(AbstractTask):
+    name = "hotpot_qa_instruct"
+    metrics = [squad_v2_metric]
+    metric_names = ["squad_v2_metric"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+
+    def load_dataset(self, split):
+        return datasets.load_dataset(self.name, split=split)
+
+    def preprocessor(self, example, add_prefix):
+        input_texts = [
+            "Answer the question based on the context.",
+            f"question: {example["question"]}",
+            f"context: {example["context"]}",
+        ]
+        label_texts = [example["answers"]] if type(example["answers"]) == str else example["answers"]
+
+        return self.formater(
+            self.name.replace("_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+        )
+
+
 
 TASK_MAPPING = OrderedDict(
     [
@@ -1346,6 +1535,11 @@ TASK_MAPPING = OrderedDict(
         ("imdb_text", IMDBText),
         ("sst5", SST5),
         ("sst5_text", SST2Text),
+        ("math_instruct", MATHInstruct),
+        ("math_l4_instruct_eval_aimo", MATHL4InstructEvalAIMO),
+        ("math_l5_instruct_eval_aimo", MATHL5InstructEvalAIMO),
+        ("mmlu_instruct", MMLUInstruct),
+        ("squad_v2_instruct", SQuADV2Instruct),
     ]
 )
 

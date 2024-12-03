@@ -13,6 +13,10 @@ import evaluate
 
 #     return metric.compute(predictions=preds, references=targets)
 
+def squad_v2_metric(preds, targets):
+    metric = evaluate.load("squad_v2")
+    
+    return metric.compute(predictions=preds, references=targets)
 
 def exact_match(preds, targets):
     check_data_state(preds, targets)

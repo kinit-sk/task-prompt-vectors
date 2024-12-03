@@ -20,6 +20,8 @@ from metrics.utils import binary_reverse
 
 
 def apply_test_template(examples):
+    # print(ahahhadsadasd)
+    # dads
     return {
         "text": tokenizer.apply_chat_template(
             [examples], tokenize=False, add_generation_prompt=True
@@ -28,6 +30,8 @@ def apply_test_template(examples):
 
 
 def apply_template(examples):
+    # print(wtf python)dsaasdasdsad
+    #da dad
     return {
         "text": tokenizer.apply_chat_template(
             [examples, {"role": "assistant", "content": examples["target"]}],
@@ -69,6 +73,41 @@ def predict(test_dataset, model, tokenizer, labels_list):
 
     return y_pred
 
+def predict_generative(test_dataset, model, tokenizer):
+    y_pred = []
+    pipe = pipeline(
+        task="text-generation",
+        model=model,
+        tokenizer=tokenizer,
+        max_new_tokens=1024,
+        do_sample=False,
+        top_p=None,
+        temperature=None,
+        device="cuda",
+    )
+
+    for x_test in tqdm(test_dataset["text"]):
+
+        print(x_test)
+
+        result = pipe(x_test)
+        answer = (
+            result[0]["generated_text"]
+            .split("<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[-1]
+            .strip()
+        )
+
+        if "answer:" in answer:
+            answer = answer.split("answer:")[-1]
+        else: answer = None
+
+        y_pred.append(answer)
+        print("result:", result)
+        print("answer:", answer)
+
+    return y_pred
+
+
 
 def evaluate(y_pred, y_true, mapping, prefix="eval"):
     def map_func(x):
@@ -104,6 +143,16 @@ def evaluate(y_pred, y_true, mapping, prefix="eval"):
 
     return {f"{prefix}/accuracy": accuracy, f"{prefix}/f1": f1}
 
+def evaluate_generative(y_pred, y_true, prefix="eval"):
+
+    y_pred = np.array(y_pred)
+    y_true = np.array(y_true)
+
+
+    accuracy = np.size(y_pred == y_true) / y_true.size
+
+    return {f"{prefix}/accuracy": accuracy}
+
 
 timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
 
@@ -115,6 +164,9 @@ argparse_parser = argparse.ArgumentParser(
 argparse_parser.add_argument("filename", help="Filename of a config to run.")
 argparse_parser.add_argument(
     "--print_data", action="store_true", help="Print parsed data and exit."
+)
+argparse_parser.add_argument(
+    "--pretrain_eval", action="store_true", help="Do pre-training evaluation."
 )
 args = argparse_parser.parse_args()
 
@@ -197,6 +249,7 @@ for origin_prompt in peft_config.origin_prompts:
         if args.print_data:
             print("Train data")
             print(chat_train_dataset["text"][0])
+            print(train_dataset[0])
 
             print("Valid data")
             print(chat_valid_dataset["text"][0])
@@ -206,19 +259,60 @@ for origin_prompt in peft_config.origin_prompts:
 
             exit(0)
 
-        # pre_train_results = evaluate(
-        #     predict(
-        #         chat_test_dataset,
-        #         model,
-        #         tokenizer,
-        #         AutoTask.get(dataset_name).labels_list,
-        #     ),
-        #     test_dataset["target"],
-        #     {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
-        #     prefix="test",
-        # )
+        if args.pretrain_eval:
+            if "math" in dataset_name:
+                l4_test_dataset = AutoTask.get("math_l4_instruct_eval_aimo").get(
+                    split="test",
+                    task_type=peft_config.task_type,
+                    add_prefix=False,
+                    n_obs=data_args.max_test_samples,
+                    split_validation_test=data_args.split_validation_test,
+                )
 
-        # print(pre_train_results)
+                l5_test_dataset = AutoTask.get("math_l5_instruct_eval_aimo").get(
+                    split="test",
+                    task_type=peft_config.task_type,
+                    add_prefix=False,
+                    n_obs=data_args.max_test_samples,
+                    split_validation_test=data_args.split_validation_test,
+                )
+
+                chat_l4_test_dataset = l4_test_dataset.map(apply_test_template)
+                chat_l5_test_dataset = l5_test_dataset.map(apply_test_template)
+
+                pre_train_l4_results = evaluate_generative(
+                predict_generative(
+                    chat_l4_test_dataset,
+                    model.base_model,
+                    tokenizer,
+                ),
+                test_dataset["target"],
+                prefix="test_l4",
+                )
+
+                pre_train_l5_results = evaluate_generative(
+                predict_generative(
+                    chat_l5_test_dataset,
+                    model.base_model,
+                    tokenizer,
+                ),
+                test_dataset["target"],
+                prefix="test_l5",
+                )
+            else:
+                pre_train_results = evaluate(
+                    predict(
+                        chat_test_dataset,
+                        model,
+                        tokenizer,
+                        AutoTask.get(dataset_name).labels_list,
+                    ),
+                    test_dataset["target"],
+                    {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
+                    prefix="test",
+                )
+
+            print(pre_train_results)
 
         trainer = SFTTrainer(
             model=model,
@@ -231,30 +325,33 @@ for origin_prompt in peft_config.origin_prompts:
 
         trainer.train()
 
-        test_results = evaluate(
-            predict(
-                chat_test_dataset,
-                model,
-                tokenizer,
-                AutoTask.get(dataset_name).labels_list,
-            ),
-            test_dataset["target"],
-            {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
-            prefix="test",
-        )
-
-        if isinstance(dataset_name, list):
-            save_name = f"./saves/prompt_tuning_{timestamp}_{'_'.join(dataset_name)}_{origin_prompt}_best"
+        if "math" in dataset_name:
+            pass
         else:
-            save_name = (
-                f"./saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"
+            test_results = evaluate(
+                predict(
+                    chat_test_dataset,
+                    model,
+                    tokenizer,
+                    AutoTask.get(dataset_name).labels_list,
+                ),
+                test_dataset["target"],
+                {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
+                prefix="test",
             )
 
-        for metric in test_results:
-            wandb.define_metric(metric, step_metric="step")
+            if isinstance(dataset_name, list):
+                save_name = f"./saves/prompt_tuning_{timestamp}_{'_'.join(dataset_name)}_{origin_prompt}_best"
+            else:
+                save_name = (
+                    f"./saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"
+                )
 
-        print(test_results)
-        wandb.run.log(test_results)
+            for metric in test_results:
+                wandb.define_metric(metric, step_metric="step")
+
+            print(test_results)
+            wandb.run.log(test_results)
 
         model.save_pretrained(save_name)
 

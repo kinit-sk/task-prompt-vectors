@@ -10,24 +10,24 @@ import torch
 import numpy as np
 
 
-# origin_prompts = [
-#     "origin_0",
-#     "origin_1",
-#     "origin_2",
-#     "origin_3",
-#     "origin_4",
-#     "origin_5",
-#     "origin_6",
-#     "origin_7",
-#     "origin_8",
-#     "origin_9",
-# ]
-
 origin_prompts = [
-    "origin_0_meta-llama-3.1-8b-instruct",
-    "origin_1_meta-llama-3.1-8b-instruct",
-    "origin_2_meta-llama-3.1-8b-instruct",
+    "origin_0",
+    "origin_1",
+    "origin_2",
+    "origin_3",
+    "origin_4",
+    "origin_5",
+    "origin_6",
+    "origin_7",
+    "origin_8",
+    "origin_9",
 ]
+
+# origin_prompts = [
+#     "origin_0_meta-llama-3.1-8b-instruct",
+#     "origin_1_meta-llama-3.1-8b-instruct",
+#     "origin_2_meta-llama-3.1-8b-instruct",
+# ]
 
 # NLI tasks
 # dataset_names = ["mnli_text", "qnli_text"]
@@ -38,20 +38,23 @@ origin_prompts = [
 # sentiment tasks
 # dataset_names = ["sst2_text", "yelp_polarity_text"]
 
-# dataset_names = [
-#     "mnli_text",
-#     "qnli_text",
-#     "dbpedia_text",
-#     "trec_coarse_text",
-#     "sst2_text",
-#     "yelp_polarity_text",
-# ]
-
 dataset_names = [
-    "qnli_text_instruct",
-    "trec_coarse_text_instruct",
-    "sst2_text_instruct",
+    "mnli_text",
+    "qnli_text",
+    "dbpedia_text",
+    "trec_coarse_text",
+    "sst2_text",
+    "yelp_polarity_text",
 ]
+
+# dataset_names = [
+#     "mnli_text_instruct",
+#     "qnli_text_instruct",
+#     "dbpedia_text_instruct",
+#     "trec_coarse_text_instruct",
+#     "sst2_text_instruct",
+#     "yelp_polarity_text_instruct",
+# ]
 
 def get_task_prompts(origin_prompts, dataset_names, device="cuda"):
     return {

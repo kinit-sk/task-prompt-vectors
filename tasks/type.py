@@ -32,8 +32,12 @@ class CausalLM(AbstractTaskType):
         add_prefix: bool,
         prefix: Optional[str] = None,
         instruct = False,
+        generation = False,
     ):
         if instruct:
+            if generation:
+                return {"content": f"{'\n'.join(inputs)}\n", "target": " ".join(labels), "role": "user"}
+
             return {"content": f"{'\n'.join(inputs)}\nlabel: ", "target": " ".join(labels), "role": "user"}
         else:
             input_prefix = task_name if prefix is None else prefix
