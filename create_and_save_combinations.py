@@ -56,6 +56,7 @@ dataset_names = [
 #     "yelp_polarity_text_instruct",
 # ]
 
+
 def get_task_prompts(origin_prompts, dataset_names, device="cuda"):
     return {
         origin_prompt: [

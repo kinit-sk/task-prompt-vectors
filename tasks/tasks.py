@@ -19,6 +19,7 @@ from transformers import EvalPrediction
 
 import re
 
+
 class AbstractTask:
     name: str = NotImplemented
     preprocessor = NotImplemented
@@ -36,8 +37,7 @@ class AbstractTask:
     }
     small_datasets_without_all_splits = ["trec_fine", "trec_coarse", "wnli", "sst5"]
     large_data_without_all_splits = [
-        "math"
-        "qnli",
+        "math" "qnli",
         "sst2",
         "mnli",
         "yelp_polarity",
@@ -47,8 +47,9 @@ class AbstractTask:
         "ag_news",
         "yahoo",
         "imdb",
-        "squad_v2"
-        "mmlu"
+        "squad_v2",
+        "mmlu",
+        "hotpot_qa",
     ]
     id2label = NotImplemented
     label_column_name = NotImplemented
@@ -1314,6 +1315,7 @@ class YahooText(AbstractTask):
             self.name.replace("_text", ""), input_texts, label_texts, add_prefix
         )
 
+
 class MATHL5InstructEvalAIMO(AbstractTask):
     name = "math_l5_instruct_eval_aimo"
     metrics = [exact_match, macro_f1]
@@ -1343,6 +1345,8 @@ class MATHL5InstructEvalAIMO(AbstractTask):
             instruct=True,
             generation=True,
         )
+
+
 class MATHL4InstructEvalAIMO(AbstractTask):
     name = "math_l4_instruct_eval_aimo"
     metrics = [exact_match, macro_f1]
@@ -1372,6 +1376,8 @@ class MATHL4InstructEvalAIMO(AbstractTask):
             instruct=True,
             generation=True,
         )
+
+
 class MATHInstruct(AbstractTask):
     name = "math_instruct"
     metrics = [exact_match, macro_f1]
@@ -1398,8 +1404,9 @@ class MATHInstruct(AbstractTask):
             label_texts,
             add_prefix,
             instruct=True,
-            generation=True
+            generation=True,
         )
+
 
 class MMLUInstruct(AbstractTask):
     name = "mmlu_instruct"
@@ -1416,7 +1423,7 @@ class MMLUInstruct(AbstractTask):
 
     def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("glue", "mnli", split=split)
-    
+
     @staticmethod
     def combine_lists_to_string(keys, values):
         if len(keys) != len(values):
@@ -1440,6 +1447,7 @@ class MMLUInstruct(AbstractTask):
             instruct=True,
         )
 
+
 class SQuADV2Instruct(AbstractTask):
     name = "squad_v2_instruct"
     metrics = [squad_v2_metric]
@@ -1449,17 +1457,18 @@ class SQuADV2Instruct(AbstractTask):
         "validation": "validation",
         "test": "validation",
     }
+    label_column_name = None
 
     def load_dataset(self, split):
-        return datasets.load_dataset(self.name, split=split)
+        return datasets.load_dataset("rajpurkar/squad_v2", split=split)
 
     def preprocessor(self, example, add_prefix):
         input_texts = [
-            "Answer the question based on the context.",
-            f"question: {example["question"]}",
-            f"context: {example["context"]}",
+            "Answer the question based on the context. Also provide where the answer starts in the question. Reply in following format: {'text': [<multiple answers>], 'answer_start': [<multiple answer starts>]}.",
+            f"question: {example['question']}",
+            f"context: {example['context']}",
         ]
-        label_texts = [example["answers"]] if type(example["answers"]) == str else example["answers"]
+        label_texts = [str(example["answers"])]
 
         return self.formater(
             self.name.replace("_instruct", ""),
@@ -1467,7 +1476,9 @@ class SQuADV2Instruct(AbstractTask):
             label_texts,
             add_prefix,
             instruct=True,
+            generation=True,
         )
+
 
 class HotpotQAInstruct(AbstractTask):
     name = "hotpot_qa_instruct"
@@ -1476,19 +1487,26 @@ class HotpotQAInstruct(AbstractTask):
     split_to_data_split = {
         "train": "train",
         "validation": "validation",
-        "test": "validation",
+        "test": "test",
     }
+    label_column_name = None
 
     def load_dataset(self, split):
-        return datasets.load_dataset(self.name, split=split)
+        return datasets.load_dataset("hotpotqa/hotpot_qa", "fullwiki", split=split)
 
     def preprocessor(self, example, add_prefix):
         input_texts = [
-            "Answer the question based on the context.",
-            f"question: {example["question"]}",
-            f"context: {example["context"]}",
+            "Answer the question based on the context. Reply only the answer.",
+            f"question: {example['question']}",
+            f"context: ",
+            "\n\n".join(
+                f"{title}\n" + "\n".join(sentences)
+                for title, sentences in zip(
+                    example["context"]["title"], example["context"]["sentences"]
+                )
+            ),
         ]
-        label_texts = [example["answers"]] if type(example["answers"]) == str else example["answers"]
+        label_texts = [str(example["answer"])]
 
         return self.formater(
             self.name.replace("_instruct", ""),
@@ -1496,8 +1514,8 @@ class HotpotQAInstruct(AbstractTask):
             label_texts,
             add_prefix,
             instruct=True,
+            generation=True,
         )
-
 
 
 TASK_MAPPING = OrderedDict(
@@ -1540,6 +1558,7 @@ TASK_MAPPING = OrderedDict(
         ("math_l5_instruct_eval_aimo", MATHL5InstructEvalAIMO),
         ("mmlu_instruct", MMLUInstruct),
         ("squad_v2_instruct", SQuADV2Instruct),
+        ("hotpot_qa_instruct", HotpotQAInstruct),
     ]
 )
 

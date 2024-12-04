@@ -31,14 +31,22 @@ class CausalLM(AbstractTaskType):
         labels: List[str],
         add_prefix: bool,
         prefix: Optional[str] = None,
-        instruct = False,
-        generation = False,
+        instruct=False,
+        generation=False,
     ):
         if instruct:
             if generation:
-                return {"content": f"{'\n'.join(inputs)}\n", "target": " ".join(labels), "role": "user"}
+                return {
+                    "content": "\n".join(inputs) + "\n",
+                    "target": " ".join(labels),
+                    "role": "user",
+                }
 
-            return {"content": f"{'\n'.join(inputs)}\nlabel: ", "target": " ".join(labels), "role": "user"}
+            return {
+                "content": "\n".join(inputs) + "\nlabel: ",
+                "target": " ".join(labels),
+                "role": "user",
+            }
         else:
             input_prefix = task_name if prefix is None else prefix
             inputs = [input_prefix] + inputs if add_prefix else inputs

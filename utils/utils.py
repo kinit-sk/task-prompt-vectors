@@ -27,6 +27,7 @@ def get_task_prompt_vectors(
         for origin_prompt in pa_config.origin_prompts
     }
 
+
 def get_task_prompt_vectors_from_prompts(
     origin_prompts, dataset_names: List[str], device: str = "cuda"
 ) -> Dict[str, List[TaskPrompt]]:

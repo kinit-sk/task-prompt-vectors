@@ -21,7 +21,7 @@ from metrics.utils import binary_reverse
 
 def apply_test_template(examples):
     # print(ahahhadsadasd)
-    # dads
+    # dada
     return {
         "text": tokenizer.apply_chat_template(
             [examples], tokenize=False, add_generation_prompt=True
@@ -30,8 +30,8 @@ def apply_test_template(examples):
 
 
 def apply_template(examples):
-    # print(wtf python)dsaasdasdsad
-    #da dad
+    # print(wtf python)dsaasdasdsa
+    # dadsa
     return {
         "text": tokenizer.apply_chat_template(
             [examples, {"role": "assistant", "content": examples["target"]}],
@@ -73,6 +73,7 @@ def predict(test_dataset, model, tokenizer, labels_list):
 
     return y_pred
 
+
 def predict_generative(test_dataset, model, tokenizer):
     y_pred = []
     pipe = pipeline(
@@ -99,14 +100,14 @@ def predict_generative(test_dataset, model, tokenizer):
 
         if "answer:" in answer:
             answer = answer.split("answer:")[-1]
-        else: answer = None
+        else:
+            answer = None
 
         y_pred.append(answer)
         print("result:", result)
         print("answer:", answer)
 
     return y_pred
-
 
 
 def evaluate(y_pred, y_true, mapping, prefix="eval"):
@@ -143,11 +144,11 @@ def evaluate(y_pred, y_true, mapping, prefix="eval"):
 
     return {f"{prefix}/accuracy": accuracy, f"{prefix}/f1": f1}
 
+
 def evaluate_generative(y_pred, y_true, prefix="eval"):
 
     y_pred = np.array(y_pred)
     y_true = np.array(y_true)
-
 
     accuracy = np.size(y_pred == y_true) / y_true.size
 
@@ -249,7 +250,6 @@ for origin_prompt in peft_config.origin_prompts:
         if args.print_data:
             print("Train data")
             print(chat_train_dataset["text"][0])
-            print(train_dataset[0])
 
             print("Valid data")
             print(chat_valid_dataset["text"][0])
@@ -281,23 +281,23 @@ for origin_prompt in peft_config.origin_prompts:
                 chat_l5_test_dataset = l5_test_dataset.map(apply_test_template)
 
                 pre_train_l4_results = evaluate_generative(
-                predict_generative(
-                    chat_l4_test_dataset,
-                    model.base_model,
-                    tokenizer,
-                ),
-                test_dataset["target"],
-                prefix="test_l4",
+                    predict_generative(
+                        chat_l4_test_dataset,
+                        model.base_model,
+                        tokenizer,
+                    ),
+                    test_dataset["target"],
+                    prefix="test_l4",
                 )
 
                 pre_train_l5_results = evaluate_generative(
-                predict_generative(
-                    chat_l5_test_dataset,
-                    model.base_model,
-                    tokenizer,
-                ),
-                test_dataset["target"],
-                prefix="test_l5",
+                    predict_generative(
+                        chat_l5_test_dataset,
+                        model.base_model,
+                        tokenizer,
+                    ),
+                    test_dataset["target"],
+                    prefix="test_l5",
                 )
             else:
                 pre_train_results = evaluate(
@@ -308,7 +308,10 @@ for origin_prompt in peft_config.origin_prompts:
                         AutoTask.get(dataset_name).labels_list,
                     ),
                     test_dataset["target"],
-                    {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
+                    {
+                        label: id_
+                        for id_, label in AutoTask.get(dataset_name).id2label.items()
+                    },
                     prefix="test",
                 )
 
@@ -325,7 +328,7 @@ for origin_prompt in peft_config.origin_prompts:
 
         trainer.train()
 
-        if "math" in dataset_name:
+        if "math" in dataset_name or "squad" in dataset_name:
             pass
         else:
             test_results = evaluate(
@@ -336,22 +339,25 @@ for origin_prompt in peft_config.origin_prompts:
                     AutoTask.get(dataset_name).labels_list,
                 ),
                 test_dataset["target"],
-                {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
+                {
+                    label: id_
+                    for id_, label in AutoTask.get(dataset_name).id2label.items()
+                },
                 prefix="test",
             )
-
-            if isinstance(dataset_name, list):
-                save_name = f"./saves/prompt_tuning_{timestamp}_{'_'.join(dataset_name)}_{origin_prompt}_best"
-            else:
-                save_name = (
-                    f"./saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"
-                )
 
             for metric in test_results:
                 wandb.define_metric(metric, step_metric="step")
 
             print(test_results)
             wandb.run.log(test_results)
+
+        if isinstance(dataset_name, list):
+            save_name = f"./saves/prompt_tuning_{timestamp}_{'_'.join(dataset_name)}_{origin_prompt}_best"
+        else:
+            save_name = (
+                f"./saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"
+            )
 
         model.save_pretrained(save_name)
 

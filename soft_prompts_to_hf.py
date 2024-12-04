@@ -9,7 +9,12 @@ from arithmetics import PromptArithmeticsConfig
 from tasks import AutoTask
 
 from datetime import datetime
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, AutoModelForSeq2SeqLM
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    pipeline,
+    AutoModelForSeq2SeqLM,
+)
 from peft import get_peft_model, PromptTuningConfig
 from trl import SFTTrainer, SFTConfig, ModelConfig
 
@@ -21,7 +26,10 @@ from metrics.utils import binary_reverse
 from itertools import combinations
 
 
-configs = ["configs/prompt_tuning/single-task/prompt_tuning.toml", "configs/prompt_tuning/single-task/llama31_8b_instruct.toml"]
+configs = [
+    "configs/prompt_tuning/single-task/prompt_tuning.toml",
+    "configs/prompt_tuning/single-task/llama31_8b_instruct.toml",
+]
 
 
 def generate_model_name(components):
@@ -64,14 +72,14 @@ def generate_model_name(components):
             if key in component.lower():
                 if abbrev not in short_name_parts:
                     short_name_parts.append(abbrev)
-                
 
     # Join the parts with hyphens
     return "-".join(short_name_parts)
 
+
 for c in configs:
     parser = ArgumentParser(
-    (SFTConfig, ModelConfig, DataTrainingArguments, PromptArithmeticsConfig)
+        (SFTConfig, ModelConfig, DataTrainingArguments, PromptArithmeticsConfig)
     )
 
     training_args, model_args, data_args, peft_config = parser.parse_toml_file(c)
@@ -80,8 +88,8 @@ for c in configs:
 
     if peft_config.task_type == "CAUSAL_LM":
         model = AutoModelForCausalLM.from_pretrained(
-        model_args.model_name_or_path,
-        torch_dtype=torch.bfloat16,
+            model_args.model_name_or_path,
+            torch_dtype=torch.bfloat16,
         ).to("cuda")
         model.active_adapters = [
             "default"
@@ -99,9 +107,9 @@ for c in configs:
 
     elif peft_config.task_type == "SEQ_2_SEQ_LM":
 
-        model = AutoModelForSeq2SeqLM.from_pretrained(
-            model_args.model_name_or_path
-        ).to("cuda")
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_args.model_name_or_path).to(
+            "cuda"
+        )
 
         model.generation_config.max_new_tokens = 16
         model.generation_config.max_length = 256
@@ -115,7 +123,6 @@ for c in configs:
         model.config.pad_token_id = tokenizer.pad_token_id
         model.generation_config.pad_token_id = tokenizer.pad_token_id
 
-
     # config_dict = model.peft_config["default"].__dict__
     # del config_dict["origin_prompts"]
     # del config_dict["init_prompts"]
@@ -125,8 +132,9 @@ for c in configs:
 
     # model.peft_config["default"] = PromptTuningConfig(**config_dict)
 
-    soft_prompt_names = ["_".join(comb) for comb in combinations(sorted(data_args.dataset_names), 2)] + data_args.dataset_names
-
+    soft_prompt_names = [
+        "_".join(comb) for comb in combinations(sorted(data_args.dataset_names), 2)
+    ] + data_args.dataset_names
 
     for o in peft_config.origin_prompts:
         soft_prompt_names.append(o)
@@ -136,12 +144,15 @@ for c in configs:
 
             if isinstance(soft_prompt, dict):
                 soft_prompt = soft_prompt["prompt_embeddings"]
-            
-            model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(soft_prompt)
 
-            model_name = generate_model_name([model_args.model_name_or_path, "prompt tuning", o, n])
+            model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(
+                soft_prompt
+            )
+
+            model_name = generate_model_name(
+                [model_args.model_name_or_path, "prompt tuning", o, n]
+            )
 
             model.push_to_hub(model_name)
 
         soft_prompt_names.remove(o)
-
