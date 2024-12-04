@@ -1492,7 +1492,7 @@ class HotpotQAInstruct(AbstractTask):
     label_column_name = None
 
     def load_dataset(self, split):
-        return datasets.load_dataset("hotpotqa/hotpot_qa", "fullwiki", split=split)
+        return datasets.load_dataset("hotpotqa/hotpot_qa", "fullwiki", split=split, trust_remote_code=True)
 
     def preprocessor(self, example, add_prefix):
         input_texts = [
