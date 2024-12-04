@@ -328,7 +328,7 @@ for origin_prompt in peft_config.origin_prompts:
 
         trainer.train()
 
-        if "math" in dataset_name or "squad" in dataset_name:
+        if "math" in dataset_name or "squad" in dataset_name or "hotpot" in dataset_name:
             pass
         else:
             test_results = evaluate(
