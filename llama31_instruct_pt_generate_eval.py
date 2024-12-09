@@ -26,16 +26,16 @@ import pandas as pd
 from transformers.pipelines.pt_utils import KeyDataset
 
 prompts_to_load = {
-    "squad_v2_instruct": [
-        "prompt_tuning_12042024144342_squad_v2_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_12042024144534_squad_v2_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_12042024144807_squad_v2_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
-    ],
-    # "hotpot_qa_instruct": [
-    #     "prompt_tuning_12042024144827_hotpot_qa_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
-    #     "prompt_tuning_12042024145638_hotpot_qa_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
-    #     "prompt_tuning_12042024150532_hotpot_qa_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
+    # "squad_v2_instruct": [
+    #     "prompt_tuning_12042024144342_squad_v2_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
+    #     "prompt_tuning_12042024144534_squad_v2_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
+    #     "prompt_tuning_12042024144807_squad_v2_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
     # ],
+    "hotpot_qa_instruct": [
+        "prompt_tuning_12042024144827_hotpot_qa_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
+        "prompt_tuning_12042024145638_hotpot_qa_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
+        "prompt_tuning_12042024150532_hotpot_qa_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
+    ],
     # "math_instruct": [
     #     "prompt_tuning_12042024094358_math_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
     #     "prompt_tuning_12042024094358_math_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
