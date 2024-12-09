@@ -31,11 +31,20 @@ class CausalLM(AbstractTaskType):
         labels: List[str],
         add_prefix: bool,
         prefix: Optional[str] = None,
-        instruct=False,
-        generation=False,
+        instruct =False,
+        generation =False,
+        id = None
     ):
         if instruct:
             if generation:
+                if id:
+                    return {
+                    "content": "\n".join(inputs) + "\n",
+                    "target": " ".join(labels),
+                    "role": "user",
+                    "id": id
+                }
+                
                 return {
                     "content": "\n".join(inputs) + "\n",
                     "target": " ".join(labels),

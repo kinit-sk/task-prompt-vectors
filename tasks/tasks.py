@@ -1387,6 +1387,7 @@ class MATHInstruct(AbstractTask):
         "validation": "test",
         "test": "test",
     }
+    label_column_name = None
 
     def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("lighteval/MATH", "all", split=split)
@@ -1477,6 +1478,7 @@ class SQuADV2Instruct(AbstractTask):
             add_prefix,
             instruct=True,
             generation=True,
+            id=example["id"],
         )
 
 
@@ -1487,7 +1489,7 @@ class HotpotQAInstruct(AbstractTask):
     split_to_data_split = {
         "train": "train",
         "validation": "validation",
-        "test": "test",
+        "test": "validation",
     }
     label_column_name = None
 
