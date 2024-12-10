@@ -23,8 +23,8 @@ import re
 
 origin_prompts = [
     "origin_0_meta-llama-3.1-8b-instruct",
-    "origin_1_meta-llama-3.1-8b-instruct",
-    # "origin_2_meta-llama-3.1-8b-instruct",
+    # "origin_1_meta-llama-3.1-8b-instruct",
+    "origin_2_meta-llama-3.1-8b-instruct",
 ]
 # dataset_names = ["qnli_text_instruct", "sst2_text_instruct", "trec_coarse_text_instruct"]
 dataset_names = ["math_instruct"]
