@@ -270,20 +270,20 @@ for dataset_name in dataset_names:
 
     chat_test_dataset = test_dataset.map(apply_test_template)
 
-    print("Eval zero-shot performance")
-    test_results = evaluate_generative(
-        predict_generative(
-            chat_test_dataset,
-            model.base_model,
-            tokenizer,
-        ),
-        test_dataset["target"],
-        squadv2="squad" in dataset_name,
-        ids=test_dataset["id"] if "squad" in dataset_name else None,
-    )
-    print(test_results)
+    # print("Eval zero-shot performance")
+    # test_results = evaluate_generative(
+    #     predict_generative(
+    #         chat_test_dataset,
+    #         model.base_model,
+    #         tokenizer,
+    #     ),
+    #     test_dataset["target"],
+    #     squadv2="squad" in dataset_name,
+    #     ids=test_dataset["id"] if "squad" in dataset_name else None,
+    # )
+    # print(test_results)
 
-    full_test_results["zero_shot"][dataset_name] = test_results
+    # full_test_results["zero_shot"][dataset_name] = test_results
     full_test_results["prompt_tuning"][dataset_name] = {}
 
 print("Eval prompt tuning performance")
