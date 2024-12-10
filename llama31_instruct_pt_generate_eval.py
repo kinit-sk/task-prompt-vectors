@@ -1,7 +1,5 @@
 import argparse
-import os
 import torch
-import numpy as np
 
 from args import DataTrainingArguments, ArgumentParser
 from arithmetics import PromptArithmeticsConfig
@@ -13,9 +11,6 @@ from peft import get_peft_model
 from trl import SFTConfig, ModelConfig
 
 from tqdm import tqdm
-from sklearn.metrics import accuracy_score, f1_score
-
-from metrics.utils import binary_reverse
 
 from utils import get_task_prompt_from_safetensor
 
@@ -64,7 +59,8 @@ def apply_template(examples):
 def tryeval(string, default):
     try:
         return eval(string)
-    except SyntaxError:
+    except Exception:
+        print("eval exception:", string)
         return eval(default)
 
 
@@ -107,7 +103,6 @@ def evaluate_generative(y_pred, y_true, prefix="eval", squadv2=False, ids=None):
     bleu_metric = evaluate.load("bleu")
 
     scores_to_return = {}
-
     
     # print("y_pred:", y_pred)
     # print("y_true:", y_true)
@@ -117,6 +112,7 @@ def evaluate_generative(y_pred, y_true, prefix="eval", squadv2=False, ids=None):
 
     if squadv2:
         squad_v2_metric = evaluate.load("squad_v2")
+
         y_pred_processed = list(map(lambda x: tryeval(x.replace("text", "prediction_text"), "{'prediction_text': [], 'answer_start': []}"), y_pred))
         y_true_proccesed = list(map(lambda x: {"answers": eval(x)}, y_true))
         for i, _id in enumerate(ids):
