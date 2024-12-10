@@ -1,5 +1,7 @@
 import argparse
+import os
 import torch
+import numpy as np
 
 from args import DataTrainingArguments, ArgumentParser
 from arithmetics import PromptArithmeticsConfig
@@ -11,32 +13,21 @@ from peft import get_peft_model
 from trl import SFTConfig, ModelConfig
 
 from tqdm import tqdm
-
-from utils import get_task_prompt_from_safetensor
-
-import evaluate
+from utils import get_task_prompt_vectors_from_prompts
 
 import pandas as pd
 
+import evaluate
+
 import re
 
-prompts_to_load = {
-    "squad_v2_instruct": [
-        "prompt_tuning_12042024144342_squad_v2_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_12042024144534_squad_v2_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_12042024144807_squad_v2_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
-    ],
-    # "hotpot_qa_instruct": [
-    #     "prompt_tuning_12042024144827_hotpot_qa_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
-    #     "prompt_tuning_12042024145638_hotpot_qa_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
-    #     "prompt_tuning_12042024150532_hotpot_qa_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
-    # ],
-    # "math_instruct": [
-    #     "prompt_tuning_12042024094358_math_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
-    #     "prompt_tuning_12042024094358_math_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
-    #     "prompt_tuning_12042024094358_math_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
-    # ],
-}
+origin_prompts = [
+    "origin_0_meta-llama-3.1-8b-instruct",
+    "origin_1_meta-llama-3.1-8b-instruct",
+    "origin_2_meta-llama-3.1-8b-instruct",
+]
+# dataset_names = ["qnli_text_instruct", "sst2_text_instruct", "trec_coarse_text_instruct"]
+dataset_names = ["squad_v2_instruct"]
 
 
 def apply_test_template(examples):
@@ -68,11 +59,11 @@ def escape_inner_single_quotes(s):
 
     escaped_answers = []
 
-    # print(answers)
     for answer in answers:
         escaped_answers.append('"' + answer[1:-1].replace('"', "\\'") + '"' )
 
     return "{'prediction_text': [" + ", ".join(escaped_answers) + "], 'answer_start': [" + re.findall(pattern, s)[1] + "]}"
+
 
 def tryeval(string, default):
     try:
@@ -154,6 +145,9 @@ def evaluate_generative(y_pred, y_true, prefix="eval", squadv2=False, ids=None):
     return scores_to_return
 
 
+task_prompt_vectors = get_task_prompt_vectors_from_prompts(
+    origin_prompts=origin_prompts, dataset_names=dataset_names
+)
 
 timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
 
@@ -163,10 +157,76 @@ argparse_parser = argparse.ArgumentParser(
 )
 
 argparse_parser.add_argument("filename", help="Filename of a config to run.")
-argparse_parser.add_argument(
-    "--print_data", action="store_true", help="Print parsed data and exit."
-)
+argparse_parser.add_argument("--parse_data", help="Parse data into table.")
 args = argparse_parser.parse_args()
+
+if args.parse_data:
+    print("Parsing data")
+
+    data_dict = pd.read_csv(args.parse_data, index_col=0).to_dict()
+
+    results = {}
+    pt_results = {}
+
+    for dataset_name in data_dict["prompt_tuning"]:
+        acc, f1 = [], []
+
+        pt_acc, pt_f1 = [], []
+        for origin in eval(data_dict["prompt_tuning"][dataset_name]):
+            o1, o2 = "_".join(origin.split("_")[:2]), "_".join(origin.split("_")[3:5])
+
+            if o1 != o2:
+                print(
+                    dataset_name,
+                    o1,
+                    o2,
+                    eval(data_dict["prompt_tuning"][dataset_name])[origin],
+                )
+
+                acc.append(
+                    eval(data_dict["prompt_tuning"][dataset_name])[origin][
+                        "test/accuracy"
+                    ]
+                )
+                f1.append(
+                    eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/f1"]
+                )
+            else:
+                pt_acc.append(
+                    eval(data_dict["prompt_tuning"][dataset_name])[origin][
+                        "test/accuracy"
+                    ]
+                )
+                pt_f1.append(
+                    eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/f1"]
+                )
+
+        # print(acc, f1)
+        results[dataset_name] = {
+            "accuracy": {
+                "mean": np.round(np.array(acc).mean() * 100, 1),
+                "std": np.round(np.array(acc).std() * 100, 1),
+            },
+            "f1": {
+                "mean": np.round(np.array(f1).mean() * 100, 1),
+                "std": np.round(np.array(f1).std() * 100, 1),
+            },
+        }
+        pt_results[dataset_name] = {
+            "accuracy": {
+                "mean": np.round(np.array(pt_acc).mean() * 100, 1),
+                "std": np.round(np.array(pt_acc).std() * 100, 1),
+            },
+            "f1": {
+                "mean": np.round(np.array(pt_f1).mean() * 100, 1),
+                "std": np.round(np.array(pt_f1).std() * 100, 1),
+            },
+        }
+
+    print(pd.DataFrame.from_dict(results).to_csv("cross_origin_results.csv"))
+    print(pd.DataFrame.from_dict(pt_results).to_csv("prompt_tuning_results.csv"))
+    exit()
+
 
 parser = ArgumentParser(
     (SFTConfig, ModelConfig, DataTrainingArguments, PromptArithmeticsConfig)
@@ -197,11 +257,9 @@ model.generation_config.pad_token_id = tokenizer.pad_token_id
 
 full_test_results = {"zero_shot": {}, "prompt_tuning": {}}
 
-
-for dataset_name in prompts_to_load:
+for dataset_name in dataset_names:
     print(f"task: {dataset_name}")
 
-    print("Eval zero-shot performance")
     test_dataset = AutoTask.get(dataset_name).get(
         split="test",
         task_type=peft_config.task_type,
@@ -212,13 +270,7 @@ for dataset_name in prompts_to_load:
 
     chat_test_dataset = test_dataset.map(apply_test_template)
 
-    if args.print_data:
-        print("Test data")
-        # print(test_dataset[0])
-        print(chat_test_dataset["text"][0], test_dataset["target"][0], test_dataset["id"][0])
-
-        exit(0)
-
+    print("Eval zero-shot performance")
     test_results = evaluate_generative(
         predict_generative(
             chat_test_dataset,
@@ -229,34 +281,61 @@ for dataset_name in prompts_to_load:
         squadv2="squad" in dataset_name,
         ids=test_dataset["id"] if "squad" in dataset_name else None,
     )
-
     print(test_results)
 
     full_test_results["zero_shot"][dataset_name] = test_results
     full_test_results["prompt_tuning"][dataset_name] = {}
 
-    print("Eval prompt tuning performance")
-    for promt_to_load in prompts_to_load[dataset_name]:
-        model.prompt_encoder.default.embedding.weight = get_task_prompt_from_safetensor(
-            f"saves/{promt_to_load}"
-        )
+print("Eval prompt tuning performance")
+for o1 in task_prompt_vectors:
+    origin_weights = torch.load(f"soft_prompts/{o1}/{o1}.bin")["prompt_embeddings"].to(
+        training_args.device
+    )
 
-        print("current PT weights:", model.prompt_encoder.default.embedding.weight)
+    for o2 in task_prompt_vectors:
+        if o1 == o2:
+            continue
 
-        test_results = evaluate_generative(
-            predict_generative(
-                chat_test_dataset,
-                model,
-                tokenizer,
-            ),
-            test_dataset["target"],
-            squadv2="squad" in dataset_name,
-            ids=test_dataset["id"] if "squad" in dataset_name else None,
-        )
+        training_args.run_name = f"addition_{timestamp}_{o1}_{o2}"
+        print(f"origin: {o1} task prompt vectors: {o2}")
 
-        print(test_results)
+        for tp in task_prompt_vectors[o2]:
+            for dataset_name in tp.tasks:
+                print(f"task: {dataset_name}")
 
-        full_test_results["prompt_tuning"][dataset_name][promt_to_load] = test_results
+                test_dataset = AutoTask.get(dataset_name).get(
+                    split="test",
+                    task_type=peft_config.task_type,
+                    add_prefix=False,
+                    n_obs=data_args.max_test_samples,
+                    split_validation_test=data_args.split_validation_test,
+                )
+
+                chat_test_dataset = test_dataset.map(apply_test_template)
+
+                model.prompt_encoder.default.embedding.weight = tp.apply(
+                    origin_weights=origin_weights
+                )
+                print(
+                    "current PT weights:", model.prompt_encoder.default.embedding.weight
+                )
+
+                test_results = evaluate_generative(
+                    predict_generative(
+                        chat_test_dataset,
+                        model,
+                        tokenizer,
+                    ),
+                    test_dataset["target"],
+                    squadv2="squad" in dataset_name,
+                    ids=test_dataset["id"] if "squad" in dataset_name else None,
+                )
+
+                print(test_results)
+
+                full_test_results["prompt_tuning"][dataset_name][
+                    f"{o1}_{o2}_{dataset_name}"
+                ] = test_results
 
 
 df = pd.DataFrame.from_dict(full_test_results)
