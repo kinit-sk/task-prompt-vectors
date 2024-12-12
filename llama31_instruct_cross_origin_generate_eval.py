@@ -165,15 +165,18 @@ if args.parse_data:
 
     data_dict = pd.read_csv(args.parse_data, index_col=0).to_dict()
 
+    print(data_dict)
+
     results = {}
     pt_results = {}
 
     for dataset_name in data_dict["prompt_tuning"]:
-        acc, f1 = [], []
+        acc, f1, bleu, rougeL = [], [], [], []
 
         pt_acc, pt_f1 = [], []
         for origin in eval(data_dict["prompt_tuning"][dataset_name]):
             o1, o2 = "_".join(origin.split("_")[:2]), "_".join(origin.split("_")[3:5])
+
 
             if o1 != o2:
                 print(
@@ -183,48 +186,65 @@ if args.parse_data:
                     eval(data_dict["prompt_tuning"][dataset_name])[origin],
                 )
 
-                acc.append(
-                    eval(data_dict["prompt_tuning"][dataset_name])[origin][
-                        "test/accuracy"
-                    ]
+                # acc.append(
+                #     eval(data_dict["prompt_tuning"][dataset_name])[origin][
+                #         "eval/squad_exatct_match"
+                #     ]
+                # )
+                # f1.append(
+                #     eval(data_dict["prompt_tuning"][dataset_name])[origin]["eval/squad_f1"]
+                # )
+
+                bleu.append(
+                    eval(data_dict["prompt_tuning"][dataset_name])[origin]["eval/bleu"]
                 )
-                f1.append(
-                    eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/f1"]
+
+                rougeL.append(
+                    eval(data_dict["prompt_tuning"][dataset_name])[origin]["eval/rougeL"]
                 )
             else:
                 pt_acc.append(
                     eval(data_dict["prompt_tuning"][dataset_name])[origin][
-                        "test/accuracy"
+                        "eval/squad_exatct_match"
                     ]
                 )
                 pt_f1.append(
-                    eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/f1"]
+                    eval(data_dict["prompt_tuning"][dataset_name])[origin]["eval/squad_f1"]
                 )
 
-        # print(acc, f1)
+        print(acc, f1)
         results[dataset_name] = {
-            "accuracy": {
-                "mean": np.round(np.array(acc).mean() * 100, 1),
-                "std": np.round(np.array(acc).std() * 100, 1),
+            # "accuracy": {
+            #     "mean": np.round(np.array(acc).mean(), 1),
+            #     "std": np.round(np.array(acc).std(), 1),
+            # },
+            # "f1": {
+            #     "mean": np.round(np.array(f1).mean(), 1),
+            #     "std": np.round(np.array(f1).std(), 1),
+            # },
+            "bleu": {
+                "mean": np.round(np.array(bleu).mean() * 100, 1),
+                "std": np.round(np.array(bleu).std() * 100, 1),
             },
-            "f1": {
-                "mean": np.round(np.array(f1).mean() * 100, 1),
-                "std": np.round(np.array(f1).std() * 100, 1),
-            },
-        }
-        pt_results[dataset_name] = {
-            "accuracy": {
-                "mean": np.round(np.array(pt_acc).mean() * 100, 1),
-                "std": np.round(np.array(pt_acc).std() * 100, 1),
-            },
-            "f1": {
-                "mean": np.round(np.array(pt_f1).mean() * 100, 1),
-                "std": np.round(np.array(pt_f1).std() * 100, 1),
+            "rougeL": {
+                "mean": np.round(np.array(rougeL).mean() * 100, 1),
+                "std": np.round(np.array(rougeL).std() * 100, 1),
             },
         }
+        # pt_results[dataset_name] = {
+        #     "accuracy": {
+        #         "mean": np.round(np.array(pt_acc).mean() * 100, 1),
+        #         "std": np.round(np.array(pt_acc).std() * 100, 1),
+        #     },
+        #     "f1": {
+        #         "mean": np.round(np.array(pt_f1).mean() * 100, 1),
+        #         "std": np.round(np.array(pt_f1).std() * 100, 1),
+        #     },
+        # }
 
-    print(pd.DataFrame.from_dict(results).to_csv("cross_origin_results.csv"))
-    print(pd.DataFrame.from_dict(pt_results).to_csv("prompt_tuning_results.csv"))
+    pd.DataFrame.from_dict(results).to_csv("cross_origin_results.csv")
+    print(results)
+    # print(pd.DataFrame.from_dict(pt_results).to_csv("prompt_tuning_results.csv"))
     exit()
 
 

@@ -34,6 +34,8 @@ task_labels = {
     "sst2_text_instruct": "SST2",
     "trec_coarse_text_instruct": "TREC",
     "yelp_polarity_text_instruct": "Yelp",
+    "math_instruct": "MATH",
+    "squad_v2_instruct": "SQuADv2",
 }
 
 
@@ -108,8 +110,8 @@ df = pd.DataFrame.from_dict(average_similarities)
 df = df.rename(task_labels)
 df = df.rename(task_labels, axis="columns")
 
-df = df[["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp"]].reindex(
-    ["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp"]
+df = df[["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]].reindex(
+    ["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]
 )
 
 # plt.figure(figsize=(16,10))
@@ -134,7 +136,7 @@ plt.savefig(f"rq1_heatmap.pdf", bbox_inches="tight")
 
 plt.close()
 
-order = ["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp"]
+order = ["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]
 
 df_mean = pd.read_csv("avg_ct_co_tpv_mean.csv", index_col=0).loc[order, order]
 df_std = pd.read_csv("avg_ct_co_tpv_std.csv", index_col=0).loc[order, order]
