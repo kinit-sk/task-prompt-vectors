@@ -21,13 +21,12 @@ from metrics import (
     pearsonr,
     spearmanr,
     matthews_correlation,
+    round_stsb_target,
 )
 
 from transformers import EvalPrediction
 
 import re
-
-from utils import round_stsb_target
 
 
 class AbstractTask:
