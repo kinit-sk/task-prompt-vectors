@@ -409,7 +409,7 @@ class STSBTextInstruct(AbstractTask):
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = [
-            f"Classify the sentence into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
+            f"Classify the sentence1 and sentence2 pair into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
             f"sentence1: {example['sentence1']}",
             f"sentence2: {example['sentence2']}",
         ]
@@ -666,7 +666,7 @@ class QQPTextInstruct(AbstractTask):
     id2label = {0: "not duplicate", 1: "duplicate"}
 
     def load_dataset(self, split) -> Dataset:
-        return datasets.load_dataset("glue", "qnli", split=split)
+        return datasets.load_dataset("glue", "qqp", split=split)
 
     def preprocessor(self, example, add_prefix=False):
         input_texts = [
