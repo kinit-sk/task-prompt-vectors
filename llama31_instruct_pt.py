@@ -20,8 +20,6 @@ from metrics.utils import binary_reverse
 
 
 def apply_test_template(examples):
-    # print(ahahhadsadasd)
-    # dada
     return {
         "text": tokenizer.apply_chat_template(
             [examples], tokenize=False, add_generation_prompt=True
@@ -30,8 +28,6 @@ def apply_test_template(examples):
 
 
 def apply_template(examples):
-    # print(wtf python)dsaasdasdsa
-    # dadsa
     return {
         "text": tokenizer.apply_chat_template(
             [examples, {"role": "assistant", "content": examples["target"]}],
@@ -328,7 +324,11 @@ for origin_prompt in peft_config.origin_prompts:
 
         trainer.train()
 
-        if "math" in dataset_name or "squad" in dataset_name or "hotpot" in dataset_name:
+        if (
+            "math" in dataset_name
+            or "squad" in dataset_name
+            or "hotpot" in dataset_name
+        ):
             pass
         else:
             test_results = evaluate(

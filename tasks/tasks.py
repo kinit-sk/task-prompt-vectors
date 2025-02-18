@@ -13,11 +13,21 @@ from typing import List, Dict, Callable
 from evaluate import Metric
 from datasets import Dataset
 
-from metrics import exact_match, macro_f1, f1, squad_v2_metric
+from metrics import (
+    exact_match,
+    macro_f1,
+    f1,
+    squad_v2_metric,
+    pearsonr,
+    spearmanr,
+    matthews_correlation,
+)
 
 from transformers import EvalPrediction
 
 import re
+
+from utils import round_stsb_target
 
 
 class AbstractTask:
@@ -35,9 +45,18 @@ class AbstractTask:
         "validation": "validation",
         "test": "test",
     }
-    small_datasets_without_all_splits = ["trec_fine", "trec_coarse", "wnli", "sst5"]
+    small_datasets_without_all_splits = [
+        "cola",
+        "rte",
+        "mrpc",
+        "trec_fine",
+        "trec_coarse",
+        "wnli",
+        "sst5",
+    ]
     large_data_without_all_splits = [
-        "math" "qnli",
+        "math",
+        "qnli",
         "sst2",
         "mnli",
         "yelp_polarity",
@@ -50,6 +69,7 @@ class AbstractTask:
         "squad_v2",
         "mmlu",
         "hotpot_qa",
+        "qqp",
     ]
     id2label = NotImplemented
     label_column_name = NotImplemented
@@ -344,6 +364,67 @@ class SST5Text(AbstractTask):
         )
 
 
+class STSBText(AbstractTask):
+    name = "stsb_text"
+    labels_list = [str(np.round(label, decimals=1)) for label in np.arange(0, 5.2, 0.2)]
+    metrics = [pearsonr, spearmanr]
+    metric_names = ["pearsonr", "spearmanr"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "stsb", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "sentence1:",
+            example["sentence1"],
+            "sentence2:",
+            example["sentence2"],
+        ]
+        label_texts = [str(round_stsb_target(example["label"]))]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class STSBTextInstruct(AbstractTask):
+    name = "stsb_text_instruct"
+    labels_list = [str(np.round(label, decimals=1)) for label in np.arange(0, 5.2, 0.2)]
+    metrics = [pearsonr, spearmanr]
+    metric_names = ["pearsonr", "spearmanr"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "stsb", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            f"Classify the sentence into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
+            f"sentence1: {example['sentence1']}",
+            f"sentence2: {example['sentence2']}",
+        ]
+        label_texts = [str(round_stsb_target(example["label"]))]
+
+        return self.formater(
+            self.name.replace("_text_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+        )
+
+
 class YelpPolarity(AbstractTask):
     name = "yelp_polarity"
     labels_list = ["0", "1"]
@@ -542,6 +623,69 @@ class QNLITextInstruct(AbstractTask):
         )
 
 
+class QQPText(AbstractTask):
+    name = "qqp_text"
+    labels_list = ["not_duplicate", "duplicate"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+    id2label = {0: "not_duplicate", 1: "duplicate"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "qqp", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "question1:",
+            example["question1"],
+            "question2:",
+            example["question2"],
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class QQPTextInstruct(AbstractTask):
+    name = "qqp_text_instruct"
+    labels_list = ["not duplicate", "duplicate"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+    id2label = {0: "not duplicate", 1: "duplicate"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "qnli", split=split)
+
+    def preprocessor(self, example, add_prefix=False):
+        input_texts = [
+            f"Classify the question1 and question2 pair into following labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
+            f"question1: {example['question1']}",
+            f"question2: {example['question2']}",
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+        )
+
+
 class MNLI(AbstractTask):
     name = "mnli"
     labels_list = ["0", "1", "2"]
@@ -602,7 +746,7 @@ class MNLIText(AbstractTask):
 
 
 class MNLITextInstruct(AbstractTask):
-    name = "mnli_text_insttuct"
+    name = "mnli_text_instruct"
     labels_list = ["entailment", "neutral", "contradiction"]
     metrics = [exact_match, macro_f1]
     metric_names = ["exact_match", "macro_f1"]
@@ -622,6 +766,192 @@ class MNLITextInstruct(AbstractTask):
             f"Classify the premise and hypothesis pair into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
             f"premise: {example['premise']}",
             f"hypothesis: {example['hypothesis']}",
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+        )
+
+
+class MRPCText(AbstractTask):
+    name = "mrpc_text"
+    labels_list = ["not_equivalent", "equivalent"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+    id2label = {0: "not_equivalent", 1: "equivalent"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "mrpc", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "sentence1:",
+            example["sentence1"],
+            "sentence2:",
+            example["sentence2"],
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class MRPCTextInstruct(AbstractTask):
+    name = "mrpc_text_instruct"
+    labels_list = ["not equivalent", "equivalent"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+    id2label = {0: "not equivalent", 1: "equivalent"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "mrpc", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            f"Classify the sentence1 and sentence2 pair into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
+            f"sentence1: {example['sentence1']}",
+            f"sentence2: {example['sentence2']}",
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+        )
+
+
+class RTEText(AbstractTask):
+    name = "rte_text"
+    labels_list = ["entailment", "not_entailment"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+    id2label = {0: "entailment", 1: "not_entailment"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "rte", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "sentence1:",
+            example["sentence1"],
+            "sentence2:",
+            example["sentence2"],
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class RTETextInstruct(AbstractTask):
+    name = "rte_text_instruct"
+    labels_list = ["entailment", "not entailment"]
+    metrics = [exact_match, macro_f1]
+    metric_names = ["exact_match", "macro_f1"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+    id2label = {0: "entailment", 1: "not entailment"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "rte", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            f"Classify the sentence1 and sentence2 pair into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
+            f"sentence1: {example['sentence1']}",
+            f"sentence2: {example['sentence2']}",
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text_instruct", ""),
+            input_texts,
+            label_texts,
+            add_prefix,
+            instruct=True,
+        )
+
+
+class COLAText(AbstractTask):
+    name = "cola_text"
+    labels_list = ["unacceptable", "acceptable"]
+    metrics = [exact_match, matthews_correlation]
+    metric_names = ["exact_match", "matthews_correlation"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+    id2label = {0: "unacceptable", 1: "acceptable"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "cola", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            "sentence:",
+            example["sentence"],
+        ]
+        label_texts = [self.id2label[example[self.label_column_name]]]
+
+        return self.formater(
+            self.name.replace("_text", ""), input_texts, label_texts, add_prefix
+        )
+
+
+class COLATextInstruct(AbstractTask):
+    name = "cola_text_instruct"
+    labels_list = ["unacceptable", "acceptable"]
+    metrics = [exact_match, matthews_correlation]
+    metric_names = ["exact_match", "matthews_correlation"]
+    split_to_data_split = {
+        "train": "train",
+        "validation": "validation",
+        "test": "validation",
+    }
+    label_column_name = "label"
+    id2label = {0: "unacceptable", 1: "acceptable"}
+
+    def load_dataset(self, split) -> Dataset:
+        return datasets.load_dataset("glue", "cola", split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        input_texts = [
+            f"Classify the sentence pair into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
+            f"sentence: {example['sentence']}",
         ]
         label_texts = [self.id2label[example[self.label_column_name]]]
 
@@ -1494,7 +1824,9 @@ class HotpotQAInstruct(AbstractTask):
     label_column_name = None
 
     def load_dataset(self, split):
-        return datasets.load_dataset("hotpotqa/hotpot_qa", "fullwiki", split=split, trust_remote_code=True)
+        return datasets.load_dataset(
+            "hotpotqa/hotpot_qa", "fullwiki", split=split, trust_remote_code=True
+        )
 
     def preprocessor(self, example, add_prefix):
         input_texts = [

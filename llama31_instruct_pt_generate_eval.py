@@ -56,10 +56,11 @@ def apply_template(examples):
         )
     }
 
+
 def escape_inner_single_quotes(s):
-  
-    pattern = r'\[(.*?)\]'
-    matches =  re.findall(pattern, s)
+
+    pattern = r"\[(.*?)\]"
+    matches = re.findall(pattern, s)
 
     if len(matches) == 0:
         return "{'prediction_text': [], 'answer_start': []}"
@@ -70,9 +71,16 @@ def escape_inner_single_quotes(s):
 
     # print(answers)
     for answer in answers:
-        escaped_answers.append('"' + answer[1:-1].replace('"', "\\'") + '"' )
+        escaped_answers.append('"' + answer[1:-1].replace('"', "\\'") + '"')
 
-    return "{'prediction_text': [" + ", ".join(escaped_answers) + "], 'answer_start': [" + re.findall(pattern, s)[1] + "]}"
+    return (
+        "{'prediction_text': ["
+        + ", ".join(escaped_answers)
+        + "], 'answer_start': ["
+        + re.findall(pattern, s)[1]
+        + "]}"
+    )
+
 
 def tryeval(string, default):
     try:
@@ -80,7 +88,6 @@ def tryeval(string, default):
     except Exception:
         print("eval exception:", string)
         return eval(default)
-
 
 
 def predict_generative(test_dataset, model, tokenizer):
@@ -116,12 +123,13 @@ def predict_generative(test_dataset, model, tokenizer):
     # print(len(y_pred))
     return y_pred
 
+
 def evaluate_generative(y_pred, y_true, prefix="eval", squadv2=False, ids=None):
     rouge_metric = evaluate.load("rouge")
     bleu_metric = evaluate.load("bleu")
 
     scores_to_return = {}
-    
+
     # print("y_pred:", y_pred)
     # print("y_true:", y_true)
 
@@ -131,28 +139,49 @@ def evaluate_generative(y_pred, y_true, prefix="eval", squadv2=False, ids=None):
     if squadv2:
         squad_v2_metric = evaluate.load("squad_v2")
 
-        y_pred_processed = list(map(lambda x: tryeval(escape_inner_single_quotes(x.replace("text", "prediction_text")), "{'prediction_text': [], 'answer_start': []}"), y_pred))
+        y_pred_processed = list(
+            map(
+                lambda x: tryeval(
+                    escape_inner_single_quotes(x.replace("text", "prediction_text")),
+                    "{'prediction_text': [], 'answer_start': []}",
+                ),
+                y_pred,
+            )
+        )
         y_true_proccesed = list(map(lambda x: {"answers": eval(x)}, y_true))
         for i, _id in enumerate(ids):
             y_pred_processed[i]["id"] = _id
-            y_pred_processed[i]["no_answer_probability"] = 0.
+            y_pred_processed[i]["no_answer_probability"] = 0.0
             if y_pred_processed[i]["prediction_text"]:
-                y_pred_processed[i]["prediction_text"] = y_pred_processed[i]["prediction_text"][0]
+                y_pred_processed[i]["prediction_text"] = y_pred_processed[i][
+                    "prediction_text"
+                ][0]
             else:
                 y_pred_processed[i]["prediction_text"] = ""
             del y_pred_processed[i]["answer_start"]
-            
+
             y_true_proccesed[i]["id"] = _id
 
         # print("y_pred_processed:", y_pred_processed)
         # print("y_true_proccesed:", y_true_proccesed)
-        squad_v2_score = squad_v2_metric.compute(predictions=y_pred_processed, references=y_true_proccesed)
-        scores_to_return.update({f"{prefix}/squad_exatct_match": squad_v2_score["exact"],f"{prefix}/squad_f1": squad_v2_score["f1"]})
+        squad_v2_score = squad_v2_metric.compute(
+            predictions=y_pred_processed, references=y_true_proccesed
+        )
+        scores_to_return.update(
+            {
+                f"{prefix}/squad_exatct_match": squad_v2_score["exact"],
+                f"{prefix}/squad_f1": squad_v2_score["f1"],
+            }
+        )
 
-    scores_to_return.update({f"{prefix}/bleu": bleu_score["bleu"], f"{prefix}/rougeL": rouge_score["rougeL"]})
+    scores_to_return.update(
+        {
+            f"{prefix}/bleu": bleu_score["bleu"],
+            f"{prefix}/rougeL": rouge_score["rougeL"],
+        }
+    )
 
     return scores_to_return
-
 
 
 timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
@@ -215,7 +244,11 @@ for dataset_name in prompts_to_load:
     if args.print_data:
         print("Test data")
         # print(test_dataset[0])
-        print(chat_test_dataset["text"][0], test_dataset["target"][0], test_dataset["id"][0])
+        print(
+            chat_test_dataset["text"][0],
+            test_dataset["target"][0],
+            test_dataset["id"][0],
+        )
 
         exit(0)
 

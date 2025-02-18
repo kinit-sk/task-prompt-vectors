@@ -6,12 +6,22 @@ import numpy as np
 import evaluate
 
 
-# def exact_match(preds, targets):
-#     check_data_state(preds, targets)
+def matthews_correlation(preds, targets):
+    metric = evaluate.load("matthews_correlation")
 
-#     metric = evaluate.load("exact_match", keep_in_memory=True)
+    return metric.compute(predictions=preds, references=targets)
 
-#     return metric.compute(predictions=preds, references=targets)
+
+def pearsonr(preds, targets):
+    metric = evaluate.load("pearsonr")
+
+    return metric.compute(predictions=preds, references=targets)
+
+
+def spearmanr(preds, targets):
+    metric = evaluate.load("spearmanr")
+
+    return metric.compute(predictions=preds, references=targets)
 
 
 def squad_v2_metric(preds, targets):
@@ -25,7 +35,6 @@ def exact_match(preds, targets):
 
     preds, targets = np.asarray(preds, dtype="<U16"), np.asarray(targets, dtype="<U16")
 
-    # print(preds, targets)
     return {"exact_match": np.sum(preds == targets) / preds.size}
 
 
