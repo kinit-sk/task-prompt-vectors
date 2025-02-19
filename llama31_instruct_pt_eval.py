@@ -21,21 +21,27 @@ from utils import get_task_prompt_from_safetensor
 
 import pandas as pd
 
+# prompts_to_load = {
+#     "qnli_text_instruct": [
+#         "prompt_tuning_09262024190021_qnli_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_09282024205601_qnli_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
+#     ],
+#     "sst2_text_instruct": [
+#         "prompt_tuning_09282024094012_sst2_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_09282024094012_sst2_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_09282024094012_sst2_text_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
+#     ],
+#     "trec_coarse_text_instruct": [
+#         "prompt_tuning_09282024094154_trec_coarse_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_09282024094154_trec_coarse_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_09282024094154_trec_coarse_text_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
+#     ],
+# }
+
 prompts_to_load = {
-    "qnli_text_instruct": [
-        "prompt_tuning_09262024190021_qnli_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_09282024205601_qnli_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
-    ],
-    "sst2_text_instruct": [
-        "prompt_tuning_09282024094012_sst2_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_09282024094012_sst2_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_09282024094012_sst2_text_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
-    ],
-    "trec_coarse_text_instruct": [
-        "prompt_tuning_09282024094154_trec_coarse_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_09282024094154_trec_coarse_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_09282024094154_trec_coarse_text_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
-    ],
+    "rte_text_instruct": [
+        "prompt_tuning_02192025145017_rte_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
+    ]
 }
 
 
@@ -63,7 +69,7 @@ def predict(test_dataset, model, tokenizer, labels_list):
         task="text-generation",
         model=model,
         tokenizer=tokenizer,
-        max_new_tokens=16,
+        max_new_tokens=2048,
         do_sample=False,
         top_p=None,
         temperature=None,
@@ -74,6 +80,8 @@ def predict(test_dataset, model, tokenizer, labels_list):
     for x_test in tqdm(test_dataset["text"]):
 
         result = pipe(x_test)
+        print(result)
+        print(x_test)
         answer = (
             result[0]["generated_text"]
             .split("label:<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[-1]
