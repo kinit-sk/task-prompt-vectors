@@ -175,6 +175,8 @@ training_args, model_args, data_args, peft_config = parser.parse_toml_file(
     args.filename
 )
 
+training_args.packing = False
+
 os.environ["WANDB_PROJECT"] = "arithmetics"
 
 output_dir = training_args.output_dir
@@ -184,8 +186,8 @@ for origin_prompt in peft_config.origin_prompts:
 
     for dataset_name in data_args.dataset_names:
 
-        training_args.output_dir = f"{output_dir}_{timestamp}_{'_'.join(data_args.dataset_names)}_{origin_prompt}"
-        training_args.run_name = f"prompt_tuning_{timestamp}_{'_'.join(data_args.dataset_names)}_{origin_prompt}"
+        training_args.output_dir = f"prompt_tuning_{timestamp}_{'_'.join(data_args.dataset_names)}_origin_{origin_prompt.split("_")[1]}_{model_args.model_name_or_path.split("/")[-1].lower()}"
+        training_args.run_name = f"prompt_tuning_{timestamp}_{'_'.join(data_args.dataset_names)}_origin_{origin_prompt.split("_")[1]}_{model_args.model_name_or_path.split("/")[-1].lower()}"
 
         model = AutoModelForCausalLM.from_pretrained(
             model_args.model_name_or_path,
@@ -320,7 +322,7 @@ for origin_prompt in peft_config.origin_prompts:
             train_dataset=chat_train_dataset,
             eval_dataset=chat_valid_dataset,
             tokenizer=tokenizer,
-            packing=False,
+            # packing=False,
         )
 
         trainer.train()
