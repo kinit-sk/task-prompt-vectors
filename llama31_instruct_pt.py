@@ -299,7 +299,7 @@ for origin_prompt in peft_config.origin_prompts:
                 pre_train_results = evaluate(
                     predict(
                         chat_test_dataset,
-                        model,
+                        model.base_model,
                         tokenizer,
                         AutoTask.get(dataset_name).labels_list,
                     ),
@@ -312,6 +312,7 @@ for origin_prompt in peft_config.origin_prompts:
                 )
 
             print(pre_train_results)
+            exit()
 
         trainer = SFTTrainer(
             model=model,
@@ -328,6 +329,7 @@ for origin_prompt in peft_config.origin_prompts:
             "math" in dataset_name
             or "squad" in dataset_name
             or "hotpot" in dataset_name
+            or "stsb" in dataset_name
         ):
             pass
         else:
