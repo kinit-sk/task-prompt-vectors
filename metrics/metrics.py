@@ -5,9 +5,19 @@ import numpy as np
 
 import evaluate
 
+def string_to_float(string, default=-1.0):
+    """Converts string to float, using default when conversion not possible."""
+    try:
+        return float(string)
+    except ValueError:
+        return default
+
 
 def matthews_correlation(preds, targets):
     metric = evaluate.load("matthews_correlation")
+
+    targets = [string_to_float(t) for t in targets]
+    preds = [string_to_float(p) for p in preds]
 
     return metric.compute(predictions=preds, references=targets)
 
@@ -15,11 +25,17 @@ def matthews_correlation(preds, targets):
 def pearsonr(preds, targets):
     metric = evaluate.load("pearsonr")
 
+    targets = [string_to_float(t) for t in targets]
+    preds = [string_to_float(p) for p in preds]
+
     return metric.compute(predictions=preds, references=targets)
 
 
 def spearmanr(preds, targets):
     metric = evaluate.load("spearmanr")
+
+    targets = [string_to_float(t) for t in targets]
+    preds = [string_to_float(p) for p in preds]
 
     return metric.compute(predictions=preds, references=targets)
 

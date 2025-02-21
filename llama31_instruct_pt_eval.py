@@ -40,28 +40,36 @@ import pandas as pd
 
 prompts_to_load = {
     "rte_text_instruct": [
-        "prompt_tuning_02182025153915_rte_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_02182025195335_rte_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_02182025195335_rte_text_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
-    ],
-    "mrpc_text_instruct": [
-        "prompt_tuning_02182025154213_mrpc_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_02182025195351_mrpc_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_02182025195351_mrpc_text_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
-    ],
-    "cola_text_instruct": [
-        "prompt_tuning_02182025154220_cola_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_02182025195340_cola_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_02182025195340_cola_text_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
+        "prompt_tuning_02192025145017_rte_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
     ],
 }
 
+# prompts_to_load = {
+#     "rte_text_instruct": [
+#         "prompt_tuning_02182025153915_rte_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_02182025195335_rte_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_02182025195335_rte_text_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
+#     ],
+#     "mrpc_text_instruct": [
+#         "prompt_tuning_02182025154213_mrpc_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_02182025195351_mrpc_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_02182025195351_mrpc_text_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
+#     ],
+#     "cola_text_instruct": [
+#         "prompt_tuning_02182025154220_cola_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_02182025195340_cola_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_02182025195340_cola_text_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
+#     ],
+# }
+
 
 def apply_test_template(examples):
+    # print(examples)
+    # exit()
     return {
         "text": tokenizer.apply_chat_template(
             [examples], tokenize=False, add_generation_prompt=True
-        )
+        ).replace("<think>", "")
     }
 
 
@@ -92,8 +100,8 @@ def predict(test_dataset, model, tokenizer, labels_list):
     for x_test in tqdm(test_dataset["text"]):
 
         result = pipe(x_test)
-        # print(result)
-        # print(x_test)
+        print(result)
+        print(x_test)
         answer = (
             result[0]["generated_text"]
             .split("label:<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[-1]
@@ -202,21 +210,21 @@ for dataset_name in prompts_to_load:
 
     chat_test_dataset = test_dataset.map(apply_test_template)
 
-    test_results = evaluate(
-        predict(
-            chat_test_dataset,
-            model.base_model,
-            tokenizer,
-            AutoTask.get(dataset_name).labels_list,
-        ),
-        test_dataset["target"],
-        {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
-        prefix="test",
-    )
+    # test_results = evaluate(
+    #     predict(
+    #         chat_test_dataset,
+    #         model.base_model,
+    #         tokenizer,
+    #         AutoTask.get(dataset_name).labels_list,
+    #     ),
+    #     test_dataset["target"],
+    #     {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
+    #     prefix="test",
+    # )
 
-    print(test_results)
+    # print(test_results)
 
-    full_test_results["zero_shot"][dataset_name] = test_results
+    # full_test_results["zero_shot"][dataset_name] = test_results
     full_test_results["prompt_tuning"][dataset_name] = {}
 
     print("Eval prompt tuning performance")

@@ -780,8 +780,8 @@ class MNLITextInstruct(AbstractTask):
 class MRPCText(AbstractTask):
     name = "mrpc_text"
     labels_list = ["not_equivalent", "equivalent"]
-    metrics = [exact_match, macro_f1]
-    metric_names = ["exact_match", "macro_f1"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation",
@@ -810,8 +810,8 @@ class MRPCText(AbstractTask):
 class MRPCTextInstruct(AbstractTask):
     name = "mrpc_text_instruct"
     labels_list = ["not equivalent", "equivalent"]
-    metrics = [exact_match, macro_f1]
-    metric_names = ["exact_match", "macro_f1"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation",
@@ -843,8 +843,8 @@ class MRPCTextInstruct(AbstractTask):
 class RTEText(AbstractTask):
     name = "rte_text"
     labels_list = ["entailment", "not_entailment"]
-    metrics = [exact_match, macro_f1]
-    metric_names = ["exact_match", "macro_f1"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation",
@@ -873,8 +873,8 @@ class RTEText(AbstractTask):
 class RTETextInstruct(AbstractTask):
     name = "rte_text_instruct"
     labels_list = ["entailment", "not entailment"]
-    metrics = [exact_match, macro_f1]
-    metric_names = ["exact_match", "macro_f1"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation",
@@ -906,8 +906,8 @@ class RTETextInstruct(AbstractTask):
 class COLAText(AbstractTask):
     name = "cola_text"
     labels_list = ["unacceptable", "acceptable"]
-    metrics = [exact_match, matthews_correlation]
-    metric_names = ["exact_match", "matthews_correlation"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation",
@@ -934,8 +934,8 @@ class COLAText(AbstractTask):
 class COLATextInstruct(AbstractTask):
     name = "cola_text_instruct"
     labels_list = ["unacceptable", "acceptable"]
-    metrics = [exact_match, matthews_correlation]
-    metric_names = ["exact_match", "matthews_correlation"]
+    metrics = [exact_match, f1]
+    metric_names = ["exact_match", "f1"]
     split_to_data_split = {
         "train": "train",
         "validation": "validation",

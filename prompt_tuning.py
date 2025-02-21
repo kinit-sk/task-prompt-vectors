@@ -6,12 +6,8 @@ from trainer import MultiTaskSeq2SeqTrainer
 from transformers import (
     AutoTokenizer,
     AutoModelForSeq2SeqLM,
-    AutoModelForCausalLM,
     DataCollatorForSeq2Seq,
-    Trainer,
     Seq2SeqTrainer,
-    default_data_collator,
-    GenerationConfig,
 )
 from peft import get_peft_model
 
@@ -24,41 +20,22 @@ import torch
 
 from tasks import AutoTask
 
-import argparse
 
 timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
-
-argparse_parser = argparse.ArgumentParser(
-    prog="Run prompt tuning",
-    description="Run prompt tuning to train soft-prompts.",
-)
-
-argparse_parser.add_argument("filename", help="Filename of a config to run.")
-args = argparse_parser.parse_args()
 
 
 parser = ArgumentParser(
     (TrainingArguments, DataTrainingArguments, PromptArithmeticsConfig)
 )
 
-training_args, data_args, pt_args = parser.parse_toml_file(args.filename)
-# print(training_args)
+training_args, data_args, pt_args = parser.parse_toml_file("configs/prompt_tuning/single-task/prompt_tuning.toml")
+print(training_args)
 
 os.environ["WANDB_PROJECT"] = training_args.wandb_project
 
-if pt_args.task_type == "CAUSAL_LM":
-    tokenizer = AutoTokenizer.from_pretrained(
-        data_args.data_tokenizer_name_or_path,
-        model_max_length=512,
-        use_fast=True,
-        padding_side="left",
-    )
-
-    tokenizer.add_special_tokens({"pad_token": "<|reserved_special_token_0|>"})
-else:
-    tokenizer = AutoTokenizer.from_pretrained(
-        data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True
-    )
+tokenizer = AutoTokenizer.from_pretrained(
+    data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True
+)
 
 output_dir = training_args.output_dir
 
@@ -66,127 +43,67 @@ for origin_prompt in pt_args.origin_prompts:
     training_args.origin_prompt_name = origin_prompt
 
     for dataset_name in data_args.dataset_names:
-        training_args.train_dataset_names = dataset_name
+        training_args.train_dataset_names = [dataset_name]
 
-        if not isinstance(dataset_name, list):
-            training_args.train_dataset_names = [dataset_name]
+        model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
 
-        if pt_args.task_type == "CAUSAL_LM":
-            model = AutoModelForCausalLM.from_pretrained(
-                training_args.model_name_or_path, torch_dtype=torch.bfloat16
-            ).to("cuda")
-        else:
-            model = AutoModelForSeq2SeqLM.from_pretrained(
-                training_args.model_name_or_path
-            )
-
-        model.generation_config.max_new_tokens = 16
-        model.generation_config.max_length = 256
+        model.active_adapters = [
+            "default"
+        ]
 
         model = get_peft_model(model, peft_config=pt_args)
-
-        model.config.pad_token_id = tokenizer.pad_token_id
-        model.generation_config.pad_token_id = tokenizer.pad_token_id
 
         model.prompt_encoder.default.embedding.weight = torch.nn.Parameter(
             torch.load(f"saves/{origin_prompt}/{origin_prompt}.bin")[
                 "prompt_embeddings"
-            ].to("cuda")
+            ]
         )
+        model.base_model.generation_config.max_new_tokens = data_args.max_target_length
 
         print("current PT weights:", model.prompt_encoder.default.embedding.weight)
+        print(model.active_adapters)
 
         model.print_trainable_parameters()
 
-        print(f"task: {training_args.train_dataset_names}")
+        print(f"task: {dataset_name}")
 
-        preprocessor = Preprocessor(
-            training_args.train_dataset_names,
-            data_args,
-            training_args,
-            pt_args,
-            tokenizer,
+        preprocessor = Preprocessor([dataset_name], data_args, training_args)
+
+        training_args.output_dir = (
+            f"{output_dir}_{timestamp}_{dataset_name}_{origin_prompt}_{training_args.model_name_or_path.split("/")[-1].lower()}"
         )
-
-        training_args.output_dir = f"{output_dir}_{timestamp}_{'_'.join(training_args.train_dataset_names)}_{origin_prompt}"
-        training_args.run_name = f"prompt_tuning_{timestamp}_{'_'.join(training_args.train_dataset_names)}_{origin_prompt}"
+        training_args.run_name = (
+            f"prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_{training_args.model_name_or_path.split("/")[-1].lower()}"
+        )
 
         train_dataset, valid_datasets, test_datasets = preprocessor.get_data()
         # print(train_dataset, valid_datasets, test_datasets)
 
-        print(tokenizer.decode(train_dataset[10]["labels"][-4:]))
-        print(tokenizer.decode(train_dataset[10]["input_ids"][-4:]))
-        print(tokenizer.decode(list(valid_datasets.values())[0][0]["labels"][-8:]))
-        print(tokenizer.decode(list(valid_datasets.values())[0][0]["input_ids"][-8:]))
+        data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, return_tensors="pt")
 
-        print(
-            len(list(valid_datasets.values())[0][0]["labels"]),
-            len(list(valid_datasets.values())[0][0]["input_ids"]),
-            len(list(valid_datasets.values())[0][0]["attention_mask"]),
+        compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer, pt_args.task_type)
+
+
+        trainer = Seq2SeqTrainer(
+            model=model,
+            tokenizer=tokenizer,
+            args=training_args,
+            train_dataset=train_dataset,
+            eval_dataset=next(iter(valid_datasets.values())),
+            data_collator=data_collator,
+            compute_metrics=compute_metrics,
         )
-
-        if pt_args.task_type == "CAUSAL_LM":
-            data_collator = default_data_collator
-        else:
-            data_collator = DataCollatorForSeq2Seq(
-                tokenizer=tokenizer, return_tensors="pt"
-            )
-
-        compute_metrics = None
-        if isinstance(dataset_name, list):
-            compute_metrics = {}
-            for dm in dataset_name:
-                compute_metrics[dm] = AutoTask.get(dm).get_compute_metrics(
-                    tokenizer, task_type=pt_args.task_type
-                )
-        else:
-            compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(
-                tokenizer, task_type=pt_args.task_type
-            )
-
-        if pt_args.task_type == "CAUSAL_LM":
-            trainer = Seq2SeqTrainer(
-                model=model,
-                tokenizer=tokenizer,
-                args=training_args,
-                train_dataset=train_dataset,
-                eval_dataset=list(valid_datasets.values())[0],
-                data_collator=data_collator,
-                compute_metrics=compute_metrics,
-            )
-        else:
-            trainer = MultiTaskSeq2SeqTrainer(
-                model=model,
-                tokenizer=tokenizer,
-                args=training_args,
-                train_dataset=train_dataset,
-                eval_dataset=valid_datasets,
-                data_collator=data_collator,
-                compute_metrics=compute_metrics,
-            )
         trainer.train()
 
-        if isinstance(dataset_name, list):
-            for dm in dataset_name:
-                print(
-                    trainer.evaluate(
-                        eval_dataset=test_datasets[dm], metric_key_prefix=f"test_{dm}"
-                    )
-                )
-        else:
-            print(
-                trainer.evaluate(
-                    eval_dataset=test_datasets[dataset_name], metric_key_prefix="test"
-                )
+        print(
+            trainer.evaluate(
+                eval_dataset=test_datasets[dataset_name], metric_key_prefix="test"
             )
+        )
 
-        if isinstance(dataset_name, list):
-            save_name = f"./saves/prompt_tuning_{timestamp}_{'_'.join(dataset_name)}_{origin_prompt}_best"
-        else:
-            save_name = (
-                f"./saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"
-            )
-
+        save_name = (
+            f"./{training_args.output_dir}_best"
+        )
         model.save_pretrained(save_name)
 
         if wandb.run is not None:
