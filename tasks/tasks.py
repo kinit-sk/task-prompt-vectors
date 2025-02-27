@@ -1719,7 +1719,7 @@ class MATHInstruct(AbstractTask):
     label_column_name = None
 
     def load_dataset(self, split) -> Dataset:
-        return datasets.load_dataset("lighteval/MATH", "all", split=split)
+        return datasets.load_dataset("DigitalLearningGmbH/MATH-lighteval", "default", split=split)
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = [
