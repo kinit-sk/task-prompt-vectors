@@ -39,11 +39,24 @@ df = pd.read_csv(args.filename)
 
 for pt in df["prompt_tuning"]:
     pt_df = pd.DataFrame.from_dict(eval(pt), orient="index")
-    pt_df["test/accuracy"] = pd.to_numeric(pt_df["test/accuracy"])
-    pt_df["test/f1"] = pd.to_numeric(pt_df["test/f1"])
+    if "test/accuracy" in pt_df:
+        pt_df["test/accuracy"] = pd.to_numeric(pt_df["test/accuracy"])
+
+    if "test/f1" in pt_df:
+        pt_df["test/f1"] = pd.to_numeric(pt_df["test/f1"])
+
+    if "test/spearmanr" in pt_df:
+        pt_df["test/spearmanr"] = pd.to_numeric(pt_df["test/spearmanr"])
+    
     print(pt_df)
 
     mean_values = pt_df.mean()
     std_values = pt_df.std()
-    print("mean:", np.round(mean_values["test/f1"]*100, 2))
-    print("std:", np.round(std_values["test/f1"]*100, 2))
+
+    if "test/f1" in pt_df:
+        print("mean:", np.round(mean_values["test/f1"]*100, 1))
+        print("std:", np.round(std_values["test/f1"]*100, 1))
+
+    if "test/spearmanr" in pt_df:
+        print("mean:", np.round(mean_values["test/spearmanr"]*100, 1))
+        print("std:", np.round(std_values["test/spearmanr"]*100, 1))

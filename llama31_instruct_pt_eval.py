@@ -8,7 +8,7 @@ from arithmetics import PromptArithmeticsConfig
 from tasks import AutoTask
 
 from datetime import datetime
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, EvalPrediction
 from peft import get_peft_model
 from trl import SFTConfig, ModelConfig
 
@@ -38,10 +38,24 @@ import pandas as pd
 #     ],
 # }
 
+# prompts_to_load = {
+#     "qqp_text_instruct": [
+#         "prompt_tuning_02182025154215_qqp_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_02182025195555_qqp_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_02182025195329_qqp_text_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
+#     ],
+#     "stsb_text_instruct": [
+#         "prompt_tuning_02202025132651_stsb_text_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_02202025132651_stsb_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
+#         "prompt_tuning_02202025132651_stsb_text_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
+#     ]
+
+# }
+
 prompts_to_load = {
     "rte_text_instruct": [
-        "prompt_tuning_02192025145017_rte_text_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
-    ],
+        "prompt_tuning_02262025130033_rte_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best"
+    ]
 }
 
 # prompts_to_load = {
@@ -101,12 +115,20 @@ def predict(test_dataset, model, tokenizer, labels_list):
 
         result = pipe(x_test)
         print(result)
-        print(x_test)
-        answer = (
-            result[0]["generated_text"]
-            .split("label:<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[-1]
-            .strip()
-        )
+        # print(x_test)
+        # print(model.config.name_or_path)
+        
+        if "deepseek" in model.config.name_or_path:
+            answer = (
+                result[0]["generated_text"]
+                .split("</think>")[-1].strip()
+            )
+        else:
+            answer = (
+                result[0]["generated_text"]
+                .split("label:<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[-1]
+                .strip()
+            )
 
         for label in labels_list:
             if label.lower() == answer.lower():
@@ -114,44 +136,17 @@ def predict(test_dataset, model, tokenizer, labels_list):
                 break
         else:
             y_pred.append("none")
-            # print(answer)
+            # print(x_test)
+         
+        # print(answer)
 
     return y_pred
 
 
-def evaluate(y_pred, y_true, mapping, prefix="eval"):
-    def map_func(x):
-        return mapping.get(x, -1)
-
-    # print(y_pred)
-    y_pred_mapped = np.vectorize(map_func)(y_pred)
-    y_true_mapped = np.vectorize(map_func)(y_true)
-
-    unique_labels = list(set(y_true_mapped))
-
-    accuracy = accuracy_score(y_pred=y_pred_mapped, y_true=y_true_mapped)
-
-    if len(unique_labels) > 2:
-        f1 = f1_score(
-            y_pred=y_pred_mapped,
-            y_true=y_true_mapped,
-            labels=unique_labels,
-            average="macro",
-        )
-    else:
-        invalid_idx_mask = y_pred_mapped == -1
-        y_pred_mapped[invalid_idx_mask] = binary_reverse(
-            y_true_mapped[invalid_idx_mask], unique_labels
-        )
-
-        f1 = f1_score(
-            y_pred=y_pred_mapped,
-            y_true=y_true_mapped,
-            labels=unique_labels,
-            pos_label=unique_labels[1],
-        )
-
-    return {f"{prefix}/accuracy": accuracy, f"{prefix}/f1": f1}
+def evaluate(y_pred, y_true, compute_metrics, prefix="eval"):
+    metrics = compute_metrics(EvalPrediction(y_pred, y_true))
+    
+    return {f"{prefix}/{k}": v for k,v in metrics.items()}
 
 
 timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
@@ -199,7 +194,7 @@ full_test_results = {"zero_shot": {}, "prompt_tuning": {}}
 for dataset_name in prompts_to_load:
     print(f"task: {dataset_name}")
 
-    print("Eval zero-shot performance")
+    # print("Eval zero-shot performance")
     test_dataset = AutoTask.get(dataset_name).get(
         split="test",
         task_type=peft_config.task_type,
@@ -207,6 +202,8 @@ for dataset_name in prompts_to_load:
         n_obs=data_args.max_test_samples,
         split_validation_test=data_args.split_validation_test,
     )
+
+    compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer, postprocess=False)
 
     chat_test_dataset = test_dataset.map(apply_test_template)
 
@@ -218,7 +215,7 @@ for dataset_name in prompts_to_load:
     #         AutoTask.get(dataset_name).labels_list,
     #     ),
     #     test_dataset["target"],
-    #     {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
+    #     compute_metrics,
     #     prefix="test",
     # )
 
@@ -243,7 +240,7 @@ for dataset_name in prompts_to_load:
                 AutoTask.get(dataset_name).labels_list,
             ),
             test_dataset["target"],
-            {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
+            compute_metrics,
             prefix="test",
         )
 

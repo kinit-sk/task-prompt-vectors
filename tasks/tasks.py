@@ -152,23 +152,21 @@ class AbstractTask:
         )
 
     def get_compute_metrics(
-        self, tokenizer, task_type
+        self, tokenizer, postprocess=True,
     ) -> Callable[[EvalPrediction], Dict]:
         def compute_metrics(eval_preds: EvalPrediction) -> Dict:
             preds, labels = eval_preds
 
-            preds[preds == -100] = tokenizer.pad_token_id
-            labels[labels == -100] = tokenizer.pad_token_id
+            if postprocess:
+                preds[preds == -100] = tokenizer.pad_token_id
+                labels[labels == -100] = tokenizer.pad_token_id
 
-            decoded_preds, decoded_labels = self.postprocessor(preds, labels, tokenizer)
+                decoded_preds, decoded_labels = self.postprocessor(preds, labels, tokenizer)
+            else:
+                decoded_preds = preds
+                decoded_labels = labels
 
-            if task_type == "CAUSAL_LM":
-                decoded_preds = [
-                    dpred.split("label: ")[1] if "label: " in dpred else dpred
-                    for dpred in tokenizer.batch_decode(preds, skip_special_tokens=True)
-                ]
-
-            print("compute_metrics:", decoded_preds)
+            # print("compute_metrics:", decoded_preds, decoded_labels)
 
             metrics = {}
             # TODO: to get rid of the zip, make classes from metrics and add metric name to it
@@ -374,6 +372,7 @@ class STSBText(AbstractTask):
         "test": "validation",
     }
     label_column_name = "label"
+    id2label = {np.round(label, decimals=1): str(np.round(label, decimals=1)) for label in np.arange(0, 5.2, 0.2)}
 
     def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("glue", "stsb", split=split)
@@ -403,6 +402,7 @@ class STSBTextInstruct(AbstractTask):
         "test": "validation",
     }
     label_column_name = "label"
+    id2label = {np.round(label, decimals=1): str(np.round(label, decimals=1)) for label in np.arange(0, 5.2, 0.2)}
 
     def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("glue", "stsb", split=split)

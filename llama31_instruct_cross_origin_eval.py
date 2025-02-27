@@ -8,14 +8,11 @@ from arithmetics import PromptArithmeticsConfig
 from tasks import AutoTask
 
 from datetime import datetime
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, EvalPrediction
 from peft import get_peft_model
 from trl import SFTConfig, ModelConfig
 
 from tqdm import tqdm
-from sklearn.metrics import accuracy_score, f1_score
-
-from metrics.utils import binary_reverse
 
 from utils import get_task_prompt_vectors_from_prompts
 
@@ -27,8 +24,8 @@ origin_prompts = [
     "origin_1_meta-llama-3.1-8b-instruct",
     "origin_2_meta-llama-3.1-8b-instruct",
 ]
-# dataset_names = ["qnli_text_instruct", "sst2_text_instruct", "trec_coarse_text_instruct"]
-dataset_names = ["mnli_text_instruct"]
+# dataset_names = ["rte_text_instruct", "mrpc_text_instruct", "cola_text_instruct", "stsb_text_instruct"]
+dataset_names = ["qqp_text_instruct"]
 
 
 def apply_test_template(examples):
@@ -55,7 +52,7 @@ def predict(test_dataset, model, tokenizer, labels_list):
         task="text-generation",
         model=model,
         tokenizer=tokenizer,
-        max_new_tokens=16,
+        max_new_tokens=2048,
         do_sample=False,
         top_p=None,
         temperature=None,
@@ -66,6 +63,8 @@ def predict(test_dataset, model, tokenizer, labels_list):
     for x_test in tqdm(test_dataset["text"]):
 
         result = pipe(x_test)
+        # print(result)
+        # print(x_test)
         answer = (
             result[0]["generated_text"]
             .split("label:<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[-1]
@@ -78,44 +77,16 @@ def predict(test_dataset, model, tokenizer, labels_list):
                 break
         else:
             y_pred.append("none")
+            # print(x_test)
             # print(answer)
 
     return y_pred
 
 
-def evaluate(y_pred, y_true, mapping, prefix="eval"):
-    def map_func(x):
-        return mapping.get(x, -1)
-
-    # print(y_pred)
-    y_pred_mapped = np.vectorize(map_func)(y_pred)
-    y_true_mapped = np.vectorize(map_func)(y_true)
-
-    unique_labels = list(set(y_true_mapped))
-
-    accuracy = accuracy_score(y_pred=y_pred_mapped, y_true=y_true_mapped)
-
-    if len(unique_labels) > 2:
-        f1 = f1_score(
-            y_pred=y_pred_mapped,
-            y_true=y_true_mapped,
-            labels=unique_labels,
-            average="macro",
-        )
-    else:
-        invalid_idx_mask = y_pred_mapped == -1
-        y_pred_mapped[invalid_idx_mask] = binary_reverse(
-            y_true_mapped[invalid_idx_mask], unique_labels
-        )
-
-        f1 = f1_score(
-            y_pred=y_pred_mapped,
-            y_true=y_true_mapped,
-            labels=unique_labels,
-            pos_label=unique_labels[1],
-        )
-
-    return {f"{prefix}/accuracy": accuracy, f"{prefix}/f1": f1}
+def evaluate(y_pred, y_true, compute_metrics, prefix="eval"):
+    metrics = compute_metrics(EvalPrediction(y_pred, y_true))
+    
+    return {f"{prefix}/{k}": v for k,v in metrics.items()}
 
 
 task_prompt_vectors = get_task_prompt_vectors_from_prompts(
@@ -233,6 +204,8 @@ full_test_results = {"zero_shot": {}, "prompt_tuning": {}}
 for dataset_name in dataset_names:
     print(f"task: {dataset_name}")
 
+    compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer, postprocess=False)
+
     test_dataset = AutoTask.get(dataset_name).get(
         split="test",
         task_type=peft_config.task_type,
@@ -243,22 +216,23 @@ for dataset_name in dataset_names:
 
     chat_test_dataset = test_dataset.map(apply_test_template)
 
-    print("Eval zero-shot performance")
-    test_results = evaluate(
-        predict(
-            chat_test_dataset,
-            model.base_model,
-            tokenizer,
-            AutoTask.get(dataset_name).labels_list,
-        ),
-        test_dataset["target"],
-        {label: id_ for id_, label in AutoTask.get(dataset_name).id2label.items()},
-        prefix="test",
-    )
 
-    print(test_results)
+    # print("Eval zero-shot performance")
+    # test_results = evaluate(
+    #     predict(
+    #         chat_test_dataset,
+    #         model.base_model,
+    #         tokenizer,
+    #         AutoTask.get(dataset_name).labels_list,
+    #     ),
+    #     test_dataset["target"],
+    #     compute_metrics,
+    #     prefix="test",
+    # )
 
-    full_test_results["zero_shot"][dataset_name] = test_results
+    # print(test_results)
+
+    # full_test_results["zero_shot"][dataset_name] = test_results
     full_test_results["prompt_tuning"][dataset_name] = {}
 
 print("Eval prompt tuning performance")
@@ -275,6 +249,8 @@ for o1 in task_prompt_vectors:
             for dataset_name in tp.tasks:
                 print(f"task: {dataset_name}")
 
+                compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer, postprocess=False)
+                
                 test_dataset = AutoTask.get(dataset_name).get(
                     split="test",
                     task_type=peft_config.task_type,
@@ -300,10 +276,7 @@ for o1 in task_prompt_vectors:
                         AutoTask.get(dataset_name).labels_list,
                     ),
                     test_dataset["target"],
-                    {
-                        label: id_
-                        for id_, label in AutoTask.get(dataset_name).id2label.items()
-                    },
+                    compute_metrics,
                     prefix="test",
                 )
 

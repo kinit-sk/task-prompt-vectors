@@ -156,6 +156,14 @@ class ArithmeticsEvaluator:
                             "best_coef": best_coef,
                         }
                     )
+                elif f"test_{dataset_name}_pearsonr" in test_res.keys():
+                    self.results.append(
+                        {
+                            "tasks": " ".join(tp.tasks),
+                            f"{dataset_name}_pearsonr": test_res[f"test_{dataset_name}_pearsonr"],
+                            "best_coef": best_coef,
+                        }
+                    )
 
             if wandb.run:
                 wandb.finish()

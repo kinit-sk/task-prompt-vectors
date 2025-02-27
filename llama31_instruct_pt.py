@@ -9,7 +9,7 @@ from arithmetics import PromptArithmeticsConfig
 from tasks import AutoTask
 
 from datetime import datetime
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, EvalPrediction
 from peft import get_peft_model
 from trl import SFTTrainer, SFTConfig, ModelConfig
 
@@ -36,6 +36,10 @@ def apply_template(examples):
         )
     }
 
+def replace_map(examples, str1, str2):
+    # print(examples["text"].replace(str1, str2))
+    return {"text": examples["text"].replace(str1, str2)}
+
 
 def predict(test_dataset, model, tokenizer, labels_list):
     y_pred = []
@@ -43,21 +47,32 @@ def predict(test_dataset, model, tokenizer, labels_list):
         task="text-generation",
         model=model,
         tokenizer=tokenizer,
-        max_new_tokens=16,
+        max_new_tokens=2048,
         do_sample=False,
         top_p=None,
         temperature=None,
+        use_cache=False,
         device="cuda",
     )
 
     for x_test in tqdm(test_dataset["text"]):
 
         result = pipe(x_test)
-        answer = (
-            result[0]["generated_text"]
-            .split("label:<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[-1]
-            .strip()
-        )
+        print(result)
+        # print(x_test)
+        # print(model.config.name_or_path)
+        
+        if "deepseek" in model.config.name_or_path:
+            answer = (
+                result[0]["generated_text"]
+                .split("</think>")[-1].strip()
+            )
+        else:
+            answer = (
+                result[0]["generated_text"]
+                .split("label:<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[-1]
+                .strip()
+            )
 
         for label in labels_list:
             if label.lower() == answer.lower():
@@ -65,7 +80,9 @@ def predict(test_dataset, model, tokenizer, labels_list):
                 break
         else:
             y_pred.append("none")
-            # print(answer)
+            # print(x_test)
+         
+        # print(answer)
 
     return y_pred
 
@@ -106,39 +123,10 @@ def predict_generative(test_dataset, model, tokenizer):
     return y_pred
 
 
-def evaluate(y_pred, y_true, mapping, prefix="eval"):
-    def map_func(x):
-        return mapping.get(x, -1)
-
-    print(y_pred)
-    y_pred_mapped = np.vectorize(map_func)(y_pred)
-    y_true_mapped = np.vectorize(map_func)(y_true)
-
-    unique_labels = list(set(y_true_mapped))
-
-    accuracy = accuracy_score(y_pred=y_pred_mapped, y_true=y_true_mapped)
-
-    if len(unique_labels) > 2:
-        f1 = f1_score(
-            y_pred=y_pred_mapped,
-            y_true=y_true_mapped,
-            labels=unique_labels,
-            average="macro",
-        )
-    else:
-        invalid_idx_mask = y_pred_mapped == -1
-        y_pred_mapped[invalid_idx_mask] = binary_reverse(
-            y_true_mapped[invalid_idx_mask], unique_labels
-        )
-
-        f1 = f1_score(
-            y_pred=y_pred_mapped,
-            y_true=y_true_mapped,
-            labels=unique_labels,
-            pos_label=unique_labels[1],
-        )
-
-    return {f"{prefix}/accuracy": accuracy, f"{prefix}/f1": f1}
+def evaluate(y_pred, y_true, compute_metrics, prefix="eval"):
+    metrics = compute_metrics(EvalPrediction(y_pred, y_true))
+    
+    return {f"{prefix}/{k}": v for k,v in metrics.items()}
 
 
 def evaluate_generative(y_pred, y_true, prefix="eval"):
@@ -241,9 +229,14 @@ for origin_prompt in peft_config.origin_prompts:
             split_validation_test=data_args.split_validation_test,
         )
 
+        compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer, postprocess=False)
         chat_train_dataset = train_dataset.map(apply_template)
         chat_valid_dataset = valid_dataset.map(apply_template)
         chat_test_dataset = test_dataset.map(apply_test_template)
+
+        if "deepseek" in model_args.model_name_or_path:
+            chat_train_dataset = chat_train_dataset.map(replace_map, fn_kwargs={"str1": "<｜Assistant｜>", "str2": "<｜Assistant｜><think></think>"})
+            chat_valid_dataset = chat_valid_dataset.map(replace_map, fn_kwargs={"str1": "<｜Assistant｜>", "str2": "<｜Assistant｜><think></think>"})
 
         if args.print_data:
             print("Train data")
@@ -306,10 +299,7 @@ for origin_prompt in peft_config.origin_prompts:
                         AutoTask.get(dataset_name).labels_list,
                     ),
                     test_dataset["target"],
-                    {
-                        label: id_
-                        for id_, label in AutoTask.get(dataset_name).id2label.items()
-                    },
+                    compute_metrics,
                     prefix="test",
                 )
 
@@ -343,10 +333,7 @@ for origin_prompt in peft_config.origin_prompts:
                     AutoTask.get(dataset_name).labels_list,
                 ),
                 test_dataset["target"],
-                {
-                    label: id_
-                    for id_, label in AutoTask.get(dataset_name).id2label.items()
-                },
+                compute_metrics,
                 prefix="test",
             )
 
@@ -357,10 +344,10 @@ for origin_prompt in peft_config.origin_prompts:
             wandb.run.log(test_results)
 
         if isinstance(dataset_name, list):
-            save_name = f"./saves/prompt_tuning_{timestamp}_{'_'.join(dataset_name)}_{origin_prompt}_best"
+            save_name = f"./saves/prompt_tuning_{timestamp}_{'_'.join(dataset_name)}_origin_{origin_prompt.split("_")[1]}_{model_args.model_name_or_path.split("/")[-1].lower()}_best"
         else:
             save_name = (
-                f"./saves/prompt_tuning_{timestamp}_{dataset_name}_{origin_prompt}_best"
+                f"./saves/prompt_tuning_{timestamp}_{dataset_name}_origin_{origin_prompt.split("_")[1]}_{model_args.model_name_or_path.split("/")[-1].lower()}_best"
             )
 
         model.save_pretrained(save_name)
