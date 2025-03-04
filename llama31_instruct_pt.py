@@ -239,18 +239,18 @@ for origin_prompt in peft_config.origin_prompts:
         )
 
         compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer, postprocess=False)
-        chat_train_dataset = train_dataset.map(apply_template, desc=f"Apply train template:", load_from_cache_file=False,)
-        chat_valid_dataset = valid_dataset.map(apply_template, desc=f"Apply valid template:", load_from_cache_file=False,)
-        chat_test_dataset = test_dataset.map(apply_test_template, desc=f"Apply test template:", load_from_cache_file=False,)
+        chat_train_dataset = train_dataset.map(apply_template, desc=f"Apply train template", load_from_cache_file=False,)
+        chat_valid_dataset = valid_dataset.map(apply_template, desc=f"Apply valid template", load_from_cache_file=False,)
+        chat_test_dataset = test_dataset.map(apply_test_template, desc=f"Apply test template", load_from_cache_file=False,)
 
         if "deepseek-r1" in model_args.model_name_or_path.lower():
-            chat_train_dataset = chat_train_dataset.map(replace_map, fn_kwargs={"str1": "<｜Assistant｜>", "str2": "<｜Assistant｜><think></think>"}, desc=f"Apply train replace:", load_from_cache_file=False)
-            chat_valid_dataset = chat_valid_dataset.map(replace_map, fn_kwargs={"str1": "<｜Assistant｜>", "str2": "<｜Assistant｜><think></think>"}, desc=f"Apply valid replace:", load_from_cache_file=False)
+            chat_train_dataset = chat_train_dataset.map(replace_map, fn_kwargs={"str1": "<｜Assistant｜>", "str2": "<｜Assistant｜><think></think>"}, desc=f"Apply train replace", load_from_cache_file=False)
+            chat_valid_dataset = chat_valid_dataset.map(replace_map, fn_kwargs={"str1": "<｜Assistant｜>", "str2": "<｜Assistant｜><think></think>"}, desc=f"Apply valid replace", load_from_cache_file=False)
 
         if "deepseek-llm" in model_args.model_name_or_path.lower():
-            chat_train_dataset = chat_train_dataset.map(replace_map, fn_kwargs={"str1": "label:", "str2": ""}, desc=f"Apply train replace:", load_from_cache_file=False,)
-            chat_valid_dataset = chat_valid_dataset.map(replace_map, fn_kwargs={"str1": "label:", "str2": ""}, desc=f"Apply valid replace:", load_from_cache_file=False,)
-            chat_test_dataset = chat_test_dataset.map(replace_map, fn_kwargs={"str1": "label:", "str2": ""}, desc=f"Apply test replace:", load_from_cache_file=False,)
+            chat_train_dataset = chat_train_dataset.map(replace_map, fn_kwargs={"str1": "label:", "str2": ""}, desc=f"Apply train replace", load_from_cache_file=False,)
+            chat_valid_dataset = chat_valid_dataset.map(replace_map, fn_kwargs={"str1": "label:", "str2": ""}, desc=f"Apply valid replace", load_from_cache_file=False,)
+            chat_test_dataset = chat_test_dataset.map(replace_map, fn_kwargs={"str1": "label:", "str2": ""}, desc=f"Apply test replace", load_from_cache_file=False,)
 
 
         if args.print_data:
