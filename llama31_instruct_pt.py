@@ -30,6 +30,7 @@ def apply_test_template(examples):
 
 def apply_template(examples):
     ## dasdasd
+    #c dsa dasd
     return {
         "text": tokenizer.apply_chat_template(
             [examples, {"role": "assistant", "content": examples["target"]}],
@@ -40,6 +41,7 @@ def apply_template(examples):
 
 def replace_map(examples, str1, str2):
     # print(examples["text"].replace(str1, str2))
+    # dasdasd
     return {"text": examples["text"].replace(str1, str2)}
 
 
