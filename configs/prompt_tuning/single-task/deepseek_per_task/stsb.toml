@@ -1,8 +1,8 @@
 do_train = true
 do_eval = true
 dataset_names = ["stsb_text_instruct"]
-model_name_or_path = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
-data_tokenizer_name_or_path = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
+model_name_or_path = "deepseek-ai/deepseek-llm-7b-chat"
+data_tokenizer_name_or_path = "deepseek-ai/deepseek-llm-7b-chat"
 max_seq_length = 512
 per_device_train_batch_size = 4
 report_to = ["wandb"]

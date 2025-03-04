@@ -949,7 +949,7 @@ class COLATextInstruct(AbstractTask):
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = [
-            f"Classify the sentence pair into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
+            f"Classify the sentence into labels: {', '.join(self.labels_list)}. Reply only the corresponding label.",
             f"sentence: {example['sentence']}",
         ]
         label_texts = [self.id2label[example[self.label_column_name]]]

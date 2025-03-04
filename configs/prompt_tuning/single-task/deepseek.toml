@@ -1,7 +1,7 @@
 do_train = true
 do_eval = true
-model_name_or_path = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
-data_tokenizer_name_or_path = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
+model_name_or_path = "deepseek-ai/deepseek-llm-7b-chat"
+data_tokenizer_name_or_path = "deepseek-ai/deepseek-llm-7b-chat"
 dataset_names = ["qnli_text_instruct", "mnli_text_instruct", "dbpedia_text_instruct", "trec_coarse_text_instruct", "sst2_text_instruct", "yelp_polarity_text_instruct", "squad_v2_instruct", "math_instruct"]
 # max_seq_length = 512
 per_device_train_batch_size = 4

@@ -54,9 +54,53 @@ import pandas as pd
 
 prompts_to_load = {
     "rte_text_instruct": [
-        "prompt_tuning_02262025130033_rte_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best"
-    ]
+        "prompt_tuning_03042025124540_rte_text_instruct_origin_0_deepseek-llm-7b-chat_best",
+        "prompt_tuning_02272025162514_rte_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
+        "prompt_tuning_02272025162514_rte_text_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
+    ],
+    "stsb_text_instruct" : [
+        "prompt_tuning_02272025162407_stsb_text_instruct_origin_0_deepseek-r1-distill-llama-8b_best",
+        "prompt_tuning_02272025162407_stsb_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
+        "prompt_tuning_02272025162407_stsb_text_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
+    ],
+    "mrpc_text_instruct" : [
+        "prompt_tuning_02272025163540_mrpc_text_instruct_origin_0_deepseek-r1-distill-llama-8b_best",
+        "prompt_tuning_02272025163540_mrpc_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
+        "prompt_tuning_02272025163540_mrpc_text_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
+    ],
+    "cola_text_instruct" : [
+        "prompt_tuning_02272025162559_cola_text_instruct_origin_0_deepseek-r1-distill-llama-8b_best",
+        "prompt_tuning_02272025162559_cola_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
+        "prompt_tuning_02272025162559_cola_text_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
+    ],
+    "trec_coarse_text_instruct": [
+        "prompt_tuning_02272025162733_trec_coarse_text_instruct_origin_0_deepseek-r1-distill-llama-8b_best",
+        "prompt_tuning_02272025162733_trec_coarse_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
+        "prompt_tuning_02272025162733_trec_coarse_text_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
+    ],
 }
+
+# prompts_to_load = {
+#     "rte_text_instruct": [
+#         "prompt_tuning_02272025162514_rte_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
+#         "prompt_tuning_02272025162514_rte_text_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
+#     ],
+#     "stsb_text_instruct" : [
+#         "prompt_tuning_02272025162407_stsb_text_instruct_origin_0_deepseek-r1-distill-llama-8b_best",
+#         "prompt_tuning_02272025162407_stsb_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
+#         "prompt_tuning_02272025162407_stsb_text_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
+#     ],
+#     "mrpc_text_instruct" : [
+#         "prompt_tuning_02272025163540_mrpc_text_instruct_origin_0_deepseek-r1-distill-llama-8b_best",
+#         "prompt_tuning_02272025163540_mrpc_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
+#         "prompt_tuning_02272025163540_mrpc_text_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
+#     ],
+#     "math_text_instruct": [
+#         "prompt_tuning_02272025164541_math_instruct_origin_0_deepseek-r1-distill-llama-8b_best",
+#         "prompt_tuning_02272025164541_math_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
+#         "prompt_tuning_02272025164541_math_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
+#     ],
+# }
 
 # prompts_to_load = {
 #     "rte_text_instruct": [
@@ -76,14 +120,15 @@ prompts_to_load = {
 #     ],
 # }
 
+def replace_map(examples, str1, str2):
+    # print(examples["text"].replace(str1, str2))
+    return {"text": examples["text"].replace(str1, str2)}
 
 def apply_test_template(examples):
-    # print(examples)
-    # exit()
     return {
         "text": tokenizer.apply_chat_template(
             [examples], tokenize=False, add_generation_prompt=True
-        ).replace("<think>", "")
+        )
     }
 
 
@@ -103,7 +148,7 @@ def predict(test_dataset, model, tokenizer, labels_list):
         task="text-generation",
         model=model,
         tokenizer=tokenizer,
-        max_new_tokens=2048,
+        max_new_tokens=16,
         do_sample=False,
         top_p=None,
         temperature=None,
@@ -113,15 +158,21 @@ def predict(test_dataset, model, tokenizer, labels_list):
 
     for x_test in tqdm(test_dataset["text"]):
 
-        result = pipe(x_test)
-        print(result)
         # print(x_test)
+        result = pipe(x_test)
+        # print(result)
+        
         # print(model.config.name_or_path)
         
         if "deepseek" in model.config.name_or_path:
             answer = (
                 result[0]["generated_text"]
                 .split("</think>")[-1].strip()
+            )
+        if "deepseek-llm" in model.config.name_or_path.lower():
+            answer = (
+                result[0]["generated_text"]
+                .split("Assistant:")[-1].strip()
             )
         else:
             answer = (
@@ -136,7 +187,7 @@ def predict(test_dataset, model, tokenizer, labels_list):
                 break
         else:
             y_pred.append("none")
-            # print(x_test)
+            print(result)
          
         # print(answer)
 
@@ -206,6 +257,9 @@ for dataset_name in prompts_to_load:
     compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer, postprocess=False)
 
     chat_test_dataset = test_dataset.map(apply_test_template)
+
+    if "deepseek-llm" in model_args.model_name_or_path.lower():
+        chat_test_dataset = chat_test_dataset.map(replace_map, fn_kwargs={"str1": "label:", "str2": ""})
 
     # test_results = evaluate(
     #     predict(

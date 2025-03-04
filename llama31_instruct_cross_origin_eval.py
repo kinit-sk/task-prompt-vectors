@@ -119,6 +119,8 @@ if args.parse_data:
         for origin in eval(data_dict["prompt_tuning"][dataset_name]):
             o1, o2 = "_".join(origin.split("_")[:2]), "_".join(origin.split("_")[3:5])
 
+            # print(o1, o2)
+
             if o1 != o2:
                 print(
                     dataset_name,
@@ -127,23 +129,51 @@ if args.parse_data:
                     eval(data_dict["prompt_tuning"][dataset_name])[origin],
                 )
 
-                acc.append(
-                    eval(data_dict["prompt_tuning"][dataset_name])[origin][
-                        "test/accuracy"
-                    ]
-                )
-                f1.append(
-                    eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/f1"]
-                )
+                
+                
+                if "test/spearmanr" in eval(data_dict["prompt_tuning"][dataset_name])[origin]:
+                    acc.append(
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin][
+                            "test/spearmanr"
+                        ]
+                    )
+                else:
+                    acc.append(
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin][
+                            "test/exact_match"
+                        ]
+                    )
+
+                if "test/pearsonr" in eval(data_dict["prompt_tuning"][dataset_name])[origin]:
+                    f1.append(
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/pearsonr"]
+                    )
+                else:
+                    f1.append(
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/f1"]
+                    )
             else:
-                pt_acc.append(
-                    eval(data_dict["prompt_tuning"][dataset_name])[origin][
-                        "test/accuracy"
-                    ]
-                )
-                pt_f1.append(
-                    eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/f1"]
-                )
+                if "test/spearmanr" in eval(data_dict["prompt_tuning"][dataset_name])[origin]:
+                    pt_acc.append(
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin][
+                            "test/spearmanr"
+                        ]
+                    )
+                else:
+                    pt_acc.append(
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin][
+                            "test/exact_match"
+                        ]
+                    )
+
+                if "test/pearsonr" in eval(data_dict["prompt_tuning"][dataset_name])[origin]:
+                    pt_f1.append(
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/pearsonr"]
+                    )
+                else:
+                    pt_f1.append(
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/f1"]
+                    )
 
         # print(acc, f1)
         results[dataset_name] = {

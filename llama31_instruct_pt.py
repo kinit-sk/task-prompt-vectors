@@ -20,6 +20,7 @@ from metrics.utils import binary_reverse
 
 
 def apply_test_template(examples):
+    # dasd
     return {
         "text": tokenizer.apply_chat_template(
             [examples], tokenize=False, add_generation_prompt=True
@@ -28,6 +29,7 @@ def apply_test_template(examples):
 
 
 def apply_template(examples):
+    ## dasdasd
     return {
         "text": tokenizer.apply_chat_template(
             [examples, {"role": "assistant", "content": examples["target"]}],
@@ -47,7 +49,7 @@ def predict(test_dataset, model, tokenizer, labels_list):
         task="text-generation",
         model=model,
         tokenizer=tokenizer,
-        max_new_tokens=2048,
+        max_new_tokens=16,
         do_sample=False,
         top_p=None,
         temperature=None,
@@ -62,10 +64,15 @@ def predict(test_dataset, model, tokenizer, labels_list):
         # print(x_test)
         # print(model.config.name_or_path)
         
-        if "deepseek" in model.config.name_or_path:
+        if "deepseek-r1" in model.config.name_or_path.lower():
             answer = (
                 result[0]["generated_text"]
                 .split("</think>")[-1].strip()
+            )
+        if "deepseek-llm" in model.config.name_or_path.lower():
+            answer = (
+                result[0]["generated_text"]
+                .split("Assistant:")[-1].strip()
             )
         else:
             answer = (
@@ -174,7 +181,7 @@ for origin_prompt in peft_config.origin_prompts:
 
     for dataset_name in data_args.dataset_names:
 
-        training_args.output_dir = f"prompt_tuning_{timestamp}_{'_'.join(data_args.dataset_names)}_origin_{origin_prompt.split("_")[1]}_{model_args.model_name_or_path.split("/")[-1].lower()}"
+        training_args.output_dir = f"saves/prompt_tuning_{timestamp}_{'_'.join(data_args.dataset_names)}_origin_{origin_prompt.split("_")[1]}_{model_args.model_name_or_path.split("/")[-1].lower()}"
         training_args.run_name = f"prompt_tuning_{timestamp}_{'_'.join(data_args.dataset_names)}_origin_{origin_prompt.split("_")[1]}_{model_args.model_name_or_path.split("/")[-1].lower()}"
 
         model = AutoModelForCausalLM.from_pretrained(
@@ -234,9 +241,15 @@ for origin_prompt in peft_config.origin_prompts:
         chat_valid_dataset = valid_dataset.map(apply_template)
         chat_test_dataset = test_dataset.map(apply_test_template)
 
-        if "deepseek" in model_args.model_name_or_path:
+        if "deepseek-r1" in model_args.model_name_or_path.lower():
             chat_train_dataset = chat_train_dataset.map(replace_map, fn_kwargs={"str1": "<｜Assistant｜>", "str2": "<｜Assistant｜><think></think>"})
             chat_valid_dataset = chat_valid_dataset.map(replace_map, fn_kwargs={"str1": "<｜Assistant｜>", "str2": "<｜Assistant｜><think></think>"})
+
+        if "deepseek-llm" in model_args.model_name_or_path.lower():
+            chat_train_dataset = chat_train_dataset.map(replace_map, fn_kwargs={"str1": "label:", "str2": ""})
+            chat_valid_dataset = chat_valid_dataset.map(replace_map, fn_kwargs={"str1": "label:", "str2": ""})
+            chat_test_dataset = chat_test_dataset.map(replace_map, fn_kwargs={"str1": "label:", "str2": ""})
+
 
         if args.print_data:
             print("Train data")
