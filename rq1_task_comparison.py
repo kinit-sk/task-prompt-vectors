@@ -36,6 +36,11 @@ task_labels = {
     "yelp_polarity_text_instruct": "Yelp",
     "math_instruct": "MATH",
     "squad_v2_instruct": "SQuADv2",
+    "rte_text": "RTE",
+    "mrpc_text": "MRPC",
+    "cola_text": "CoLA",
+    "qqp_text": "QQP",
+    "stsb_text": "STS-B"
 }
 
 
@@ -70,12 +75,12 @@ parser = ArgumentParser(
     (TrainingArguments, DataTrainingArguments, PromptArithmeticsConfig)
 )
 
-# training_args, data_args, pa_config = parser.parse_toml_file(
-#     "configs/cross_origin.toml"
-# )
 training_args, data_args, pa_config = parser.parse_toml_file(
-    "configs/prompt_tuning/single-task/llama31_8b_instruct.toml"
+    "configs/cross_origin.toml"
 )
+# training_args, data_args, pa_config = parser.parse_toml_file(
+#     "configs/prompt_tuning/single-task/llama31_8b_instruct.toml"
+# )
 data_args.dataset_names = sorted(data_args.dataset_names)
 
 
@@ -110,8 +115,12 @@ df = pd.DataFrame.from_dict(average_similarities)
 df = df.rename(task_labels)
 df = df.rename(task_labels, axis="columns")
 
-df = df[["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]].reindex(
-    ["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]
+# df = df[["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]].reindex(
+#     ["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]
+# )
+
+df = df[["MNLI", "QQP", "QNLI", "SST2", "STS-B", "MRPC", "RTE", "CoLA", "TREC", "DBPedia", "Yelp"]].reindex(
+    ["MNLI", "QQP", "QNLI", "SST2", "STS-B", "MRPC", "RTE", "CoLA", "TREC", "DBPedia", "Yelp"]
 )
 
 # plt.figure(figsize=(16,10))
@@ -129,6 +138,8 @@ ax.set_xticks(ticks[:-1])
 ticks = ax.get_yticks()
 ax.set_yticks(ticks[1:])
 
+ax.tick_params(axis="x", top=True, labeltop=True, bottom=False, labelbottom=False, labelrotation=90)
+
 
 # plt.title('Cross Task Comparison of Task Prompt Vectors')
 plt.savefig(f"rq1_heatmap.png", bbox_inches="tight")
@@ -136,7 +147,8 @@ plt.savefig(f"rq1_heatmap.pdf", bbox_inches="tight")
 
 plt.close()
 
-order = ["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]
+# order = ["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]
+order = ["MNLI", "QQP", "QNLI", "SST2", "STS-B", "MRPC", "RTE", "CoLA", "TREC", "DBPedia", "Yelp"]
 
 df_mean = pd.read_csv("avg_ct_co_tpv_mean.csv", index_col=0).loc[order, order]
 df_std = pd.read_csv("avg_ct_co_tpv_std.csv", index_col=0).loc[order, order]
@@ -152,9 +164,13 @@ ax = sns.heatmap(
 )
 
 ax.invert_yaxis()
+# ax.invert_xaxis()
+
+# ax.tick_params(axis="x", top=True, labeltop=True, bottom=False, labelbottom=False, labelrotation=90)
+
 # plt.title('Cross Task Comparison of Task Prompt Vectors')
-plt.savefig(f"rq1_heatmap2.png", bbox_inches="tight")
-plt.savefig(f"rq1_heatmap2.pdf", bbox_inches="tight")
+plt.savefig(f"rq1_heatmap_tpv_cs.png", bbox_inches="tight")
+plt.savefig(f"rq1_heatmap_tpv_cs.pdf", bbox_inches="tight")
 
 plt.close()
 
@@ -165,14 +181,19 @@ print(df_mean)
 
 ax = sns.heatmap(
     df_mean,
-    annot=True,
+    annot=False,
     fmt=".2f",
     cmap="crest",
     mask=np.invert(np.tril(np.ones((len(df.axes[0]), len(df.axes[0])), dtype=bool))),
 )
 ax.invert_yaxis()
-# plt.title('Cross Task Comparison of Task Prompt Vectors')
-plt.savefig(f"rq1_heatmap3.png", bbox_inches="tight")
-plt.savefig(f"rq1_heatmap3.pdf", bbox_inches="tight")
+# ax.invert_xaxis()
+
+# ax.tick_params(axis="x", top=True, labeltop=True, bottom=False, labelbottom=False, labelrotation=90)
+
+# ax.tick_params(top=True, labeltop=True, bottom=False, labelbottom=False)
+# plt.title('Cross Task Comparison of Task Prompts')
+plt.savefig(f"rq1_heatmap_tp_cs.png", bbox_inches="tight")
+plt.savefig(f"rq1_heatmap_tp_cs.pdf", bbox_inches="tight")
 
 plt.close()

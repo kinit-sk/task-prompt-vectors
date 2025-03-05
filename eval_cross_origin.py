@@ -93,6 +93,146 @@ mapping = {
     "squad_v2_squad_v2": "SQuADv2 SQuADv2",
     "math_squad_v2": "MATH SQuADv2",
     "squad_v2_math": "SQuADv2 MATH",
+
+    "rte_text_dbpedia_text": "RTE DBPedia",
+    "rte_text_mnli_text": "RTE MNLI",
+    "rte_text_qnli_text": "RTE QNLI",
+    "rte_text_sst2_text": "RTE SST2",
+    "rte_text_trec_coarse_text": "RTE TREC",
+    "rte_text_yelp_polarity_text": "RTE Yelp",
+    "rte_text_math": "RTE MATH",
+    "rte_text_squad_v2": "RTE SQuADv2",
+    "rte_text_rte_text": "RTE RTE",
+    "rte_text_stsb_text": "RTE STS-B",
+    "rte_text_mrpc_text": "RTE MRPC",
+    "rte_text_cola_text": "RTE CoLA",
+    "rte_text_qqp_text": "RTE QQP",
+
+    "stsb_text_dbpedia_text": "STS-B DBPedia",
+    "stsb_text_mnli_text": "STS-B MNLI",
+    "stsb_text_qnli_text": "STS-B QNLI",
+    "stsb_text_sst2_text": "STS-B SST2",
+    "stsb_text_trec_coarse_text": "STS-B TREC",
+    "stsb_text_yelp_polarity_text": "STS-B Yelp",
+    "stsb_text_math": "STS-B MATH",
+    "stsb_text_squad_v2": "STS-B SQuADv2",
+    "stsb_text_rte_text": "STS-B RTE",
+    "stsb_text_stsb_text": "STS-B STS-B",
+    "stsb_text_mrpc_text": "STS-B MRPC",
+    "stsb_text_cola_text": "STS-B CoLA",
+    "stsb_text_qqp_text": "STS-B QQP",
+
+    "mrpc_text_dbpedia_text": "MRPC DBPedia",
+    "mrpc_text_mnli_text": "MRPC MNLI",
+    "mrpc_text_qnli_text": "MRPC QNLI",
+    "mrpc_text_sst2_text": "MRPC SST2",
+    "mrpc_text_trec_coarse_text": "MRPC TREC",
+    "mrpc_text_yelp_polarity_text": "MRPC Yelp",
+    "mrpc_text_math": "MRPC MATH",
+    "mrpc_text_squad_v2": "MRPC SQuADv2",
+    "mrpc_text_rte_text": "MRPC RTE",
+    "mrpc_text_stsb_text": "MRPC STS-B",
+    "mrpc_text_mrpc_text": "MRPC MRPC",
+    "mrpc_text_cola_text": "MRPC CoLA",
+    "mrpc_text_qqp_text": "MRPC QQP",
+
+    "cola_text_dbpedia_text": "CoLA DBPedia",
+    "cola_text_mnli_text": "CoLA MNLI",
+    "cola_text_qnli_text": "CoLA QNLI",
+    "cola_text_sst2_text": "CoLA SST2",
+    "cola_text_trec_coarse_text": "CoLA TREC",
+    "cola_text_yelp_polarity_text": "CoLA Yelp",
+    "cola_text_math": "CoLA MATH",
+    "cola_text_squad_v2": "CoLA SQuADv2",
+    "cola_text_rte_text": "CoLA RTE",
+    "cola_text_stsb_text": "CoLA STS-B",
+    "cola_text_mrpc_text": "CoLA MRPC",
+    "cola_text_cola_text": "CoLA CoLA",
+    "cola_text_qqp_text": "CoLA QQP",
+
+    "qqp_text_dbpedia_text": "QQP DBPedia",
+    "qqp_text_mnli_text": "QQP MNLI",
+    "qqp_text_qnli_text": "QQP QNLI",
+    "qqp_text_sst2_text": "QQP SST2",
+    "qqp_text_trec_coarse_text": "QQP TREC",
+    "qqp_text_yelp_polarity_text": "QQP Yelp",
+    "qqp_text_math": "QQP MATH",
+    "qqp_text_squad_v2": "QQP SQuADv2",
+    "qqp_text_rte_text": "QQP RTE",
+    "qqp_text_stsb_text": "QQP STS-B",
+    "qqp_text_mrpc_text": "QQP MRPC",
+    "qqp_text_cola_text": "QQP CoLA",
+    "qqp_text_qqp_text": "QQP QQP",
+    
+    "dbpedia_text_rte_text": "DBPedia RTE",
+    "mnli_text_rte_text": "MNLI RTE",
+    "qnli_text_rte_text": "QNLI RTE",
+    "sst2_text_rte_text": "SST2 RTE",
+    "trec_coarse_text_rte_text": "TREC RTE",
+    "yelp_polarity_text_rte_text": "Yelp RTE",
+    "math_rte_text": "MATH RTE",
+    "squad_v2_rte_text": "SQuADv2 RTE",
+    "rte_text_rte_text": "RTE RTE",
+    "stsb_text_rte_text": "STS-B RTE",
+    "mrpc_text_rte_text": "MRPC RTE",
+    "cola_text_rte_text": "CoLA RTE",
+    "qqp_text_rte_text": "QQP RTE",
+
+    "dbpedia_text_stsb_text": "DBPedia STS-B",
+    "mnli_text_stsb_text": "MNLI STS-B",
+    "qnli_text_stsb_text": "QNLI STS-B",
+    "sst2_text_stsb_text": "SST2 STS-B",
+    "trec_coarse_text_stsb_text": "TREC STS-B",
+    "yelp_polarity_text_stsb_text": "Yelp STS-B",
+    "math_stsb_text": "MATH STS-B",
+    "squad_v2_stsb_text": "SQuADv2 STS-B",
+    "rte_text_stsb_text": "RTE STS-B",
+    "stsb_text_stsb_text": "STS-B STS-B",
+    "mrpc_text_stsb_text": "MRPC STS-B",
+    "cola_text_stsb_text": "CoLA STS-B",
+    "qqp_text_stsb_text": "QQP STS-B",
+
+    "dbpedia_text_cola_text": "DBPedia CoLA",
+    "mnli_text_cola_text": "MNLI CoLA",
+    "qnli_text_cola_text": "QNLI CoLA",
+    "sst2_text_cola_text": "SST2 CoLA",
+    "trec_coarse_text_cola_text": "TREC CoLA",
+    "yelp_polarity_text_cola_text": "Yelp CoLA",
+    "math_cola_text": "MATH CoLA",
+    "squad_v2_cola_text": "SQuADv2 CoLA",
+    "rte_text_cola_text": "RTE CoLA",
+    "stsb_text_cola_text": "STS-B CoLA",
+    "mrpc_text_cola_text": "MRPC CoLA",
+    "cola_text_cola_text": "CoLA CoLA",
+    "qqp_text_cola_text": "QQP CoLA",
+
+    "dbpedia_text_mrpc_text": "DBPedia MRPC",
+    "mnli_text_mrpc_text": "MNLI MRPC",
+    "qnli_text_mrpc_text": "QNLI MRPC",
+    "sst2_text_mrpc_text": "SST2 MRPC",
+    "trec_coarse_text_mrpc_text": "TREC MRPC",
+    "yelp_polarity_text_mrpc_text": "Yelp MRPC",
+    "math_mrpc_text": "MATH MRPC",
+    "squad_v2_mrpc_text": "SQuADv2 MRPC",
+    "rte_text_mrpc_text": "RTE MRPC",
+    "stsb_text_mrpc_text": "STS-B MRPC",
+    "mrpc_text_mrpc_text": "MRPC MRPC",
+    "cola_text_mrpc_text": "CoLA MRPC",
+    "qqp_text_mrpc_text": "QQP MRPC",
+
+    "dbpedia_text_qqp_text": "DBPedia QQP",
+    "mnli_text_qqp_text": "MNLI QQP",
+    "qnli_text_qqp_text": "QNLI QQP",
+    "sst2_text_qqp_text": "SST2 QQP",
+    "trec_coarse_text_qqp_text": "TREC QQP",
+    "yelp_polarity_text_qqp_text": "Yelp QQP",
+    "math_qqp_text": "MATH QQP",
+    "squad_v2_qqp_text": "SQuADv2 QQP",
+    "rte_text_qqp_text": "RTE QQP",
+    "stsb_text_qqp_text": "STS-B QQP",
+    "mrpc_text_qqp_text": "MRPC QQP",
+    "cola_text_qqp_text": "CoLA QQP",
+    "qqp_text_qqp_text": "QQP QQP"
 }
 
 
@@ -105,7 +245,7 @@ def l2_norm(t1, t2):
 
 
 def cosine_sim(t1, t2):
-    return cosine_similarity(t1.flatten(), t2.flatten(), dim=0)
+    return cosine_similarity(t1.mean(axis=0), t2.mean(axis=0), dim=0)
 
 
 def remove_duplicates(keys):
@@ -184,11 +324,11 @@ def get_tpv_ct_comparison(
                     f"{data_args.dataset_names[i].replace('_instruct', '')}_{data_args.dataset_names[j].replace('_instruct', '')}"
                 ].append([])
                 for o2 in task_prompt_vectors:
-                    # print(o1, o2)
+                    print(o1, o2)
                     tpv1 = task_prompt_vectors[o1][i]
                     tpv2 = task_prompt_vectors[o2][j]
 
-                    # print(tpv1.task_name, tpv2.task_name)
+                    print(tpv1.task_name, tpv2.task_name)
                     cross_origin_comparisons[
                         f"{data_args.dataset_names[i].replace('_instruct', '')}_{data_args.dataset_names[j].replace('_instruct', '')}"
                     ][-1].append(function(tpv1.prompt, tpv2.prompt).item())
@@ -292,218 +432,218 @@ task_prompt_vectors = get_task_prompt_vectors(
     pa_config=pa_config, dataset_names=data_args.dataset_names
 )
 
-# name_func_map = {"diff": average_diff, "l2": l2_norm, "cosine": cosine_sim}
+name_func_map = {"diff": average_diff, "l2": l2_norm, "cosine": cosine_sim}
 
-# for fname in name_func_map:
-#     print(fname)
-#     cross_origin_comparisons = get_tpv_comparison(
-#         data_args, task_prompt_vectors, name_func_map[fname]
-#     )
+for fname in name_func_map:
+    print(fname)
+    cross_origin_comparisons = get_tpv_comparison(
+        data_args, task_prompt_vectors, name_func_map[fname]
+    )
 
-#     create_heatmaps(
-#         cross_origin_comparisons,
-#         filename_prefix=f"tpv_{fname}_{timestamp}",
-#         save_dir=f"./visuals/{timestamp}",
-#     )
+    create_heatmaps(
+        cross_origin_comparisons,
+        filename_prefix=f"tpv_{fname}_{timestamp}",
+        save_dir=f"./visuals/{timestamp}",
+    )
 
-# dup_tpv_ct_cs = get_tpv_ct_comparison(data_args, task_prompt_vectors, cosine_sim)
-# print(dup_tpv_ct_cs)
+dup_tpv_ct_cs = get_tpv_ct_comparison(data_args, task_prompt_vectors, cosine_sim)
+print(dup_tpv_ct_cs)
 
-# tpv_ct_cs = dict(
-#     filter(
-#         lambda x: x[0] in remove_duplicates(dup_tpv_ct_cs.keys()), dup_tpv_ct_cs.items()
-#     )
-# )
+tpv_ct_cs = dict(
+    filter(
+        lambda x: x[0] in remove_duplicates(dup_tpv_ct_cs.keys()), dup_tpv_ct_cs.items()
+    )
+)
 
-# print(f"tpv_ct_cs_{timestamp}")
+print(f"tpv_ct_cs_{timestamp}")
 # print(tpv_ct_cs)
-# create_heatmaps(
-#     tpv_ct_cs,
-#     filename_prefix=f"tpv_ct_cs_{timestamp}",
-#     save_dir=f"./visuals/{timestamp}",
-#     n_rows=7,
-#     figsize=(25, 40),
-# )
+create_heatmaps(
+    tpv_ct_cs,
+    filename_prefix=f"tpv_ct_cs_{timestamp}",
+    save_dir=f"./visuals/{timestamp}",
+    n_rows=11,
+    figsize=(25, 40),
+)
 
-# tpv_ct_cs = dup_tpv_ct_cs
-# avg_ct_co_tpv_mean = defaultdict(lambda: defaultdict(dict))
-# avg_ct_co_tpv_std = defaultdict(lambda: defaultdict(dict))
-# print("average cross origin, cross tasks, task prompt vector cosine similarity:")
-# for dataset_name in tpv_ct_cs:
-#     n = len(tpv_ct_cs[dataset_name.replace("_instruct", "")])
+tpv_ct_cs = dup_tpv_ct_cs
+avg_ct_co_tpv_mean = defaultdict(lambda: defaultdict(dict))
+avg_ct_co_tpv_std = defaultdict(lambda: defaultdict(dict))
+print("average cross origin, cross tasks, task prompt vector cosine similarity:")
+for dataset_name in tpv_ct_cs:
+    n = len(tpv_ct_cs[dataset_name.replace("_instruct", "")])
 
-#     if (
-#         mapping[dataset_name.replace("_instruct", "")].split(" ")[0]
-#         == mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
-#     ):
-#         no_diag = tpv_ct_cs[dataset_name.replace("_instruct", "")].masked_select(
-#             torch.tril(torch.ones(n, n, dtype=bool), diagonal=-1)
-#         )
-#     else:
-#         no_diag = tpv_ct_cs[dataset_name.replace("_instruct", "")]
+    if (
+        mapping[dataset_name.replace("_instruct", "")].split(" ")[0]
+        == mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
+    ):
+        no_diag = tpv_ct_cs[dataset_name.replace("_instruct", "")].masked_select(
+            torch.tril(torch.ones(n, n, dtype=bool), diagonal=-1)
+        )
+    else:
+        no_diag = tpv_ct_cs[dataset_name.replace("_instruct", "")]
 
-#     print(no_diag.shape)
-#     # print(dataset_name.replace('_instruct', ''), np.round(no_diag.mean().item(), 2), np.round(no_diag.std().item(), 2))
-#     avg_ct_co_tpv_mean[mapping[dataset_name.replace("_instruct", "")].split(" ")[0]][
-#         mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
-#     ] = np.round(no_diag.mean().item(), 2)
-#     avg_ct_co_tpv_std[mapping[dataset_name.replace("_instruct", "")].split(" ")[0]][
-#         mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
-#     ] = np.round(no_diag.std().item(), 2)
-
-
-# df_mean = pd.DataFrame.from_dict(avg_ct_co_tpv_mean)
-# df_std = pd.DataFrame.from_dict(avg_ct_co_tpv_std)
-# print(df_mean)
-
-# df_mean.to_csv("avg_ct_co_tpv_mean.csv")
-# df_std.to_csv("avg_ct_co_tpv_std.csv")
-
-# task_prompts = get_task_prompts(
-#     pa_config=pa_config, dataset_names=data_args.dataset_names
-# )
-
-# dup_task_ct_cs = get_task_ct_cs(data_args, task_prompts)
-# task_ct_cs = dict(
-#     filter(
-#         lambda x: x[0] in remove_duplicates(dup_task_ct_cs.keys()),
-#         dup_task_ct_cs.items(),
-#     )
-# )
-
-# print(f"task_ct_cs_{timestamp}")
-# create_heatmaps(
-#     task_ct_cs,
-#     filename_prefix=f"task_ct_cs_{timestamp}",
-#     save_dir=f"./visuals/{timestamp}",
-#     n_rows=7,
-#     figsize=(25, 40),
-# )
-
-# task_ct_cs = dup_task_ct_cs
-# avg_ct_co_task_mean = defaultdict(lambda: defaultdict(dict))
-# avg_ct_co_task_std = defaultdict(lambda: defaultdict(dict))
-# print("average cross origin, cross tasks, task prompt cosine similarity:")
-# for dataset_name in task_ct_cs:
-#     n = len(task_ct_cs[dataset_name.replace("_instruct", "")])
-#     if (
-#         mapping[dataset_name.replace("_instruct", "")].split(" ")[0]
-#         == mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
-#     ):
-#         no_diag = task_ct_cs[dataset_name.replace("_instruct", "")].masked_select(
-#             torch.tril(torch.ones(n, n, dtype=bool), diagonal=-1)
-#         )
-#     else:
-#         no_diag = tpv_ct_cs[dataset_name.replace("_instruct", "")]
-
-#     # print(no_diag)
-#     # print(dataset_name.replace('_instruct', ''), np.round(no_diag.mean().item(), 2), np.round(no_diag.std().item(), 2))
-#     avg_ct_co_task_mean[mapping[dataset_name.replace("_instruct", "")].split(" ")[0]][
-#         mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
-#     ] = np.round(no_diag.mean().item(), 2)
-#     avg_ct_co_task_std[mapping[dataset_name.replace("_instruct", "")].split(" ")[0]][
-#         mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
-#     ] = np.round(no_diag.std().item(), 2)
+    # print(no_diag.shape)
+    # print(dataset_name.replace('_instruct', ''), np.round(no_diag.mean().item(), 2), np.round(no_diag.std().item(), 2))
+    avg_ct_co_tpv_mean[mapping[dataset_name.replace("_instruct", "")].split(" ")[0]][
+        mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
+    ] = np.round(no_diag.mean().item(), 2)
+    avg_ct_co_tpv_std[mapping[dataset_name.replace("_instruct", "")].split(" ")[0]][
+        mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
+    ] = np.round(no_diag.std().item(), 2)
 
 
-# df_mean = pd.DataFrame.from_dict(avg_ct_co_task_mean)
-# df_std = pd.DataFrame.from_dict(avg_ct_co_task_std)
-# print(df_mean)
+df_mean = pd.DataFrame.from_dict(avg_ct_co_tpv_mean)
+df_std = pd.DataFrame.from_dict(avg_ct_co_tpv_std)
+print(df_mean)
 
-# df_mean.to_csv("avg_ct_co_task_mean.csv")
-# df_std.to_csv("avg_ct_co_task_std.csv")
+df_mean.to_csv("avg_ct_co_tpv_mean.csv")
+df_std.to_csv("avg_ct_co_tpv_std.csv")
 
-# # create heatmaps for task prompts
-# task_prompts = get_task_prompts(
-#     pa_config=pa_config, dataset_names=data_args.dataset_names
-# )
+task_prompts = get_task_prompts(
+    pa_config=pa_config, dataset_names=data_args.dataset_names
+)
 
-# cross_origin_task_cs = get_task_cs(data_args, task_prompts)
-# create_heatmaps(
-#     cross_origin_task_cs,
-#     filename_prefix=f"tp_cosine_{timestamp}",
-#     save_dir=f"./visuals/{timestamp}",
-# )
+dup_task_ct_cs = get_task_ct_cs(data_args, task_prompts)
+task_ct_cs = dict(
+    filter(
+        lambda x: x[0] in remove_duplicates(dup_task_ct_cs.keys()),
+        dup_task_ct_cs.items(),
+    )
+)
 
-# print("average cross origin task prompt cosine similarity:")
-# for dataset_name in cross_origin_task_cs:
-#     n = len(cross_origin_task_cs[dataset_name.replace("_instruct", "")])
-#     no_diag = (
-#         cross_origin_task_cs[dataset_name.replace("_instruct", "")]
-#         .masked_select(~torch.eye(n, dtype=bool))
-#         .view(n, n - 1)
-#     )
-#     print(
-#         dataset_name.replace("_instruct", ""),
-#         np.round(no_diag.mean().item(), 2),
-#         np.round(no_diag.std().item(), 2),
-#     )
+print(f"task_ct_cs_{timestamp}")
+create_heatmaps(
+    task_ct_cs,
+    filename_prefix=f"task_ct_cs_{timestamp}",
+    save_dir=f"./visuals/{timestamp}",
+    n_rows=11,
+    figsize=(25, 40),
+)
 
-# print("average cross origin task prompt vector cosine similarity:")
-# cross_origin_tpv_cs = get_tpv_comparison(
-#     data_args, task_prompt_vectors, name_func_map["cosine"]
-# )
-# for dataset_name in cross_origin_tpv_cs:
-#     n = len(cross_origin_tpv_cs[dataset_name.replace("_instruct", "")])
-#     no_diag = (
-#         cross_origin_tpv_cs[dataset_name.replace("_instruct", "")]
-#         .masked_select(~torch.eye(n, dtype=bool))
-#         .view(n, n - 1)
-#     )
-#     print(
-#         dataset_name.replace("_instruct", ""),
-#         np.round(no_diag.mean().item(), 2),
-#         np.round(no_diag.std().item(), 2),
-#     )
+task_ct_cs = dup_task_ct_cs
+avg_ct_co_task_mean = defaultdict(lambda: defaultdict(dict))
+avg_ct_co_task_std = defaultdict(lambda: defaultdict(dict))
+print("average cross origin, cross tasks, task prompt cosine similarity:")
+for dataset_name in task_ct_cs:
+    n = len(task_ct_cs[dataset_name.replace("_instruct", "")])
+    if (
+        mapping[dataset_name.replace("_instruct", "")].split(" ")[0]
+        == mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
+    ):
+        no_diag = task_ct_cs[dataset_name.replace("_instruct", "")].masked_select(
+            torch.tril(torch.ones(n, n, dtype=bool), diagonal=-1)
+        )
+    else:
+        no_diag = tpv_ct_cs[dataset_name.replace("_instruct", "")]
+
+    # print(no_diag)
+    # print(dataset_name.replace('_instruct', ''), np.round(no_diag.mean().item(), 2), np.round(no_diag.std().item(), 2))
+    avg_ct_co_task_mean[mapping[dataset_name.replace("_instruct", "")].split(" ")[0]][
+        mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
+    ] = np.round(no_diag.mean().item(), 2)
+    avg_ct_co_task_std[mapping[dataset_name.replace("_instruct", "")].split(" ")[0]][
+        mapping[dataset_name.replace("_instruct", "")].split(" ")[1]
+    ] = np.round(no_diag.std().item(), 2)
+
+
+df_mean = pd.DataFrame.from_dict(avg_ct_co_task_mean)
+df_std = pd.DataFrame.from_dict(avg_ct_co_task_std)
+print(df_mean)
+
+df_mean.to_csv("avg_ct_co_task_mean.csv")
+df_std.to_csv("avg_ct_co_task_std.csv")
+
+# create heatmaps for task prompts
+task_prompts = get_task_prompts(
+    pa_config=pa_config, dataset_names=data_args.dataset_names
+)
+
+cross_origin_task_cs = get_task_cs(data_args, task_prompts)
+create_heatmaps(
+    cross_origin_task_cs,
+    filename_prefix=f"tp_cosine_{timestamp}",
+    save_dir=f"./visuals/{timestamp}",
+)
+
+print("average cross origin task prompt cosine similarity:")
+for dataset_name in cross_origin_task_cs:
+    n = len(cross_origin_task_cs[dataset_name.replace("_instruct", "")])
+    no_diag = (
+        cross_origin_task_cs[dataset_name.replace("_instruct", "")]
+        .masked_select(~torch.eye(n, dtype=bool))
+        .view(n, n - 1)
+    )
+    print(
+        dataset_name.replace("_instruct", ""),
+        np.round(no_diag.mean().item(), 2),
+        np.round(no_diag.std().item(), 2),
+    )
+
+print("average cross origin task prompt vector cosine similarity:")
+cross_origin_tpv_cs = get_tpv_comparison(
+    data_args, task_prompt_vectors, name_func_map["cosine"]
+)
+for dataset_name in cross_origin_tpv_cs:
+    n = len(cross_origin_tpv_cs[dataset_name.replace("_instruct", "")])
+    no_diag = (
+        cross_origin_tpv_cs[dataset_name.replace("_instruct", "")]
+        .masked_select(~torch.eye(n, dtype=bool))
+        .view(n, n - 1)
+    )
+    print(
+        dataset_name.replace("_instruct", ""),
+        np.round(no_diag.mean().item(), 2),
+        np.round(no_diag.std().item(), 2),
+    )
 
 # cross origin evaluation on datasets
-os.environ["WANDB_PROJECT"] = training_args.wandb_project
+# os.environ["WANDB_PROJECT"] = training_args.wandb_project
 
 
-tokenizer = AutoTokenizer.from_pretrained(
-    data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True
-)
+# tokenizer = AutoTokenizer.from_pretrained(
+#     data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True
+# )
 
-model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
+# model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
 
-peft_config = PromptTuningConfig(
-    task_type=TaskType.SEQ_2_SEQ_LM,
-    num_virtual_tokens=pa_config.num_virtual_tokens,
-)
+# peft_config = PromptTuningConfig(
+#     task_type=TaskType.SEQ_2_SEQ_LM,
+#     num_virtual_tokens=pa_config.num_virtual_tokens,
+# )
 
-model = get_peft_model(model, peft_config)
-model.base_model.generation_config.max_new_tokens = data_args.max_target_length
+# model = get_peft_model(model, peft_config)
+# model.base_model.generation_config.max_new_tokens = data_args.max_target_length
 
 
-preprocessor = Preprocessor(data_args.dataset_names, data_args, training_args)
+# preprocessor = Preprocessor(data_args.dataset_names, data_args, training_args)
 
-_, valid_datasets, test_datasets = preprocessor.get_data()
+# _, valid_datasets, test_datasets = preprocessor.get_data()
 
-for o1 in task_prompt_vectors:
-    for o2 in task_prompt_vectors:
-        origin_weights = torch.load(f"soft_prompts/{o1}/{o1}.bin")[
-            "prompt_embeddings"
-        ].to(training_args.device)
+# for o1 in task_prompt_vectors:
+#     for o2 in task_prompt_vectors:
+#         origin_weights = torch.load(f"soft_prompts/{o1}/{o1}.bin")[
+#             "prompt_embeddings"
+#         ].to(training_args.device)
 
-        print(model.prompt_encoder.default.embedding.weight)
+#         print(model.prompt_encoder.default.embedding.weight)
 
-        training_args.run_name = f"addition_{timestamp}_{o1}_{o2}"
+#         training_args.run_name = f"addition_{timestamp}_{o1}_{o2}"
 
-        print(f"origin: {o1} task prompt vectors: {o2}")
+#         print(f"origin: {o1} task prompt vectors: {o2}")
 
-        evaluator = ArithmeticsEvaluator(
-            task_prompts=task_prompt_vectors[o2],
-            model=model,
-            test_datasets=test_datasets,
-            eval_datasets=valid_datasets,
-            training_args=training_args,
-            tokenizer=tokenizer,
-            origin_weights=origin_weights,
-        )
-        results = evaluator.run()
+#         evaluator = ArithmeticsEvaluator(
+#             task_prompts=task_prompt_vectors[o2],
+#             model=model,
+#             test_datasets=test_datasets,
+#             eval_datasets=valid_datasets,
+#             training_args=training_args,
+#             tokenizer=tokenizer,
+#             origin_weights=origin_weights,
+#         )
+#         results = evaluator.run()
 
         
-        if not os.path.exists(f"./results/cross_origin/{timestamp}"):
-            os.makedirs(f"./results/cross_origin/{timestamp}")
+#         if not os.path.exists(f"./results/cross_origin/{timestamp}"):
+#             os.makedirs(f"./results/cross_origin/{timestamp}")
 
-        results.to_csv(f"./results/cross_origin/{timestamp}/results_{o1}_{o2}_{timestamp}.csv")
+#         results.to_csv(f"./results/cross_origin/{timestamp}/results_{o1}_{o2}_{timestamp}.csv")
