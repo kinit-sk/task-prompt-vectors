@@ -5,6 +5,7 @@ import numpy as np
 
 import evaluate
 
+
 def string_to_float(string, default=-1.0):
     """Converts string to float, using default when conversion not possible."""
     try:

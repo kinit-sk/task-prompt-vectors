@@ -58,7 +58,6 @@ dataset_names = [
 ]
 
 
-
 def get_task_prompts(origin_prompts, dataset_names, device="cuda"):
     return {
         origin_prompt: [

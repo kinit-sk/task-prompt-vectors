@@ -40,7 +40,7 @@ task_labels = {
     "mrpc_text": "MRPC",
     "cola_text": "CoLA",
     "qqp_text": "QQP",
-    "stsb_text": "STS-B"
+    "stsb_text": "STS-B",
 }
 
 
@@ -119,8 +119,34 @@ df = df.rename(task_labels, axis="columns")
 #     ["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]
 # )
 
-df = df[["MNLI", "QQP", "QNLI", "SST2", "STS-B", "MRPC", "RTE", "CoLA", "TREC", "DBPedia", "Yelp"]].reindex(
-    ["MNLI", "QQP", "QNLI", "SST2", "STS-B", "MRPC", "RTE", "CoLA", "TREC", "DBPedia", "Yelp"]
+df = df[
+    [
+        "MNLI",
+        "QQP",
+        "QNLI",
+        "SST2",
+        "STS-B",
+        "MRPC",
+        "RTE",
+        "CoLA",
+        "TREC",
+        "DBPedia",
+        "Yelp",
+    ]
+].reindex(
+    [
+        "MNLI",
+        "QQP",
+        "QNLI",
+        "SST2",
+        "STS-B",
+        "MRPC",
+        "RTE",
+        "CoLA",
+        "TREC",
+        "DBPedia",
+        "Yelp",
+    ]
 )
 
 # plt.figure(figsize=(16,10))
@@ -138,7 +164,9 @@ ax.set_xticks(ticks[:-1])
 ticks = ax.get_yticks()
 ax.set_yticks(ticks[1:])
 
-ax.tick_params(axis="x", top=True, labeltop=True, bottom=False, labelbottom=False, labelrotation=90)
+ax.tick_params(
+    axis="x", top=True, labeltop=True, bottom=False, labelbottom=False, labelrotation=90
+)
 
 
 # plt.title('Cross Task Comparison of Task Prompt Vectors')
@@ -148,7 +176,19 @@ plt.savefig(f"rq1_heatmap.pdf", bbox_inches="tight")
 plt.close()
 
 # order = ["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]
-order = ["MNLI", "QQP", "QNLI", "SST2", "STS-B", "MRPC", "RTE", "CoLA", "TREC", "DBPedia", "Yelp"]
+order = [
+    "MNLI",
+    "QQP",
+    "QNLI",
+    "SST2",
+    "STS-B",
+    "MRPC",
+    "RTE",
+    "CoLA",
+    "TREC",
+    "DBPedia",
+    "Yelp",
+]
 
 df_mean = pd.read_csv("avg_ct_co_tpv_mean.csv", index_col=0).loc[order, order]
 df_std = pd.read_csv("avg_ct_co_tpv_std.csv", index_col=0).loc[order, order]

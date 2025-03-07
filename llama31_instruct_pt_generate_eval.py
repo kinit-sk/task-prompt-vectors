@@ -21,11 +21,11 @@ import pandas as pd
 import re
 
 prompts_to_load = {
-    "squad_v2_instruct": [
-        "prompt_tuning_12042024144342_squad_v2_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_12042024144534_squad_v2_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
-        "prompt_tuning_12042024144807_squad_v2_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
-    ],
+    # "squad_v2_instruct": [
+    #     "prompt_tuning_12042024144342_squad_v2_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
+    #     "prompt_tuning_12042024144534_squad_v2_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
+    #     "prompt_tuning_12042024144807_squad_v2_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
+    # ],
     # "hotpot_qa_instruct": [
     #     "prompt_tuning_12042024144827_hotpot_qa_instruct_origin_0_meta-llama-3.1-8b-instruct_best",
     #     "prompt_tuning_12042024145638_hotpot_qa_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
@@ -36,7 +36,22 @@ prompts_to_load = {
     #     "prompt_tuning_12042024094358_math_instruct_origin_1_meta-llama-3.1-8b-instruct_best",
     #     "prompt_tuning_12042024094358_math_instruct_origin_2_meta-llama-3.1-8b-instruct_best",
     # ],
+    # "math_instruct": [
+    #     "prompt_tuning_03042025154643_math_instruct_origin_0_deepseek-llm-7b-chat_best",
+    #     "prompt_tuning_03042025154643_math_instruct_origin_1_deepseek-llm-7b-chat_best",
+    #     "prompt_tuning_03042025154643_math_instruct_origin_2_deepseek-llm-7b-chat_best",
+    # ],
+    "squad_v2_instruct": [
+        # "prompt_tuning_03042025193320_squad_v2_instruct_origin_0_deepseek-llm-7b-chat_best",
+        # "prompt_tuning_03042025193442_squad_v2_instruct_origin_1_deepseek-llm-7b-chat_best",
+        "prompt_tuning_03042025193535_squad_v2_instruct_origin_2_deepseek-llm-7b-chat_best",
+    ]
 }
+
+
+def replace_map(examples, str1, str2):
+    # print(examples["text"].replace(str1, str2))
+    return {"text": examples["text"].replace(str1, str2)}
 
 
 def apply_test_template(examples):
@@ -72,6 +87,13 @@ def escape_inner_single_quotes(s):
     # print(answers)
     for answer in answers:
         escaped_answers.append('"' + answer[1:-1].replace('"', "\\'") + '"')
+
+    if len(matches) == 1:
+        return (
+            "{'prediction_text': ["
+            + ", ".join(escaped_answers)
+            + "], 'answer_start': []}"
+        )
 
     return (
         "{'prediction_text': ["
@@ -110,11 +132,18 @@ def predict_generative(test_dataset, model, tokenizer):
         # print(x_test)
 
         result = pipe(x_test)
-        answer = (
-            result[0]["generated_text"]
-            .split("<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[-1]
-            .strip()
-        )
+        if "deepseek-llm" in model.config.name_or_path.lower():
+            answer = result[0]["generated_text"].split("Assistant:")[-1].strip()
+        else:
+            answer = (
+                result[0]["generated_text"]
+                .split("label:<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[
+                    -1
+                ]
+                .strip()
+            )
+
+        # print(result)
 
         y_pred.append(answer)
         # print("result:", result)
@@ -230,7 +259,7 @@ full_test_results = {"zero_shot": {}, "prompt_tuning": {}}
 for dataset_name in prompts_to_load:
     print(f"task: {dataset_name}")
 
-    print("Eval zero-shot performance")
+    # print("Eval zero-shot performance")
     test_dataset = AutoTask.get(dataset_name).get(
         split="test",
         task_type=peft_config.task_type,
@@ -240,6 +269,11 @@ for dataset_name in prompts_to_load:
     )
 
     chat_test_dataset = test_dataset.map(apply_test_template)
+
+    if "deepseek-llm" in model_args.model_name_or_path.lower():
+        chat_test_dataset = chat_test_dataset.map(
+            replace_map, fn_kwargs={"str1": "label:", "str2": ""}
+        )
 
     if args.print_data:
         print("Test data")
@@ -252,20 +286,20 @@ for dataset_name in prompts_to_load:
 
         exit(0)
 
-    test_results = evaluate_generative(
-        predict_generative(
-            chat_test_dataset,
-            model.base_model,
-            tokenizer,
-        ),
-        test_dataset["target"],
-        squadv2="squad" in dataset_name,
-        ids=test_dataset["id"] if "squad" in dataset_name else None,
-    )
+    # test_results = evaluate_generative(
+    #     predict_generative(
+    #         chat_test_dataset,
+    #         model.base_model,
+    #         tokenizer,
+    #     ),
+    #     test_dataset["target"],
+    #     squadv2="squad" in dataset_name,
+    #     ids=test_dataset["id"] if "squad" in dataset_name else None,
+    # )
 
-    print(test_results)
+    # print(test_results)
 
-    full_test_results["zero_shot"][dataset_name] = test_results
+    # full_test_results["zero_shot"][dataset_name] = test_results
     full_test_results["prompt_tuning"][dataset_name] = {}
 
     print("Eval prompt tuning performance")

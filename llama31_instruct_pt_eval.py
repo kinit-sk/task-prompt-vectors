@@ -53,31 +53,11 @@ import pandas as pd
 # }
 
 prompts_to_load = {
-    "rte_text_instruct": [
-        "prompt_tuning_03042025124540_rte_text_instruct_origin_0_deepseek-llm-7b-chat_best",
-        "prompt_tuning_02272025162514_rte_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
-        "prompt_tuning_02272025162514_rte_text_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
-    ],
-    "stsb_text_instruct" : [
-        "prompt_tuning_02272025162407_stsb_text_instruct_origin_0_deepseek-r1-distill-llama-8b_best",
-        "prompt_tuning_02272025162407_stsb_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
-        "prompt_tuning_02272025162407_stsb_text_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
-    ],
-    "mrpc_text_instruct" : [
-        "prompt_tuning_02272025163540_mrpc_text_instruct_origin_0_deepseek-r1-distill-llama-8b_best",
-        "prompt_tuning_02272025163540_mrpc_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
-        "prompt_tuning_02272025163540_mrpc_text_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
-    ],
-    "cola_text_instruct" : [
-        "prompt_tuning_02272025162559_cola_text_instruct_origin_0_deepseek-r1-distill-llama-8b_best",
-        "prompt_tuning_02272025162559_cola_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
-        "prompt_tuning_02272025162559_cola_text_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
-    ],
-    "trec_coarse_text_instruct": [
-        "prompt_tuning_02272025162733_trec_coarse_text_instruct_origin_0_deepseek-r1-distill-llama-8b_best",
-        "prompt_tuning_02272025162733_trec_coarse_text_instruct_origin_1_deepseek-r1-distill-llama-8b_best",
-        "prompt_tuning_02272025162733_trec_coarse_text_instruct_origin_2_deepseek-r1-distill-llama-8b_best",
-    ],
+    "stsb_text_instruct": [
+        "prompt_tuning_03042025154255_stsb_text_instruct_origin_0_deepseek-llm-7b-chat_best",
+        "prompt_tuning_03042025154255_stsb_text_instruct_origin_1_deepseek-llm-7b-chat_best",
+        "prompt_tuning_03042025154255_stsb_text_instruct_origin_2_deepseek-llm-7b-chat_best",
+    ]
 }
 
 # prompts_to_load = {
@@ -120,9 +100,11 @@ prompts_to_load = {
 #     ],
 # }
 
+
 def replace_map(examples, str1, str2):
     # print(examples["text"].replace(str1, str2))
     return {"text": examples["text"].replace(str1, str2)}
+
 
 def apply_test_template(examples):
     return {
@@ -161,23 +143,17 @@ def predict(test_dataset, model, tokenizer, labels_list):
         # print(x_test)
         result = pipe(x_test)
         # print(result)
-        
+
         # print(model.config.name_or_path)
-        
-        if "deepseek" in model.config.name_or_path:
-            answer = (
-                result[0]["generated_text"]
-                .split("</think>")[-1].strip()
-            )
+
         if "deepseek-llm" in model.config.name_or_path.lower():
-            answer = (
-                result[0]["generated_text"]
-                .split("Assistant:")[-1].strip()
-            )
+            answer = result[0]["generated_text"].split("Assistant:")[-1].strip()
         else:
             answer = (
                 result[0]["generated_text"]
-                .split("label:<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[-1]
+                .split("label:<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[
+                    -1
+                ]
                 .strip()
             )
 
@@ -188,7 +164,7 @@ def predict(test_dataset, model, tokenizer, labels_list):
         else:
             y_pred.append("none")
             print(result)
-         
+
         # print(answer)
 
     return y_pred
@@ -196,8 +172,8 @@ def predict(test_dataset, model, tokenizer, labels_list):
 
 def evaluate(y_pred, y_true, compute_metrics, prefix="eval"):
     metrics = compute_metrics(EvalPrediction(y_pred, y_true))
-    
-    return {f"{prefix}/{k}": v for k,v in metrics.items()}
+
+    return {f"{prefix}/{k}": v for k, v in metrics.items()}
 
 
 timestamp = datetime.now().strftime("%m%d%Y%H%M%S")
@@ -254,12 +230,16 @@ for dataset_name in prompts_to_load:
         split_validation_test=data_args.split_validation_test,
     )
 
-    compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer, postprocess=False)
+    compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(
+        tokenizer, postprocess=False
+    )
 
     chat_test_dataset = test_dataset.map(apply_test_template)
 
     if "deepseek-llm" in model_args.model_name_or_path.lower():
-        chat_test_dataset = chat_test_dataset.map(replace_map, fn_kwargs={"str1": "label:", "str2": ""})
+        chat_test_dataset = chat_test_dataset.map(
+            replace_map, fn_kwargs={"str1": "label:", "str2": ""}
+        )
 
     # test_results = evaluate(
     #     predict(

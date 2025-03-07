@@ -160,7 +160,9 @@ class ArithmeticsEvaluator:
                     self.results.append(
                         {
                             "tasks": " ".join(tp.tasks),
-                            f"{dataset_name}_pearsonr": test_res[f"test_{dataset_name}_pearsonr"],
+                            f"{dataset_name}_pearsonr": test_res[
+                                f"test_{dataset_name}_pearsonr"
+                            ],
                             "best_coef": best_coef,
                         }
                     )

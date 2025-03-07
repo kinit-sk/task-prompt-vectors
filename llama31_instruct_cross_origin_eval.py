@@ -19,13 +19,25 @@ from utils import get_task_prompt_vectors_from_prompts
 import pandas as pd
 
 
+# origin_prompts = [
+#     "origin_0_meta-llama-3.1-8b-instruct",
+#     "origin_1_meta-llama-3.1-8b-instruct",
+#     "origin_2_meta-llama-3.1-8b-instruct",
+# ]
+
 origin_prompts = [
-    "origin_0_meta-llama-3.1-8b-instruct",
-    "origin_1_meta-llama-3.1-8b-instruct",
-    "origin_2_meta-llama-3.1-8b-instruct",
+    "origin_0_deepseek-llm-7b-chat",
+    "origin_1_deepseek-llm-7b-chat",
+    "origin_2_deepseek-llm-7b-chat",
 ]
-# dataset_names = ["rte_text_instruct", "mrpc_text_instruct", "cola_text_instruct", "stsb_text_instruct"]
-dataset_names = ["qqp_text_instruct"]
+# dataset_names = ["cola_text_instruct", "stsb_text_instruct", "trec_coarse_text_instruct", "dbpedia_text_instruct"]
+# dataset_names = ["rte_text_instruct", "mrpc_text_instruct",  "sst2_text_instruct", "yelp_polarity_text_instruct", "qnli_text_instruct"]
+dataset_names = ["mnli_text_instruct"]
+
+
+def replace_map(examples, str1, str2):
+    # print(examples["text"].replace(str1, str2))
+    return {"text": examples["text"].replace(str1, str2)}
 
 
 def apply_test_template(examples):
@@ -52,7 +64,7 @@ def predict(test_dataset, model, tokenizer, labels_list):
         task="text-generation",
         model=model,
         tokenizer=tokenizer,
-        max_new_tokens=2048,
+        max_new_tokens=16,
         do_sample=False,
         top_p=None,
         temperature=None,
@@ -62,14 +74,22 @@ def predict(test_dataset, model, tokenizer, labels_list):
 
     for x_test in tqdm(test_dataset["text"]):
 
+        # print(x_test)
         result = pipe(x_test)
         # print(result)
-        # print(x_test)
-        answer = (
-            result[0]["generated_text"]
-            .split("label:<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[-1]
-            .strip()
-        )
+
+        # print(model.config.name_or_path)
+
+        if "deepseek-llm" in model.config.name_or_path.lower():
+            answer = result[0]["generated_text"].split("Assistant:")[-1].strip()
+        else:
+            answer = (
+                result[0]["generated_text"]
+                .split("label:<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[
+                    -1
+                ]
+                .strip()
+            )
 
         for label in labels_list:
             if label.lower() == answer.lower():
@@ -77,16 +97,17 @@ def predict(test_dataset, model, tokenizer, labels_list):
                 break
         else:
             y_pred.append("none")
-            # print(x_test)
-            # print(answer)
+            print(result)
+
+        # print(answer)
 
     return y_pred
 
 
 def evaluate(y_pred, y_true, compute_metrics, prefix="eval"):
     metrics = compute_metrics(EvalPrediction(y_pred, y_true))
-    
-    return {f"{prefix}/{k}": v for k,v in metrics.items()}
+
+    return {f"{prefix}/{k}": v for k, v in metrics.items()}
 
 
 task_prompt_vectors = get_task_prompt_vectors_from_prompts(
@@ -129,9 +150,10 @@ if args.parse_data:
                     eval(data_dict["prompt_tuning"][dataset_name])[origin],
                 )
 
-                
-                
-                if "test/spearmanr" in eval(data_dict["prompt_tuning"][dataset_name])[origin]:
+                if (
+                    "test/spearmanr"
+                    in eval(data_dict["prompt_tuning"][dataset_name])[origin]
+                ):
                     acc.append(
                         eval(data_dict["prompt_tuning"][dataset_name])[origin][
                             "test/spearmanr"
@@ -144,16 +166,26 @@ if args.parse_data:
                         ]
                     )
 
-                if "test/pearsonr" in eval(data_dict["prompt_tuning"][dataset_name])[origin]:
+                if (
+                    "test/pearsonr"
+                    in eval(data_dict["prompt_tuning"][dataset_name])[origin]
+                ):
                     f1.append(
-                        eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/pearsonr"]
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin][
+                            "test/pearsonr"
+                        ]
                     )
                 else:
                     f1.append(
-                        eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/f1"]
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin][
+                            "test/f1"
+                        ]
                     )
             else:
-                if "test/spearmanr" in eval(data_dict["prompt_tuning"][dataset_name])[origin]:
+                if (
+                    "test/spearmanr"
+                    in eval(data_dict["prompt_tuning"][dataset_name])[origin]
+                ):
                     pt_acc.append(
                         eval(data_dict["prompt_tuning"][dataset_name])[origin][
                             "test/spearmanr"
@@ -166,13 +198,20 @@ if args.parse_data:
                         ]
                     )
 
-                if "test/pearsonr" in eval(data_dict["prompt_tuning"][dataset_name])[origin]:
+                if (
+                    "test/pearsonr"
+                    in eval(data_dict["prompt_tuning"][dataset_name])[origin]
+                ):
                     pt_f1.append(
-                        eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/pearsonr"]
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin][
+                            "test/pearsonr"
+                        ]
                     )
                 else:
                     pt_f1.append(
-                        eval(data_dict["prompt_tuning"][dataset_name])[origin]["test/f1"]
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin][
+                            "test/f1"
+                        ]
                     )
 
         # print(acc, f1)
@@ -234,7 +273,9 @@ full_test_results = {"zero_shot": {}, "prompt_tuning": {}}
 for dataset_name in dataset_names:
     print(f"task: {dataset_name}")
 
-    compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer, postprocess=False)
+    compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(
+        tokenizer, postprocess=False
+    )
 
     test_dataset = AutoTask.get(dataset_name).get(
         split="test",
@@ -246,6 +287,10 @@ for dataset_name in dataset_names:
 
     chat_test_dataset = test_dataset.map(apply_test_template)
 
+    if "deepseek-llm" in model_args.model_name_or_path.lower():
+        chat_test_dataset = chat_test_dataset.map(
+            replace_map, fn_kwargs={"str1": "label:", "str2": ""}
+        )
 
     # print("Eval zero-shot performance")
     # test_results = evaluate(
@@ -279,8 +324,10 @@ for o1 in task_prompt_vectors:
             for dataset_name in tp.tasks:
                 print(f"task: {dataset_name}")
 
-                compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(tokenizer, postprocess=False)
-                
+                compute_metrics = AutoTask.get(dataset_name).get_compute_metrics(
+                    tokenizer, postprocess=False
+                )
+
                 test_dataset = AutoTask.get(dataset_name).get(
                     split="test",
                     task_type=peft_config.task_type,

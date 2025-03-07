@@ -19,6 +19,7 @@ def round_stsb_target(label):
     """
     return np.round((label * 5) / 5, decimals=1)
 
+
 def _f1_score(target, prediction):
     prediction_tokens = prediction.split()
     target_tokens = target.split()

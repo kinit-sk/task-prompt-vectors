@@ -83,7 +83,6 @@ mapping = {
     "squad_v2_squad_v2": "SQuADv2/SQuADv2",
     "math_squad_v2": "MATH/SQuADv2",
     "squad_v2_math": "SQuADv2/MATH",
-
     "rte_text": "RTE",
     "rte_text_dbpedia_text": "RTE/DBPedia",
     "rte_text_mnli_text": "RTE/MNLI",
@@ -98,7 +97,6 @@ mapping = {
     "rte_text_mrpc_text": "RTE/MRPC",
     "rte_text_cola_text": "RTE/CoLA",
     "rte_text_qqp_text": "RTE/QQP",
-
     "stsb_text": "STS-B",
     "stsb_text_dbpedia_text": "STS-B/DBPedia",
     "stsb_text_mnli_text": "STS-B/MNLI",
@@ -113,7 +111,6 @@ mapping = {
     "stsb_text_mrpc_text": "STS-B/MRPC",
     "stsb_text_cola_text": "STS-B/CoLA",
     "stsb_text_qqp_text": "STS-B/QQP",
-
     "mrpc_text": "MRPC",
     "mrpc_text_dbpedia_text": "MRPC/DBPedia",
     "mrpc_text_mnli_text": "MRPC/MNLI",
@@ -128,7 +125,6 @@ mapping = {
     "mrpc_text_mrpc_text": "MRPC/MRPC",
     "mrpc_text_cola_text": "MRPC/CoLA",
     "mrpc_text_qqp_text": "MRPC/QQP",
-
     "cola_text": "CoLA",
     "cola_text_dbpedia_text": "CoLA/DBPedia",
     "cola_text_mnli_text": "CoLA/MNLI",
@@ -143,7 +139,6 @@ mapping = {
     "cola_text_mrpc_text": "CoLA/MRPC",
     "cola_text_cola_text": "CoLA/CoLA",
     "cola_text_qqp_text": "CoLA/QQP",
-
     "qqp_text": "QQP",
     "qqp_text_dbpedia_text": "QQP/DBPedia",
     "qqp_text_mnli_text": "QQP/MNLI",
@@ -158,7 +153,6 @@ mapping = {
     "qqp_text_mrpc_text": "QQP/MRPC",
     "qqp_text_cola_text": "QQP/CoLA",
     "qqp_text_qqp_text": "QQP/QQP",
-
     "dbpedia_text_rte_text": "DBPedia/RTE",
     "mnli_text_rte_text": "MNLI/RTE",
     "qnli_text_rte_text": "QNLI/RTE",
@@ -172,7 +166,6 @@ mapping = {
     "mrpc_text_rte_text": "MRPC/RTE",
     "cola_text_rte_text": "CoLA/RTE",
     "qqp_text_rte_text": "QQP/RTE",
-
     "dbpedia_text_stsb_text": "DBPedia/STS-B",
     "mnli_text_stsb_text": "MNLI/STS-B",
     "qnli_text_stsb_text": "QNLI/STS-B",
@@ -186,7 +179,6 @@ mapping = {
     "mrpc_text_stsb_text": "MRPC/STS-B",
     "cola_text_stsb_text": "CoLA/STS-B",
     "qqp_text_stsb_text": "QQP/STS-B",
-
     "dbpedia_text_cola_text": "DBPedia/CoLA",
     "mnli_text_cola_text": "MNLI/CoLA",
     "qnli_text_cola_text": "QNLI/CoLA",
@@ -200,7 +192,6 @@ mapping = {
     "mrpc_text_cola_text": "MRPC/CoLA",
     "cola_text_cola_text": "CoLA/CoLA",
     "qqp_text_cola_text": "QQP/CoLA",
-
     "dbpedia_text_mrpc_text": "DBPedia/MRPC",
     "mnli_text_mrpc_text": "MNLI/MRPC",
     "qnli_text_mrpc_text": "QNLI/MRPC",
@@ -214,7 +205,6 @@ mapping = {
     "mrpc_text_mrpc_text": "MRPC/MRPC",
     "cola_text_mrpc_text": "CoLA/MRPC",
     "qqp_text_mrpc_text": "QQP/MRPC",
-
     "dbpedia_text_qqp_text": "DBPedia/QQP",
     "mnli_text_qqp_text": "MNLI/QQP",
     "qnli_text_qqp_text": "QNLI/QQP",
@@ -227,7 +217,7 @@ mapping = {
     "stsb_text_qqp_text": "STS-B/QQP",
     "mrpc_text_qqp_text": "MRPC/QQP",
     "cola_text_qqp_text": "CoLA/QQP",
-    "qqp_text_qqp_text": "QQP/QQP"
+    "qqp_text_qqp_text": "QQP/QQP",
 }
 
 

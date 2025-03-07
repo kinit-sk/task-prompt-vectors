@@ -21,13 +21,24 @@ import evaluate
 
 import re
 
+# origin_prompts = [
+#     "origin_0_meta-llama-3.1-8b-instruct",
+#     "origin_1_meta-llama-3.1-8b-instruct",
+#     "origin_2_meta-llama-3.1-8b-instruct",
+# ]
 origin_prompts = [
-    # "origin_0_meta-llama-3.1-8b-instruct",
-    "origin_1_meta-llama-3.1-8b-instruct",
-    "origin_2_meta-llama-3.1-8b-instruct",
+    "origin_0_deepseek-llm-7b-chat",
+    "origin_1_deepseek-llm-7b-chat",
+    "origin_2_deepseek-llm-7b-chat",
 ]
 # dataset_names = ["qnli_text_instruct", "sst2_text_instruct", "trec_coarse_text_instruct"]
-dataset_names = ["math_instruct"]
+# dataset_names = ["math_instruct"]
+dataset_names = ["squad_v2_instruct"]
+
+
+def replace_map(examples, str1, str2):
+    # print(examples["text"].replace(str1, str2))
+    return {"text": examples["text"].replace(str1, str2)}
 
 
 def apply_test_template(examples):
@@ -60,8 +71,16 @@ def escape_inner_single_quotes(s):
 
     escaped_answers = []
 
+    # print(answers)
     for answer in answers:
         escaped_answers.append('"' + answer[1:-1].replace('"', "\\'") + '"')
+
+    if len(matches) == 1:
+        return (
+            "{'prediction_text': ["
+            + ", ".join(escaped_answers)
+            + "], 'answer_start': []}"
+        )
 
     return (
         "{'prediction_text': ["
@@ -100,11 +119,16 @@ def predict_generative(test_dataset, model, tokenizer):
         # print(x_test)
 
         result = pipe(x_test)
-        answer = (
-            result[0]["generated_text"]
-            .split("<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[-1]
-            .strip()
-        )
+        if "deepseek-llm" in model.config.name_or_path.lower():
+            answer = result[0]["generated_text"].split("Assistant:")[-1].strip()
+        else:
+            answer = (
+                result[0]["generated_text"]
+                .split("label:<|eot_id|><|start_header_id|>assistant<|end_header_id|>")[
+                    -1
+                ]
+                .strip()
+            )
 
         y_pred.append(answer)
         # print("result:", result)
@@ -321,6 +345,11 @@ for dataset_name in dataset_names:
     )
 
     chat_test_dataset = test_dataset.map(apply_test_template)
+
+    if "deepseek-llm" in model_args.model_name_or_path.lower():
+        chat_test_dataset = chat_test_dataset.map(
+            replace_map, fn_kwargs={"str1": "label:", "str2": ""}
+        )
 
     # print("Eval zero-shot performance")
     # test_results = evaluate_generative(

@@ -336,7 +336,6 @@ for origin_prompt in peft_config.origin_prompts:
             "math" in dataset_name
             or "squad" in dataset_name
             or "hotpot" in dataset_name
-            or "stsb" in dataset_name
         ):
             pass
         else:

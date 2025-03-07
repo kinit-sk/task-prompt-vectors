@@ -152,7 +152,9 @@ class AbstractTask:
         )
 
     def get_compute_metrics(
-        self, tokenizer, postprocess=True,
+        self,
+        tokenizer,
+        postprocess=True,
     ) -> Callable[[EvalPrediction], Dict]:
         def compute_metrics(eval_preds: EvalPrediction) -> Dict:
             preds, labels = eval_preds
@@ -161,7 +163,9 @@ class AbstractTask:
                 preds[preds == -100] = tokenizer.pad_token_id
                 labels[labels == -100] = tokenizer.pad_token_id
 
-                decoded_preds, decoded_labels = self.postprocessor(preds, labels, tokenizer)
+                decoded_preds, decoded_labels = self.postprocessor(
+                    preds, labels, tokenizer
+                )
             else:
                 decoded_preds = preds
                 decoded_labels = labels
@@ -372,7 +376,10 @@ class STSBText(AbstractTask):
         "test": "validation",
     }
     label_column_name = "label"
-    id2label = {np.round(label, decimals=1): str(np.round(label, decimals=1)) for label in np.arange(0, 5.2, 0.2)}
+    id2label = {
+        np.round(label, decimals=1): str(np.round(label, decimals=1))
+        for label in np.arange(0, 5.2, 0.2)
+    }
 
     def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("glue", "stsb", split=split)
@@ -402,7 +409,10 @@ class STSBTextInstruct(AbstractTask):
         "test": "validation",
     }
     label_column_name = "label"
-    id2label = {np.round(label, decimals=1): str(np.round(label, decimals=1)) for label in np.arange(0, 5.2, 0.2)}
+    id2label = {
+        np.round(label, decimals=1): str(np.round(label, decimals=1))
+        for label in np.arange(0, 5.2, 0.2)
+    }
 
     def load_dataset(self, split) -> Dataset:
         return datasets.load_dataset("glue", "stsb", split=split)
@@ -1719,7 +1729,9 @@ class MATHInstruct(AbstractTask):
     label_column_name = None
 
     def load_dataset(self, split) -> Dataset:
-        return datasets.load_dataset("DigitalLearningGmbH/MATH-lighteval", "default", split=split)
+        return datasets.load_dataset(
+            "DigitalLearningGmbH/MATH-lighteval", "default", split=split
+        )
 
     def preprocessor(self, example, add_prefix=True):
         input_texts = [
