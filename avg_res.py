@@ -45,8 +45,18 @@ for pt in df["prompt_tuning"]:
     if "test/f1" in pt_df:
         pt_df["test/f1"] = pd.to_numeric(pt_df["test/f1"])
 
+    if "test/squad_f1" in pt_df:
+        pt_df["test/squad_f1"] = pd.to_numeric(pt_df["test/squad_f1"])
+
     if "test/spearmanr" in pt_df:
         pt_df["test/spearmanr"] = pd.to_numeric(pt_df["test/spearmanr"])
+
+    if "test/rougeL" in pt_df:
+        pt_df["test/rougeL"] = pd.to_numeric(pt_df["test/rougeL"])
+
+    if "test/bleu" in pt_df:
+        pt_df["test/bleu"] = pd.to_numeric(pt_df["test/bleu"])
+
 
     print(pt_df)
 
@@ -54,9 +64,18 @@ for pt in df["prompt_tuning"]:
     std_values = pt_df.std()
 
     if "test/f1" in pt_df:
-        print("mean:", np.round(mean_values["test/f1"] * 100, 1))
-        print("std:", np.round(std_values["test/f1"] * 100, 1))
+        print("test/f1 mean:", np.round(mean_values["test/f1"] * 100, 1))
+        print("test/f1 std:", np.round(std_values["test/f1"] * 100, 1))
+
+    if "test/squad_f1" in pt_df:
+        print("test/squad_f1 mean:", np.round(mean_values["test/squad_f1"], 1))
+        print("test/squad_f1 std:", np.round(std_values["test/squad_f1"], 1))
+
 
     if "test/spearmanr" in pt_df:
-        print("mean:", np.round(mean_values["test/spearmanr"] * 100, 1))
-        print("std:", np.round(std_values["test/spearmanr"] * 100, 1))
+        print("test/spearmanr mean:", np.round(mean_values["test/spearmanr"] * 100, 1))
+        print("test/spearmanr std:", np.round(std_values["test/spearmanr"] * 100, 1))
+
+    if "test/rougeL" in pt_df:
+        print("test/rougeL mean:", np.round(mean_values["test/rougeL"] * 100, 1))
+        print("test/rougeL std:", np.round(std_values["test/rougeL"] * 100, 1))
