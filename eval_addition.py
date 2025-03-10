@@ -92,7 +92,7 @@ tp_per_origin = get_task_prompts(
 
 print(tp_per_origin)
 
-for tp in create_task_combinations(tp_per_origin["origin_5"]):
+for tp in create_task_combinations(tp_per_origin["origin_0"]):
     print(tp.task_name)
 
 for origin_prompt in tp_per_origin:

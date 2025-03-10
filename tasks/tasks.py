@@ -170,7 +170,7 @@ class AbstractTask:
                 decoded_preds = preds
                 decoded_labels = labels
 
-            # print("compute_metrics:", decoded_preds, decoded_labels)
+            print("compute_metrics:", decoded_preds, decoded_labels)
 
             metrics = {}
             # TODO: to get rid of the zip, make classes from metrics and add metric name to it

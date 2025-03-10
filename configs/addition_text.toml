@@ -1,14 +1,14 @@
 do_train = false
 do_eval = true
 do_test = true
-dataset_names = ["qnli_text", "mnli_text", "trec_coarse_text", "dbpedia_text", "sst2_text", "yelp_polarity_text"]
+dataset_names = ["qnli_text", "mnli_text", "trec_coarse_text", "dbpedia_text", "sst2_text", "yelp_polarity_text", "rte_text", "mrpc_text", "stsb_text", "cola_text", "qqp_text"]
 model_name_or_path = "t5-base"
 data_tokenizer_name_or_path = "t5-base"
 max_target_length = 128
 per_device_eval_batch_size = 32
 report_to = ["wandb"]
 num_virtual_tokens = 50
-wandb_project = "eval_arithmetics_addition"
+wandb_project = "eval_arithmetics_addition_new"
 max_source_length = 256
 split_validation_test = true
 origin_prompts = ["origin_0", "origin_1", "origin_2"]
