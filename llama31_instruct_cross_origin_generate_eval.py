@@ -238,14 +238,15 @@ if args.parse_data:
                     eval(data_dict["prompt_tuning"][dataset_name])[origin],
                 )
 
-                acc.append(
-                    eval(data_dict["prompt_tuning"][dataset_name])[origin][
-                        "eval/squad_exatct_match"
-                    ]
-                )
-                f1.append(
-                    eval(data_dict["prompt_tuning"][dataset_name])[origin]["eval/squad_f1"]
-                )
+                if "squad" in dataset_name:
+                    acc.append(
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin][
+                            "eval/squad_exatct_match"
+                        ]
+                    )
+                    f1.append(
+                        eval(data_dict["prompt_tuning"][dataset_name])[origin]["eval/squad_f1"]
+                    )
 
                 bleu.append(
                     eval(data_dict["prompt_tuning"][dataset_name])[origin]["eval/bleu"]
