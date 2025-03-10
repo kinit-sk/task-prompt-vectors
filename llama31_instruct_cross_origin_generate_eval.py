@@ -271,14 +271,14 @@ if args.parse_data:
 
         print(acc, f1)
         results[dataset_name] = {
-            "accuracy": {
-                "mean": np.round(np.array(acc).mean(), 1),
-                "std": np.round(np.array(acc).std(), 1),
-            },
-            "f1": {
-                "mean": np.round(np.array(f1).mean(), 1),
-                "std": np.round(np.array(f1).std(), 1),
-            },
+            # "accuracy": {
+            #     "mean": np.round(np.array(acc).mean(), 1),
+            #     "std": np.round(np.array(acc).std(), 1),
+            # },
+            # "f1": {
+            #     "mean": np.round(np.array(f1).mean(), 1),
+            #     "std": np.round(np.array(f1).std(), 1),
+            # },
             "bleu": {
                 "mean": np.round(np.array(bleu).mean() * 100, 1),
                 "std": np.round(np.array(bleu).std() * 100, 1),
