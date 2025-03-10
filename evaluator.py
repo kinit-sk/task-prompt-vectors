@@ -92,7 +92,10 @@ class ArithmeticsEvaluator:
                         )
                         print(eval_res)
 
-                        eval_em.append(eval_res[f"eval_{dataset_name}_exact_match"])
+                        if f"test_{dataset_name}_exact_match" in eval_res.keys():
+                            eval_em.append(eval_res[f"eval_{dataset_name}_exact_match"])
+                        elif f"test_{dataset_name}_pearsonr" in eval_res.keys():
+                            eval_em.append(eval_res[f"eval_{dataset_name}_pearsonr"])
 
                     mean_acc = torch.tensor(eval_em).mean()
                     if mean_acc > best_acc:

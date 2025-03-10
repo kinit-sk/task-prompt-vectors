@@ -1,8 +1,8 @@
 do_train = false
 do_eval = true
 do_test = true
-# dataset_names = ["qnli_text", "mnli_text", "trec_coarse_text", "dbpedia_text", "sst2_text", "yelp_polarity_text", "rte_text", "mrpc_text", "stsb_text", "cola_text", "qqp_text"]
-dataset_names = ["trec_coarse_text", "mrpc_text"]
+dataset_names = ["qnli_text", "mnli_text", "trec_coarse_text", "dbpedia_text", "sst2_text", "yelp_polarity_text", "rte_text", "mrpc_text", "stsb_text", "cola_text", "qqp_text"]
+# dataset_names = ["trec_coarse_text", "mrpc_text"]
 model_name_or_path = "t5-base"
 data_tokenizer_name_or_path = "t5-base"
 max_target_length = 128

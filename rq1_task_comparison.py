@@ -41,6 +41,11 @@ task_labels = {
     "cola_text": "CoLA",
     "qqp_text": "QQP",
     "stsb_text": "STS-B",
+    "cola_text_instruct": "CoLA",
+    "mrpc_text_instruct": "MRPC",
+    "qqp_text_instruct": "QQP",
+    "rte_text_instruct": "RTE",
+    "stsb_text_instruct": "STS-B",
 }
 
 
@@ -75,12 +80,15 @@ parser = ArgumentParser(
     (TrainingArguments, DataTrainingArguments, PromptArithmeticsConfig)
 )
 
-training_args, data_args, pa_config = parser.parse_toml_file(
-    "configs/cross_origin.toml"
-)
+# training_args, data_args, pa_config = parser.parse_toml_file(
+#     "configs/cross_origin.toml"
+# )
 # training_args, data_args, pa_config = parser.parse_toml_file(
 #     "configs/prompt_tuning/single-task/llama31_8b_instruct.toml"
 # )
+training_args, data_args, pa_config = parser.parse_toml_file(
+    "configs/prompt_tuning/single-task/deepseek.toml"
+)
 data_args.dataset_names = sorted(data_args.dataset_names)
 
 
@@ -115,8 +123,40 @@ df = pd.DataFrame.from_dict(average_similarities)
 df = df.rename(task_labels)
 df = df.rename(task_labels, axis="columns")
 
+print(df)
+
 # df = df[["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]].reindex(
 #     ["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]
+# )
+
+# df = df[
+#     [
+#         "MNLI",
+#         "QQP",
+#         "QNLI",
+#         "SST2",
+#         "STS-B",
+#         "MRPC",
+#         "RTE",
+#         "CoLA",
+#         "TREC",
+#         "DBPedia",
+#         "Yelp",
+#     ]
+# ].reindex(
+#     [
+#         "MNLI",
+#         "QQP",
+#         "QNLI",
+#         "SST2",
+#         "STS-B",
+#         "MRPC",
+#         "RTE",
+#         "CoLA",
+#         "TREC",
+#         "DBPedia",
+#         "Yelp",
+#     ]
 # )
 
 df = df[
@@ -132,6 +172,8 @@ df = df[
         "TREC",
         "DBPedia",
         "Yelp",
+        "MATH", 
+        "SQuADv2",
     ]
 ].reindex(
     [
@@ -146,6 +188,8 @@ df = df[
         "TREC",
         "DBPedia",
         "Yelp",
+        "MATH", 
+        "SQuADv2",
     ]
 )
 
@@ -175,7 +219,6 @@ plt.savefig(f"rq1_heatmap.pdf", bbox_inches="tight")
 
 plt.close()
 
-# order = ["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]
 order = [
     "MNLI",
     "QQP",
@@ -188,7 +231,23 @@ order = [
     "TREC",
     "DBPedia",
     "Yelp",
+    "MATH", 
+    "SQuADv2",
 ]
+
+# order = [
+#     "MNLI",
+#     "QQP",
+#     "QNLI",
+#     "SST2",
+#     "STS-B",
+#     "MRPC",
+#     "RTE",
+#     "CoLA",
+#     "TREC",
+#     "DBPedia",
+#     "Yelp",
+# ]
 
 df_mean = pd.read_csv("avg_ct_co_tpv_mean.csv", index_col=0).loc[order, order]
 df_std = pd.read_csv("avg_ct_co_tpv_std.csv", index_col=0).loc[order, order]
@@ -201,6 +260,7 @@ ax = sns.heatmap(
     fmt=".2f",
     cmap="crest",
     mask=np.invert(np.tril(np.ones((len(df.axes[0]), len(df.axes[0])), dtype=bool))),
+    annot_kws={"fontsize":8},
 )
 
 ax.invert_yaxis()
@@ -221,10 +281,11 @@ print(df_mean)
 
 ax = sns.heatmap(
     df_mean,
-    annot=False,
+    annot=True,
     fmt=".2f",
     cmap="crest",
     mask=np.invert(np.tril(np.ones((len(df.axes[0]), len(df.axes[0])), dtype=bool))),
+    annot_kws={"fontsize":8},
 )
 ax.invert_yaxis()
 # ax.invert_xaxis()

@@ -231,7 +231,7 @@ def create_heatmaps(
 ) -> None:
     Path(save_dir).mkdir(parents=True, exist_ok=True)
 
-    # print(len(data.values()))
+    print(len(data.values()))
     n_cols = round(len(data.values()) / n_rows)
     # for name in data:
 
