@@ -243,9 +243,9 @@ if args.parse_data:
                 #         "eval/squad_exatct_match"
                 #     ]
                 # )
-                # f1.append(
-                #     eval(data_dict["prompt_tuning"][dataset_name])[origin]["eval/squad_f1"]
-                # )
+                f1.append(
+                    eval(data_dict["prompt_tuning"][dataset_name])[origin]["eval/squad_f1"]
+                )
 
                 bleu.append(
                     eval(data_dict["prompt_tuning"][dataset_name])[origin]["eval/bleu"]
@@ -264,7 +264,7 @@ if args.parse_data:
                 )
                 pt_f1.append(
                     eval(data_dict["prompt_tuning"][dataset_name])[origin][
-                        "eval/squad_f1"
+                    "eval/squad_f1"
                     ]
                 )
 

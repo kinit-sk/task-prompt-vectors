@@ -32,7 +32,8 @@ origin_prompts = [
 ]
 # dataset_names = ["cola_text_instruct", "stsb_text_instruct", "trec_coarse_text_instruct", "dbpedia_text_instruct"]
 # dataset_names = ["rte_text_instruct", "mrpc_text_instruct",  "sst2_text_instruct", "yelp_polarity_text_instruct", "qnli_text_instruct"]
-dataset_names = ["mnli_text_instruct"]
+# dataset_names = ["mnli_text_instruct"]
+dataset_names = ["qqp_text_instruct"]
 
 
 def replace_map(examples, str1, str2):

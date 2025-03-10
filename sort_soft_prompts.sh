@@ -11,7 +11,8 @@
 # datasets=("squad_v2_instruct")
 # datasets=("rte_text_instruct" "mrpc_text_instruct" "cola_text_instruct" "stsb_text_instruct" "math_instruct" "squad_v2_instruct" "trec_coarse_text_instruct" "sst2_text_instruct" "yelp_polarity_text_instruct" "dbpedia_text_instruct" "qnli_text_instruct")
 # datasets=("rte_text" "mrpc_text" "cola_text" "qqp_text" "stsb_text")
-datasets=("mnli_text_instruct")
+# datasets=("mnli_text_instruct")
+ datasets=("qqp_text_instruct")
 
 # for i in ${datasets[@]}; do for j in {0..2}; do occurances=(saves/*${i}*origin_${j}_t5-base_best); python sf2bin.py ${occurances[-1]} soft_prompts/origin_$j/$i.bin; done; done
 # for i in ${datasets[@]}; do for j in {0..2}; do occurances=(saves/*${i}*origin_${j}_meta-llama-3.1-8b-instruct_best); python sf2bin.py ${occurances[-1]} soft_prompts/origin_"$j"_meta-llama-3.1-8b-instruct/$i.bin; done; done
