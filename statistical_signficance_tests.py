@@ -245,41 +245,185 @@ with open("significance.json", "w") as f:
 #     },
 # }
 
-data = {
-    "dataset": ["QNLI", "MNLI", "TREC", "DBpedia", "SST2", "Yelp", "avg"],
-    "Prompt tuning": {
-        "QNLI": {"score": 92.0, "std": 0},
-        "MNLI": {"score": 89.7, "std": 0.2},
-        "TREC": {"score": 95.8, "std": 0.3},
-        "DBpedia": {"score": 99.2, "std": 0},
-        "SST2": {"score": 95.9, "std": 0.4},
-        "Yelp": {"score": 98.6, "std": 0.1},
-        "avg": {"score": 95.2, "std": 0.2},
+# data = {
+#     "dataset": ["QNLI", "MNLI", "TREC", "DBpedia", "SST2", "Yelp", "avg"],
+#     "Prompt tuning": {
+#         "QNLI": {"score": 92.0, "std": 0},
+#         "MNLI": {"score": 89.7, "std": 0.2},
+#         "TREC": {"score": 95.8, "std": 0.3},
+#         "DBpedia": {"score": 99.2, "std": 0},
+#         "SST2": {"score": 95.9, "std": 0.4},
+#         "Yelp": {"score": 98.6, "std": 0.1},
+#         "avg": {"score": 95.2, "std": 0.2},
+#     },
+#     "Random init": {
+#         "QNLI": {"score": 92.0, "std": 0.1},
+#         "MNLI": {"score": 89.7, "std": 0.2},
+#         "TREC": {"score": 96.0, "std": 0.3},
+#         "DBpedia": {"score": 99.2, "std": 0},
+#         "SST2": {"score": 96.0, "std": 0.5},
+#         "Yelp": {"score": 98.6, "std": 0.1},
+#         "avg": {"score": 95.3, "std": 0.2},
+#     },
+# }
+
+t5 = {
+    "GLUE": {
+        "dataset": ["MNLI", "QQP", "QNLI", "SST2", "STS-B", "MRPC", "RTE", "CoLA", "avg"],
+        "Original init": {
+            "MNLI": {"score": 85.4, "std": 0.1},
+            "QQP": {"score": 87.3, "std": 0.1},
+            "QNLI": {"score": 93.3, "std": 0.0},
+            "SST2": {"score": 93.8, "std": 0.3},
+            "STS-B": {"score": 89.3, "std": 0.2},
+            "MRPC": {"score": 90.8, "std": 0.8},
+            "RTE": {"score": 50.3, "std": 4.2},
+            "CoLA": {"score": 85.9, "std": 0.2},
+            "avg": {"score": 84.5, "std": 1.0}
+        },
+        "Mixed init": {
+            "MNLI": {"score": 85.3, "std": 0.2},
+            "QQP": {"score": 87.4, "std": 0.1},
+            "QNLI": {"score": 93.2, "std": 0.1},
+            "SST2": {"score": 93.2, "std": 0.6},
+            "STS-B": {"score": 88.6, "std": 0.2},
+            "MRPC": {"score": 83.0, "std": 4.1},
+            "RTE": {"score": 63.4, "std": 1.1},
+            "CoLA": {"score": 84.9, "std": 0.3},
+            "avg": {"score": 84.0, "std": 1.9}
+        }
     },
-    "Random init": {
-        "QNLI": {"score": 92.0, "std": 0.1},
-        "MNLI": {"score": 89.7, "std": 0.2},
-        "TREC": {"score": 96.0, "std": 0.3},
-        "DBpedia": {"score": 99.2, "std": 0},
-        "SST2": {"score": 96.0, "std": 0.5},
-        "Yelp": {"score": 98.6, "std": 0.1},
-        "avg": {"score": 95.3, "std": 0.2},
-    },
+    "Others": {
+        "dataset": ["TREC", "DBpedia", "Yelp", "avg"],
+        "Original init": {
+            "TREC": {"score": 95.5, "std": 1.7},
+            "DBpedia": {"score": 99.1, "std": 0.0},
+            "Yelp": {"score": 97.2, "std": 0.0},
+            "SQuADv2": None,
+            "MATH": None,
+            "avg": {"score": 97.3, "std": 0.6}
+        },
+        "Mixed init": {
+            "TREC": {"score": 26.5, "std": 18.2},
+            "DBpedia": {"score": 99.0, "std": 0.1},
+            "Yelp": {"score": 97.1, "std": 0.1},
+            "SQuADv2": None,
+            "MATH": None,
+            "avg": {"score": 74.2, "std": 6.13}
+        }
+    }
 }
+
+llama = {
+    "GLUE": {
+        "dataset": ["MNLI", "QQP", "QNLI", "SST2", "STS-B", "MRPC", "RTE", "CoLA", "avg"],
+        "Original init": {
+            "MNLI": {"score": 89.7, "std": 0.2},
+            "QQP": {"score": 84.6, "std": 0.1},
+            "QNLI": {"score": 92.0, "std": 0.0},
+            "SST2": {"score": 95.9, "std": 0.4},
+            "STS-B": {"score": 89.9, "std": 1.0},
+            "MRPC": {"score": 87.7, "std": 0.2},
+            "RTE": {"score": 89.7, "std": 0.3},
+            "CoLA": {"score": 87.3, "std": 1.6},
+            "avg": {"score": 89.6, "std": 0.7}
+        },
+        "Mixed init": {
+            "MNLI": {"score": 89.7, "std": 0.2},
+            "QQP": {"score": 84.6, "std": 0.1},
+            "QNLI": {"score": 92.0, "std": 0.1},
+            "SST2": {"score": 96.0, "std": 0.5},
+            "STS-B": {"score": 89.8, "std": 0.8},
+            "MRPC": {"score": 88.1, "std": 0.1},
+            "RTE": {"score": 89.4, "std": 0.6},
+            "CoLA": {"score": 87.6, "std": 1.2},
+            "avg": {"score": 89.7, "std": 0.6}
+        }
+    },
+    "Others": {
+        "dataset": ["TREC", "DBpedia", "Yelp", "avg"],
+        "Original init": {
+            "TREC": {"score": 95.8, "std": 0.3},
+            "DBpedia": {"score": 99.2, "std": 0.0},
+            "Yelp": {"score": 98.6, "std": 0.1},
+            "SQuADv2": {"score": 66.3, "std": 0.9},
+            "MATH": {"score": 36.8, "std": 0.2},
+            "avg": {"score": 79.3, "std": 0.3}
+        },
+        "Mixed init": {
+            "TREC": {"score": 96.0, "std": 0.3},
+            "DBpedia": {"score": 99.2, "std": 0.0},
+            "Yelp": {"score": 98.6, "std": 0.1},
+            "SQuADv2": {"score": 66.4, "std": 0.9},
+            "MATH": {"score": 36.9, "std": 0.1},
+            "avg": {"score": 79.4, "std": 0.3}
+        }
+    }
+}
+
+deepseek = {
+    "GLUE": {
+        "dataset": ["MNLI", "QQP", "QNLI", "SST2", "STS-B", "MRPC", "RTE", "CoLA", "avg"],
+        "Original init": {
+            "MNLI": {"score": 86.1, "std": 1.9},
+            "QQP": {"score": 84.4, "std": 0.1},
+            "QNLI": {"score": 90.3, "std": 1.4},
+            "SST2": {"score": 95.6, "std": 0.1},
+            "STS-B": {"score": 88.7, "std": 0.3},
+            "MRPC": {"score": 87.5, "std": 1.1},
+            "RTE": {"score": 84.3, "std": 0.7},
+            "CoLA": {"score": 87.3, "std": 0.6},
+            "avg": {"score": 88.1, "std": 0.8}
+        },
+        "Mixed init": {
+            "MNLI": {"score": 86.0, "std": 2.0},
+            "QQP": {"score": 84.4, "std": 0.1},
+            "QNLI": {"score": 90.4, "std": 1.3},
+            "SST2": {"score": 95.6, "std": 0.1},
+            "STS-B": {"score": 88.7, "std": 0.4},
+            "MRPC": {"score": 87.4, "std": 1.1},
+            "RTE": {"score": 84.3, "std": 0.7},
+            "CoLA": {"score": 87.6, "std": 0.5},
+            "avg": {"score": 88.1, "std": 0.8}
+        }
+    },
+    "Others": {
+        "dataset": ["TREC", "DBpedia", "Yelp", "avg"],
+        "Original init": {
+            "TREC": {"score": 95.7, "std": 1.0},
+            "DBpedia": {"score": 99.1, "std": 0.1},
+            "Yelp": {"score": 98.4, "std": 0.1},
+            "SQuADv2": {"score": 63.8, "std": 0.9},
+            "MATH": {"score": 32.1, "std": 0.1},
+            "avg": {"score": 77.8, "std": 0.4}
+        },
+        "Mixed init": {
+            "TREC": {"score": 95.6, "std": 1.0},
+            "DBpedia": {"score": 99.1, "std": 0.1},
+            "Yelp": {"score": 98.4, "std": 0.1},
+            "SQuADv2": {"score": 63.8, "std": 0.6},
+            "MATH": {"score": 32.2, "std": 0.1},
+            "avg": {"score": 77.8, "std": 0.4}
+        }
+    }
+}
+
+data = deepseek["Others"]
+print(data)
 
 comparison_results = {}
 for dataset in data["dataset"]:
     comparison_results[dataset] = {}
-    mean1 = data["Prompt tuning"][dataset]["score"]
-    std1 = data["Prompt tuning"][dataset]["std"]
-    mean2 = data["Random init"][dataset]["score"]
-    std2 = data["Random init"][dataset]["std"]
+    mean1 = data["Original init"][dataset]["score"]
+    std1 = data["Original init"][dataset]["std"]
+    mean2 = data["Mixed init"][dataset]["score"]
+    std2 = data["Mixed init"][dataset]["std"]
 
     p_value = compute_significance(mean1, std1, n, mean2, std2, n)
 
-    comparison_results[dataset][f"Prompt tuning vs Random init ({dataset})"] = {
-        "Prompt tuning": {"score": mean1, "std": std1},
-        "Random init": {"score": mean2, "std": std2},
+    comparison_results[dataset][f"Original init vs Mixed init ({dataset})"] = {
+        "Original init": {"score": mean1, "std": std1},
+        "Mixed init": {"score": mean2, "std": std2},
         "p-value": p_value,
         "significance": bool(p_value <= 0.05 / len(data["dataset"])),
     }

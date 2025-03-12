@@ -129,36 +129,6 @@ print(df)
 #     ["MNLI", "QNLI", "DBPedia", "TREC", "SST2", "Yelp", "MATH", "SQuADv2"]
 # )
 
-# df = df[
-#     [
-#         "MNLI",
-#         "QQP",
-#         "QNLI",
-#         "SST2",
-#         "STS-B",
-#         "MRPC",
-#         "RTE",
-#         "CoLA",
-#         "TREC",
-#         "DBPedia",
-#         "Yelp",
-#     ]
-# ].reindex(
-#     [
-#         "MNLI",
-#         "QQP",
-#         "QNLI",
-#         "SST2",
-#         "STS-B",
-#         "MRPC",
-#         "RTE",
-#         "CoLA",
-#         "TREC",
-#         "DBPedia",
-#         "Yelp",
-#     ]
-# )
-
 df = df[
     [
         "MNLI",
@@ -172,8 +142,6 @@ df = df[
         "TREC",
         "DBPedia",
         "Yelp",
-        "MATH", 
-        "SQuADv2",
     ]
 ].reindex(
     [
@@ -188,10 +156,42 @@ df = df[
         "TREC",
         "DBPedia",
         "Yelp",
-        "MATH", 
-        "SQuADv2",
     ]
 )
+
+# df = df[
+#     [
+#         "MNLI",
+#         "QQP",
+#         "QNLI",
+#         "SST2",
+#         "STS-B",
+#         "MRPC",
+#         "RTE",
+#         "CoLA",
+#         "TREC",
+#         "DBPedia",
+#         "Yelp",
+#         "MATH", 
+#         "SQuADv2",
+#     ]
+# ].reindex(
+#     [
+#         "MNLI",
+#         "QQP",
+#         "QNLI",
+#         "SST2",
+#         "STS-B",
+#         "MRPC",
+#         "RTE",
+#         "CoLA",
+#         "TREC",
+#         "DBPedia",
+#         "Yelp",
+#         "MATH", 
+#         "SQuADv2",
+#     ]
+# )
 
 # plt.figure(figsize=(16,10))
 mask = np.triu(df.to_numpy())
@@ -219,22 +219,6 @@ plt.savefig(f"rq1_heatmap.pdf", bbox_inches="tight")
 
 plt.close()
 
-order = [
-    "MNLI",
-    "QQP",
-    "QNLI",
-    "SST2",
-    "STS-B",
-    "MRPC",
-    "RTE",
-    "CoLA",
-    "TREC",
-    "DBPedia",
-    "Yelp",
-    "MATH", 
-    "SQuADv2",
-]
-
 # order = [
 #     "MNLI",
 #     "QQP",
@@ -247,7 +231,23 @@ order = [
 #     "TREC",
 #     "DBPedia",
 #     "Yelp",
+#     "MATH", 
+#     "SQuADv2",
 # ]
+
+order = [
+    "MNLI",
+    "QQP",
+    "QNLI",
+    "SST2",
+    "STS-B",
+    "MRPC",
+    "RTE",
+    "CoLA",
+    "TREC",
+    "DBPedia",
+    "Yelp",
+]
 
 df_mean = pd.read_csv("avg_ct_co_tpv_mean.csv", index_col=0).loc[order, order]
 df_std = pd.read_csv("avg_ct_co_tpv_std.csv", index_col=0).loc[order, order]

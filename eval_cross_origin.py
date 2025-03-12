@@ -314,11 +314,11 @@ def get_tpv_ct_comparison(
                     f"{data_args.dataset_names[i].replace('_instruct', '')}_{data_args.dataset_names[j].replace('_instruct', '')}"
                 ].append([])
                 for o2 in task_prompt_vectors:
-                    print(o1, o2)
+                    # print(o1, o2)
                     tpv1 = task_prompt_vectors[o1][i]
                     tpv2 = task_prompt_vectors[o2][j]
 
-                    print(tpv1.task_name, tpv2.task_name)
+                    # print(tpv1.task_name, tpv2.task_name)
                     cross_origin_comparisons[
                         f"{data_args.dataset_names[i].replace('_instruct', '')}_{data_args.dataset_names[j].replace('_instruct', '')}"
                     ][-1].append(function(tpv1.prompt, tpv2.prompt).item())
@@ -407,17 +407,17 @@ parser = ArgumentParser(
     (TrainingArguments, DataTrainingArguments, PromptArithmeticsConfig)
 )
 
-# training_args, data_args, pa_config = parser.parse_toml_file(
-#     "configs/cross_origin.toml"
-# )
+training_args, data_args, pa_config = parser.parse_toml_file(
+    "configs/cross_origin.toml"
+)
 
 # training_args, data_args, pa_config = parser.parse_toml_file(
 #     "configs/prompt_tuning/single-task/llama31_8b_instruct.toml"
 # )
 
-training_args, data_args, pa_config = parser.parse_toml_file(
-    "configs/prompt_tuning/single-task/deepseek.toml"
-)
+# training_args, data_args, pa_config = parser.parse_toml_file(
+#     "configs/prompt_tuning/single-task/deepseek.toml"
+# )
 data_args.dataset_names = sorted(data_args.dataset_names)
 
 
@@ -441,6 +441,7 @@ for fname in name_func_map:
     )
 
 dup_tpv_ct_cs = get_tpv_ct_comparison(data_args, task_prompt_vectors, cosine_sim)
+print("dup_tpv_ct_cs")
 print(dup_tpv_ct_cs)
 
 tpv_ct_cs = dict(
@@ -498,12 +499,16 @@ task_prompts = get_task_prompts(
 )
 
 dup_task_ct_cs = get_task_ct_cs(data_args, task_prompts)
+print("dup_tpv_ct_cs")
+print(dup_task_ct_cs)
+
 task_ct_cs = dict(
     filter(
         lambda x: x[0] in remove_duplicates(dup_task_ct_cs.keys()),
         dup_task_ct_cs.items(),
     )
 )
+
 
 print(f"task_ct_cs_{timestamp}")
 create_heatmaps(
@@ -528,7 +533,7 @@ for dataset_name in task_ct_cs:
             torch.tril(torch.ones(n, n, dtype=bool), diagonal=-1)
         )
     else:
-        no_diag = tpv_ct_cs[dataset_name.replace("_instruct", "")]
+        no_diag = task_ct_cs[dataset_name.replace("_instruct", "")]
 
     # print(no_diag)
     # print(dataset_name.replace('_instruct', ''), np.round(no_diag.mean().item(), 2), np.round(no_diag.std().item(), 2))
