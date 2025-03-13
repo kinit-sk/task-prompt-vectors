@@ -22,7 +22,7 @@ dfs = []
 
 for file in sorted(glob.glob(f"{args.results_dir}results_origin*.csv")):
 
-    # print(file)
+    print(file)
     df = pd.read_csv(file, index_col=0)
 
     df["tasks"] = df["tasks"].map(lambda x: " ".join(sorted(x.split(" "))))
@@ -33,10 +33,15 @@ exact_match_per_task = defaultdict(lambda: defaultdict(list))
 for df in dfs:
     for t in df["tasks"]:
         for tt in t.split(" "):
-            exact_match_per_task[t][tt].append(
-                df[df["tasks"] == t][f"{tt}_exact_match"].values[0]
-            )
-
+            if f"{tt}_pearsonr" in df[df["tasks"] == t]:
+                exact_match_per_task[t][tt].append(
+                    df[df["tasks"] == t][f"{tt}_pearsonr"].values[0]
+                )
+            else:
+                exact_match_per_task[t][tt].append(
+                    df[df["tasks"] == t][f"{tt}_exact_match"].values[0]
+                )
+                
 print(exact_match_per_task)
 
 
@@ -80,12 +85,20 @@ for df in [mean_dfs, mean_dfs_std]:
             if t not in res_dict:
                 res_dict[t] = {}
 
-            res_dict[t].update(
-                {
-                    tt: df[df["tasks"] == t][f"{tt}_exact_match"].values[0]
-                    / mean_dfs[df["tasks"] == tt][f"{tt}_exact_match"].values[0]
-                }
-            )
+            if f"{tt}_pearsonr" in df[df["tasks"] == t]:
+                res_dict[t].update(
+                    {
+                        tt: df[df["tasks"] == t][f"{tt}_pearsonr"].values[0]
+                        / mean_dfs[df["tasks"] == tt][f"{tt}_pearsonr"].values[0]
+                    }
+                )
+            else:
+                res_dict[t].update(
+                    {
+                        tt: df[df["tasks"] == t][f"{tt}_exact_match"].values[0]
+                        / mean_dfs[df["tasks"] == tt][f"{tt}_exact_match"].values[0]
+                    }
+                )
 
     print(res_dict)
 

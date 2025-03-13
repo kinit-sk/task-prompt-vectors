@@ -30,4 +30,4 @@ lr_scheduler_type = "cosine"
 optim = "adamw_torch"
 group_by_length = false
 # dataset_text_field="text"
-origin_prompts = ["origin_0_meta-llama-3.1-8b-instruct", "origin_1_meta-llama-3.1-8b-instruct", "origin_2_meta-llama-3.1-8b-instruct"]
+origin_prompts = ["origin_0_deepseek-llm-7b-chat", "origin_1_deepseek-llm-7b-chat", "origin_0_deepseek-llm-7b-chat"]

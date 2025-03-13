@@ -407,17 +407,17 @@ parser = ArgumentParser(
     (TrainingArguments, DataTrainingArguments, PromptArithmeticsConfig)
 )
 
-training_args, data_args, pa_config = parser.parse_toml_file(
-    "configs/cross_origin.toml"
-)
+# training_args, data_args, pa_config = parser.parse_toml_file(
+#     "configs/cross_origin.toml"
+# )
 
 # training_args, data_args, pa_config = parser.parse_toml_file(
 #     "configs/prompt_tuning/single-task/llama31_8b_instruct.toml"
 # )
 
-# training_args, data_args, pa_config = parser.parse_toml_file(
-#     "configs/prompt_tuning/single-task/deepseek.toml"
-# )
+training_args, data_args, pa_config = parser.parse_toml_file(
+    "configs/prompt_tuning/single-task/deepseek.toml"
+)
 data_args.dataset_names = sorted(data_args.dataset_names)
 
 
@@ -425,6 +425,8 @@ data_args.dataset_names = sorted(data_args.dataset_names)
 task_prompt_vectors = get_task_prompt_vectors(
     pa_config=pa_config, dataset_names=data_args.dataset_names
 )
+
+# print(task_prompt_vectors["origin_0_meta-llama-3.1-8b-instruct"][0])
 
 name_func_map = {"diff": average_diff, "l2": l2_norm, "cosine": cosine_sim}
 
@@ -456,8 +458,8 @@ create_heatmaps(
     tpv_ct_cs,
     filename_prefix=f"tpv_ct_cs_{timestamp}",
     save_dir=f"./visuals/{timestamp}",
-    n_rows=11,
-    figsize=(25, 40),
+    n_rows=17,
+    figsize=(18, 60),
 )
 
 tpv_ct_cs = dup_tpv_ct_cs
@@ -498,8 +500,10 @@ task_prompts = get_task_prompts(
     pa_config=pa_config, dataset_names=data_args.dataset_names
 )
 
+# print(task_prompts["origin_0_meta-llama-3.1-8b-instruct"][0])
+
 dup_task_ct_cs = get_task_ct_cs(data_args, task_prompts)
-print("dup_tpv_ct_cs")
+print("dup_task_ct_cs")
 print(dup_task_ct_cs)
 
 task_ct_cs = dict(
@@ -515,8 +519,8 @@ create_heatmaps(
     task_ct_cs,
     filename_prefix=f"task_ct_cs_{timestamp}",
     save_dir=f"./visuals/{timestamp}",
-    n_rows=11,
-    figsize=(25, 40),
+    n_rows=17,
+    figsize=(18, 60),
 )
 
 task_ct_cs = dup_task_ct_cs
