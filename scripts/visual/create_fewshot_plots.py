@@ -94,18 +94,21 @@ n_classes = {
     "yahoo_text": 10,
 }
 
-matplotlib.rc("font", size=42)
+font = {"size": 50}
+matplotlib.rc("font", **font)
 
 
-fig, axs = plt.subplots(nrows=len(tasks), ncols=2, figsize=(25, 20))
+fig, axs = plt.subplots(nrows=len(tasks), ncols=2, figsize=(45, 48))
 # fig, axs = plt.subplots(nrows=1, ncols=len(tasks), figsize=(23,8))
+
+legend_handles = {}
 
 for ti, t in enumerate(tasks):
     df = pd.read_csv(f"wandb_results_{t}.csv", index_col=0)
     for i, td in enumerate(test_datasets[t]):
         for d in train_datasets[t]:
 
-            data = df[df.index.str.contains(rf".*_{td}_{d}$")][1:]
+            data = df[df.index.str.contains(rf".*_{td}_{d}$")][1:7]
             # print(data)
 
             metric = data["f1"].values
@@ -120,11 +123,11 @@ for ti, t in enumerate(tasks):
                 or d == "sst2_text_yelp_polarity_text"
                 or d == "mnli_text_qnli_text"
             ):
-                axs[ti, i].plot(
+                (line,) = axs[ti, i].plot(
                     shots, metric, label=formating_map[d], marker="o", linewidth=3.0
                 )
             else:
-                axs[ti, i].plot(
+                (line,) = axs[ti, i].plot(
                     shots,
                     metric,
                     label=formating_map[d],
@@ -132,6 +135,11 @@ for ti, t in enumerate(tasks):
                     linestyle="--",
                     linewidth=3.0,
                 )
+
+            if i == 0:
+                if ti not in legend_handles:
+                    legend_handles[ti] = []
+                legend_handles[ti].append((line, formating_map[d]))
             # axs[ti, i].fill_between(shots, metric - std, metric + std, alpha=0.2)
 
         axs[ti, i].set_xscale("log")
@@ -142,21 +150,34 @@ for ti, t in enumerate(tasks):
         axs[ti, i].set_title(formating_map[td])
         axs[ti, i].set_xlabel("N shots")
         axs[ti, i].set_ylabel("Macro F1")
-        if i % 2 == 0:
-            axs[ti, i].legend(
-                loc="upper center",
-                bbox_to_anchor=(0.5, -0.2),
-                fancybox=True,
-                shadow=True,
-                ncol=2,
-            )
+
+        handles, labels = zip(*legend_handles[ti])
+        fig.legend(
+            handles,
+            labels,
+            # title="Train dataset",
+            loc="center",
+            bbox_to_anchor=(0.5, (len(tasks) - ti - 0.9) / len(tasks)),  # y-position by row
+            bbox_transform=fig.transFigure,
+            ncol=len(train_datasets),
+        )
+
+        # if i % 2 == 0:
+        #     axs[ti, i].legend(
+        #         loc="upper center",
+        #         bbox_to_anchor=(1.0, -0.2),
+        #         fancybox=True,
+        #         shadow=True,
+        #         ncol=3,
+        #     )
 
 
-fig.tight_layout(pad=1.0)
+plt.tight_layout(rect=[0, 0.05, 1, 1])
+fig.subplots_adjust(hspace=0.6) 
 
 # fig.legend(loc='upper left')
-plt.savefig(f"visuals/fewshots_all.pdf")
-plt.savefig(f"visuals/fewshots_all.png")
+plt.savefig(f"./fewshots_all.pdf")
+plt.savefig(f"./fewshots_all.png")
 plt.close()
 
 
@@ -223,6 +244,6 @@ for ti, t in enumerate(tasks):
 fig.tight_layout(pad=1.0)
 
 # fig.legend(loc='upper left')
-plt.savefig(f"visuals/fewshots_three.pdf")
-plt.savefig(f"visuals/fewshots_three.png")
+plt.savefig(f"./fewshots_three.pdf")
+plt.savefig(f"./fewshots_three.png")
 plt.close()

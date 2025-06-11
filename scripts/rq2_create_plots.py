@@ -304,11 +304,11 @@ df_melted["Task Type"] = df_melted["Task Type"].replace(
 print(df_melted.sort_values("tasks").iloc[56:])
 
 
-font = {"size": 32}
+font = {"size": 45}
 matplotlib.rc("font", **font)
 
 # figsize=(42, 18)
-figsize=(50, 18)
+figsize=(52, 27)
 
 fig, axs = plt.subplots(nrows=2, figsize=figsize)
 # Plotting the updated bar plot
@@ -325,10 +325,10 @@ sns.barplot(data=df_melted.sort_values("tasks").iloc[56:], x="tasks", y="Score",
 # plt.legend(title="Task Type", loc="lower left")
 # plt.grid(True, axis="y")
 
-axs[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.1),
+axs[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.55),
           fancybox=True, shadow=True, ncol=5)
 
-axs[1].get_legend().remove()
+axs[0].get_legend().remove()
 
 for ax in axs:
     ax.grid(True, axis="y")
@@ -340,7 +340,7 @@ for ax in axs:
             lab.set_fontweight("bold")
 
 fig.tight_layout()
-fig.supylabel("Performance relative to prompt tuning", x=-0.02)
+fig.supylabel("Performance relative to prompt tuning", x=-0.02, size=60)
 
 
 plt.savefig("combinations.png", bbox_inches="tight")
