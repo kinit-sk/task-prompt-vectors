@@ -600,55 +600,55 @@ for dataset_name in cross_origin_tpv_cs:
     )
 
 # cross origin evaluation on datasets
-# os.environ["WANDB_PROJECT"] = training_args.wandb_project
+os.environ["WANDB_PROJECT"] = training_args.wandb_project
 
 
-# tokenizer = AutoTokenizer.from_pretrained(
-#     data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True
-# )
+tokenizer = AutoTokenizer.from_pretrained(
+    data_args.data_tokenizer_name_or_path, model_max_length=512, use_fast=True
+)
 
-# model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
+model = AutoModelForSeq2SeqLM.from_pretrained(training_args.model_name_or_path)
 
-# peft_config = PromptTuningConfig(
-#     task_type=TaskType.SEQ_2_SEQ_LM,
-#     num_virtual_tokens=pa_config.num_virtual_tokens,
-# )
+peft_config = PromptTuningConfig(
+    task_type=TaskType.SEQ_2_SEQ_LM,
+    num_virtual_tokens=pa_config.num_virtual_tokens,
+)
 
-# model = get_peft_model(model, peft_config)
-# model.base_model.generation_config.max_new_tokens = data_args.max_target_length
-
-
-# preprocessor = Preprocessor(data_args.dataset_names, data_args, training_args)
-
-# _, valid_datasets, test_datasets = preprocessor.get_data()
-
-# print(test_datasets)
-
-# for o1 in task_prompt_vectors:
-#     for o2 in task_prompt_vectors:
-#         origin_weights = torch.load(f"soft_prompts/{o1}/{o1}.bin")[
-#             "prompt_embeddings"
-#         ].to(training_args.device)
-
-#         print(model.prompt_encoder.default.embedding.weight)
-
-#         training_args.run_name = f"addition_{timestamp}_{o1}_{o2}"
-
-#         print(f"origin: {o1} task prompt vectors: {o2}")
-
-#         evaluator = ArithmeticsEvaluator(
-#             task_prompts=task_prompt_vectors[o2],
-#             model=model,
-#             test_datasets=test_datasets,
-#             eval_datasets=valid_datasets,
-#             training_args=training_args,
-#             tokenizer=tokenizer,
-#             origin_weights=origin_weights,
-#         )
-#         results = evaluator.run()
+model = get_peft_model(model, peft_config)
+model.base_model.generation_config.max_new_tokens = data_args.max_target_length
 
 
-#         if not os.path.exists(f"./results/cross_origin/{timestamp}"):
-#             os.makedirs(f"./results/cross_origin/{timestamp}")
+preprocessor = Preprocessor(data_args.dataset_names, data_args, training_args)
 
-#         results.to_csv(f"./results/cross_origin/{timestamp}/results_{o1}_{o2}_{timestamp}.csv")
+_, valid_datasets, test_datasets = preprocessor.get_data()
+
+print(test_datasets)
+
+for o1 in task_prompt_vectors:
+    for o2 in task_prompt_vectors:
+        origin_weights = torch.load(f"soft_prompts/{o1}/{o1}.bin")[
+            "prompt_embeddings"
+        ].to(training_args.device)
+
+        print(model.prompt_encoder.default.embedding.weight)
+
+        training_args.run_name = f"addition_{timestamp}_{o1}_{o2}"
+
+        print(f"origin: {o1} task prompt vectors: {o2}")
+
+        evaluator = ArithmeticsEvaluator(
+            task_prompts=task_prompt_vectors[o2],
+            model=model,
+            test_datasets=test_datasets,
+            eval_datasets=valid_datasets,
+            training_args=training_args,
+            tokenizer=tokenizer,
+            origin_weights=origin_weights,
+        )
+        results = evaluator.run()
+
+
+        if not os.path.exists(f"./results/cross_origin/{timestamp}"):
+            os.makedirs(f"./results/cross_origin/{timestamp}")
+
+        results.to_csv(f"./results/cross_origin/{timestamp}/results_{o1}_{o2}_{timestamp}.csv")
